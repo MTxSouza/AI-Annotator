@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.configs import BackendSettings
-from backend.database.config import DatabaseConfig
+from backend.database.configs import DatabaseConfig
 
 # Dynamically import all routers from the routes package
 # depending on the API version.
