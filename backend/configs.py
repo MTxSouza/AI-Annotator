@@ -1,8 +1,44 @@
 """
 Module with configuration for backend.
 """
+import importlib
+import pkgutil
+
+from fastapi import FastAPI
 from pydantic_settings import BaseSettings
 
+
+# Functions.
+def setup_routers(app: FastAPI, api_version: str) -> None:
+    """
+    Function to setup routers for the FastAPI application.
+
+    Args:
+        app (FastAPI): The FastAPI application instance.
+        api_version (str): The API version to use for routing.
+    """
+    # Dynamically import all routers from the routes package
+    # depending on the API version.
+    module_path = "backend.api.%s.routers" % api_version
+    try:
+        router_module = importlib.import_module(name=module_path)
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError("Module %s not found." % module_path)
+
+    # Include all routers in the FastAPI application.
+    for _, module_name, _ in pkgutil.iter_modules(path=router_module.__path__):
+        
+        # Skip special modules.
+        if module_name == "__init__" or module_name.startswith("_"):
+            continue
+
+        # Import the module.
+        internal_module_path = "%s.%s" % (module_path, module_name)
+        internal_module = importlib.import_module(name=internal_module_path)
+
+        # Look for the router attribute and include it.
+        if hasattr(internal_module, "router"):
+            app.include_router(router=internal_module.router)
 
 # Classes.
 class BackendSettings(BaseSettings):
