@@ -1,7 +1,6 @@
 """
 Entrypoint used to deploy the AI-Annotator backend API.
 """
-import importlib
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -10,11 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.configs import BackendSettings
-from backend.database.configs import DatabaseConfig
+from backend.database.configs import DatabaseConfig, setup_routers
 
-# Dynamically import all routers from the routes package
-# depending on the API version.
-# TODO: router_module = importlib.import_module(f"routes.{BackendSettings.api_version}.routers")
 
 # Startup event to initialize database connection and
 # shutdown event to close it.
@@ -49,7 +45,8 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# TODO: Include all routers from the imported module.
+# Include all routers from the imported module.
+setup_routers(app=app, api_version=BackendSettings.api_version)
 
 # Health check endpoint.
 @app.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
