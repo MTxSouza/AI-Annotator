@@ -8,8 +8,8 @@ from fastapi import Depends, FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo.asynchronous.database import AsyncDatabase
 
-from backend.configs import BackendSettings
-from backend.database.configs import DatabaseConfig, setup_routers
+from backend.configs import BackendSettings, setup_routers
+from backend.database.configs import DatabaseConfig
 
 
 # Startup event to initialize database connection and
