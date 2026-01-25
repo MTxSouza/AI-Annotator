@@ -33,6 +33,6 @@ services:
     depends_on:
       - database
     environment:
-      - DATABASE_NAME=ai_annotator_db_test
+      - AI_ANNOTATOR_DATABASE_NAME=ai_annotator_db_test
     profiles:
       - unittest
