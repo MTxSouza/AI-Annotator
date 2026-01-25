@@ -3,17 +3,17 @@ Module with custom types for database operations.
 """
 from datetime import datetime
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, Any
 
 from bson import ObjectId
 from pydantic import BeforeValidator, PlainSerializer, WithJsonSchema
 
 
 # Types.
-def validate_py_object_id(v, *args, **kwargs):
+def validate_py_object_id(v: Any) -> ObjectId:
     if isinstance(v, ObjectId):
         return v
-    if ObjectId.is_valid(v):
+    if ObjectId.is_valid(oid=v):
         return ObjectId(v)
     raise ValueError("Invalid ObjectId")
 
