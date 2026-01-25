@@ -49,4 +49,4 @@ class TaskType(str, Enum):
     """
     Enum for task types.
     """
-    OBJECT_DETECTION = "object_detection"
+    OBJECT_DETECTION = "Object Detection"
