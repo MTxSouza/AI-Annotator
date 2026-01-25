@@ -68,6 +68,17 @@ class DatabaseConfig:
         # Return the database connection.
         return cls.__client.get_database(name=cls.__database_name)
 
+    @classmethod
+    def _drop_database(cls) -> None:
+        """
+        Method to drop the database. (For testing purposes only)
+        """
+        # Check if the client is initialized.
+        cls._check_client_initialized()
+
+        # Drop the database.
+        cls.__client.drop_database(name=cls.__database_name)
+
     # Properties.
     @property
     def client(self) -> AsyncMongoClient:
