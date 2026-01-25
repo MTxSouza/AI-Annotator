@@ -27,6 +27,7 @@ def setup_routers(app: FastAPI, api_version: str) -> None:
         raise ModuleNotFoundError("Module %s not found." % module_path)
 
     # Include all routers in the FastAPI application.
+    api_prefix = "/api/%s" % api_version
     for _, module_name, _ in pkgutil.iter_modules(path=router_module.__path__):
 
         # Skip special modules.
@@ -39,7 +40,7 @@ def setup_routers(app: FastAPI, api_version: str) -> None:
 
         # Look for the router attribute and include it.
         if hasattr(internal_module, "router"):
-            app.include_router(router=internal_module.router)
+            app.include_router(router=internal_module.router, prefix=api_prefix)
 
 # Classes.
 class BackendSettings(BaseSettings):
