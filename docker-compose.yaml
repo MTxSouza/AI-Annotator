@@ -7,7 +7,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db
+      - ${LOCAL_STORAGE_PATH}/mongodb:/data/db
   backend:
     build:
       context: .
@@ -15,8 +15,7 @@ services:
     container_name: ai_annotator_backend
     ports:
       - "8000:8000"
+    volumes:
+      - ${LOCAL_STORAGE_PATH}/static:/app/storage
     depends_on:
       - database
-
-volumes:
-  mongo_data:
