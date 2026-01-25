@@ -1,9 +1,33 @@
 """
 Main module with all database configurations.
 """
+from dataclasses import dataclass
+
 from pymongo import AsyncMongoClient
 from pymongo.asynchronous.database import AsyncDatabase
 
+
+# Global variables.
+@dataclass
+class _CollectionFieldSetup:
+    """
+    Class to handle collection field setup.
+    """
+    name: str
+    is_indexed: bool = False
+    is_unique: bool = False
+
+@dataclass
+class _CollectionConfig:
+    """
+    Class to handle collection configurations.
+    """
+    name: str
+    field_setup: list[_CollectionFieldSetup]
+
+COLLECTIONS = [
+    _CollectionConfig(name="projects", field_setup=[_CollectionFieldSetup(name="name", is_indexed=True, is_unique=True)])
+]
 
 # Classes.
 class DatabaseConfig:
@@ -17,7 +41,7 @@ class DatabaseConfig:
 
     # Class methods.
     @classmethod
-    def initialize_client(cls, uri: str, database_name: str, port: int = 27017) -> None:
+    async def initialize_client(cls, uri: str, database_name: str, port: int = 27017) -> None:
         """
         Method to initialize the database client.
 
@@ -30,8 +54,20 @@ class DatabaseConfig:
         cls.__client = AsyncMongoClient(host=uri, port=port)
         cls.__database_name = database_name
 
+        # Setup collections.
+        db = cls.get_database()
+        for collection_config in COLLECTIONS:
+            collection = db.get_collection(name=collection_config.name)
+            for field_setup in collection_config.field_setup:
+                if field_setup.is_indexed or field_setup.is_unique:
+                    await collection.create_index(
+                        keys=[(field_setup.name, 1)],
+                        unique=field_setup.is_unique,
+                        background=True
+                    )
+
     @classmethod
-    def close_client(cls) -> None:
+    async def close_client(cls) -> None:
         """
         Method to close the database client.
         """
@@ -39,7 +75,7 @@ class DatabaseConfig:
         cls._check_client_initialized()
 
         # Close the MongoDB client.
-        cls.__client.close()
+        await cls.__client.close()
         cls.__client = None
         cls.__database_name = None
 
@@ -69,7 +105,7 @@ class DatabaseConfig:
         return cls.__client.get_database(name=cls.__database_name)
 
     @classmethod
-    def _drop_database(cls) -> None:
+    async def _drop_database(cls) -> None:
         """
         Method to drop the database. (For testing purposes only)
         """
@@ -77,7 +113,7 @@ class DatabaseConfig:
         cls._check_client_initialized()
 
         # Drop the database.
-        cls.__client.drop_database(name=cls.__database_name)
+        await cls.__client.drop_database(name=cls.__database_name)
 
     # Properties.
     @property
