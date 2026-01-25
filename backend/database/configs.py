@@ -2,6 +2,7 @@
 Main module with all database configurations.
 """
 from dataclasses import dataclass
+from enum import Enum
 
 from pymongo import AsyncMongoClient
 from pymongo.asynchronous.database import AsyncDatabase
@@ -9,9 +10,9 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 # Global variables.
 @dataclass
-class _CollectionFieldSetup:
+class _IndexConfig:
     """
-    Class to handle collection field setup.
+    Class to handle index configuration.
     """
     name: str
     is_indexed: bool = False
@@ -20,14 +21,19 @@ class _CollectionFieldSetup:
 @dataclass
 class _CollectionConfig:
     """
-    Class to handle collection configurations.
+    Class to handle collection configuration.
     """
     name: str
-    field_setup: list[_CollectionFieldSetup]
+    index_configs: list[_IndexConfig]
 
-COLLECTIONS = [
-    _CollectionConfig(name="projects", field_setup=[_CollectionFieldSetup(name="name", is_indexed=True, is_unique=True)])
-]
+class Collections(Enum):
+    """
+    Enum to handle collection names.
+    """
+    PROJECTS = _CollectionConfig(
+        name="projects",
+        index_configs=[_IndexConfig(name="name", is_indexed=True, is_unique=True)]
+    )
 
 # Classes.
 class DatabaseConfig:
@@ -56,13 +62,13 @@ class DatabaseConfig:
 
         # Setup collections.
         db = cls.get_database()
-        for collection_config in COLLECTIONS:
-            collection = db.get_collection(name=collection_config.name)
-            for field_setup in collection_config.field_setup:
-                if field_setup.is_indexed or field_setup.is_unique:
+        for collection_config in Collections:
+            collection = db.get_collection(name=collection_config.value.name)
+            for index_config in collection_config.value.index_configs:
+                if index_config.is_indexed or index_config.is_unique:
                     await collection.create_index(
-                        keys=[(field_setup.name, 1)],
-                        unique=field_setup.is_unique,
+                        keys=[(index_config.name, 1)],
+                        unique=index_config.is_unique,
                         background=True
                     )
 
