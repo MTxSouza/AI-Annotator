@@ -10,6 +10,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.configs import BackendSettings, setup_routers
 from backend.database.configs import DatabaseConfig
+from backend.limiter import limiter, setup_limiter
 
 
 # Startup event to initialize database connection and
@@ -45,11 +46,15 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+# Setup rate limiter.
+setup_limiter(app=app)
+
 # Include all routers from the imported module.
 setup_routers(app=app, api_version=BackendSettings.api_version)
 
 # Health check endpoint.
 @app.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
+@limiter.limit(limit_value="10/minute")
 async def health_check(db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> dict:
     # Check database status.
     db_status = await db.command("ping")
