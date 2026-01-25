@@ -27,7 +27,7 @@ def setup_routers(app: FastAPI, api_version: str) -> None:
 
     # Include all routers in the FastAPI application.
     for _, module_name, _ in pkgutil.iter_modules(path=router_module.__path__):
-        
+
         # Skip special modules.
         if module_name == "__init__" or module_name.startswith("_"):
             continue
