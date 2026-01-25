@@ -47,8 +47,7 @@ clean_application() {
 
 test_application() {
     echo "🧪 Running backend tests..."
-    docker compose --profile unittest up --build --abort-on-container-exit
-    echo ""
+    docker compose --profile unittest up --build --quiet-build --abort-on-container-exit
     echo "✅ Backend tests completed."
     docker compose --profile unittest down --rmi all -v
     exit 0
