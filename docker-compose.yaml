@@ -32,5 +32,7 @@ services:
       - ${LOCAL_STORAGE_PATH}/static:/app/storage
     depends_on:
       - database
+    environment:
+      - DATABASE_NAME=ai_annotator_db_test
     profiles:
       - unittest

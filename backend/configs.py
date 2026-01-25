@@ -2,6 +2,7 @@
 Module with configuration for backend.
 """
 import importlib
+import os
 import pkgutil
 
 from fastapi import FastAPI
@@ -57,7 +58,7 @@ class BackendSettings(BaseSettings):
 
     database_uri: str = "mongodb://database"
     database_port: int = 27017
-    database_name: str = "ai_annotator_db"
+    database_name: str = os.getenv("AI_ANNOTATOR_DATABASE_NAME", "ai_annotator_db")
 
 # Instantiate the settings.
 BackendSettings = BackendSettings()
