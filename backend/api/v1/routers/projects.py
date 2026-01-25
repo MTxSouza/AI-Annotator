@@ -21,7 +21,7 @@ router = APIRouter(
 )
 
 # Endpoints.
-@router.get(path="/", response_model=list[Project], status_code=status.HTTP_200_OK)
+@router.get(path="/", name="Get Projects", response_model=list[Project], status_code=status.HTTP_200_OK)
 async def get_projects_endpoint(
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
     limit: int = Param(default=10, ge=1, le=100),
@@ -35,8 +35,8 @@ async def get_projects_endpoint(
     """
     return await get_projects(db=db, limit=limit, offset=offset)
 
-@router.get(path="/{id}", response_model=ProjectDetail, status_code=status.HTTP_200_OK)
-async def get_project(id: str, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
+@router.get(path="/{id}", name="Get Project", response_model=ProjectDetail, status_code=status.HTTP_200_OK)
+async def get_project_endpoint(id: str, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
     """
     Endpoint to get a project by its ID.
 
@@ -51,8 +51,8 @@ async def get_project(id: str, db: AsyncDatabase = Depends(dependency=DatabaseCo
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
     return project
 
-@router.post(path="/", response_model=ProjectDetail, status_code=status.HTTP_201_CREATED)
-async def create_project(project: ProjectCreate, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
+@router.post(path="/", name="Create Project", response_model=ProjectDetail, status_code=status.HTTP_201_CREATED)
+async def create_project_endpoint(project: ProjectCreate, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
     """
     Endpoint to create a new project.
 
@@ -72,8 +72,8 @@ async def create_project(project: ProjectCreate, db: AsyncDatabase = Depends(dep
 
     return new_project
 
-@router.put(path="/{id}", response_model=ProjectDetail, status_code=status.HTTP_200_OK)
-async def update_project(id: str, project: ProjectUpdate, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
+@router.put(path="/{id}", name="Update Project", response_model=ProjectDetail, status_code=status.HTTP_200_OK)
+async def update_project_endpoint(id: str, project: ProjectUpdate, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
     """
     Endpoint to update an existing project.
 
@@ -93,8 +93,8 @@ async def update_project(id: str, project: ProjectUpdate, db: AsyncDatabase = De
 
     return updated_project
 
-@router.delete(path="/{id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_project(id: str, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> None:
+@router.delete(path="/{id}", name="Delete Project", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_project_endpoint(id: str, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> None:
     """
     Endpoint to delete a project by its ID.
 
