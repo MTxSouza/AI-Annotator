@@ -18,6 +18,7 @@ class Project(CommonResponseModel):
     name: str = Field(..., description="The name of the project.")
     description: Optional[str] = Field(default=None, description="The description of the project.")
     task_type: TaskType = Field(..., description="The type of task for the project.")
+    is_private: Optional[bool] = Field(default=False, description="Whether the project is private or public.")
 
 class ProjectDetail(Project):
     """
@@ -32,6 +33,7 @@ class ProjectCreate(CommonRequestModel):
     """
     name: str = Field(..., description="The name of the project.")
     task_type: TaskType = Field(..., description="The type of task for the project.")
+    is_private: Optional[bool] = Field(default=False, description="Whether the project is private or public.")
 
 class ProjectUpdate(CommonUpdateModel):
     """
@@ -39,3 +41,4 @@ class ProjectUpdate(CommonUpdateModel):
     """
     name: Optional[str] = Field(default=None, description="The name of the project.")
     description: Optional[str] = Field(default=None, description="The description of the project.")
+    is_private: Optional[bool] = Field(default=False, description="Whether the project is private or public.")
