@@ -2,10 +2,16 @@
 Module with all endpoints related to project operations.
 """
 from fastapi import APIRouter, Depends, status
+from fastapi.exceptions import HTTPException
+from fastapi.params import Param
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import (Project, ProjectCreate,
                                             ProjectDetail, ProjectUpdate)
+from backend.api.v1.utils.projects import (create_project, delete_project,
+                                           get_project_by_id,
+                                           get_project_by_name, get_projects,
+                                           update_project)
 from backend.database.configs import DatabaseConfig
 
 # Instantiate the router.
@@ -16,14 +22,18 @@ router = APIRouter(
 
 # Endpoints.
 @router.get(path="/", response_model=list[Project], status_code=status.HTTP_200_OK)
-async def get_projects(db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> list[Project]:
+async def get_projects_endpoint(
+    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
+    limit: int = Param(default=10, ge=1, le=100),
+    offset: int = Param(default=0, ge=0)
+    ) -> list[Project]:
     """
     Endpoint to get all projects.
 
     Returns:
         list[Project]: List of all projects.
     """
-    pass  # TODO: Implementation goes here.
+    return await get_projects(db=db, limit=limit, offset=offset)
 
 @router.get(path="/{id}", response_model=ProjectDetail, status_code=status.HTTP_200_OK)
 async def get_project(id: str, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
@@ -36,7 +46,10 @@ async def get_project(id: str, db: AsyncDatabase = Depends(dependency=DatabaseCo
     Returns:
         ProjectDetail: The project with the given ID.
     """
-    pass  # TODO: Implementation goes here.
+    project = await get_project_by_id(db=db, project_id=id)
+    if project is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    return project
 
 @router.post(path="/", response_model=ProjectDetail, status_code=status.HTTP_201_CREATED)
 async def create_project(project: ProjectCreate, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
@@ -49,7 +62,15 @@ async def create_project(project: ProjectCreate, db: AsyncDatabase = Depends(dep
     Returns:
         ProjectDetail: The created project.
     """
-    pass  # TODO: Implementation goes here.
+    # Check if a project with the same name already exists.
+    existing_project = await get_project_by_name(db=db, project_name=project.name)
+    if existing_project is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Project with the same name already exists")
+
+    # Create the project.
+    new_project = await create_project(db=db, project_data=project.model_dump())
+
+    return new_project
 
 @router.put(path="/{id}", response_model=ProjectDetail, status_code=status.HTTP_200_OK)
 async def update_project(id: str, project: ProjectUpdate, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
@@ -63,7 +84,14 @@ async def update_project(id: str, project: ProjectUpdate, db: AsyncDatabase = De
     Returns:
         ProjectDetail: The updated project.
     """
-    pass  # TODO: Implementation goes here.
+    # Check if the project exists.
+    if await get_project_by_id(db=db, project_id=id) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+
+    # Update the project.
+    updated_project = await update_project(db=db, project_id=id, project_data=project.model_dump())
+
+    return updated_project
 
 @router.delete(path="/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(id: str, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> None:
@@ -73,4 +101,9 @@ async def delete_project(id: str, db: AsyncDatabase = Depends(dependency=Databas
     Args:
         id (str): The ID of the project to delete.
     """
-    pass  # TODO: Implementation goes here.
+    # Check if the project exists.
+    if await get_project_by_id(db=db, project_id=id) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+
+    # Delete the project.
+    await delete_project(db=db, project_id=id)
