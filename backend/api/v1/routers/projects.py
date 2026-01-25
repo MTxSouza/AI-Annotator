@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, status
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import (Project, ProjectCreate,
-                                            ProjectUpdate)
+                                            ProjectDetail, ProjectUpdate)
 from backend.database.configs import DatabaseConfig
 
 # Instantiate the router.
@@ -25,8 +25,8 @@ async def get_projects(db: AsyncDatabase = Depends(dependency=DatabaseConfig.get
     """
     pass  # TODO: Implementation goes here.
 
-@router.get(path="/{id}", response_model=Project, status_code=status.HTTP_200_OK)
-async def get_project(id: str, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> Project:
+@router.get(path="/{id}", response_model=ProjectDetail, status_code=status.HTTP_200_OK)
+async def get_project(id: str, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
     """
     Endpoint to get a project by its ID.
 
@@ -34,12 +34,12 @@ async def get_project(id: str, db: AsyncDatabase = Depends(dependency=DatabaseCo
         id (str): The ID of the project.
 
     Returns:
-        Project: The project with the given ID.
+        ProjectDetail: The project with the given ID.
     """
     pass  # TODO: Implementation goes here.
 
-@router.post(path="/", response_model=Project, status_code=status.HTTP_201_CREATED)
-async def create_project(project: ProjectCreate, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> Project:
+@router.post(path="/", response_model=ProjectDetail, status_code=status.HTTP_201_CREATED)
+async def create_project(project: ProjectCreate, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
     """
     Endpoint to create a new project.
 
@@ -47,12 +47,12 @@ async def create_project(project: ProjectCreate, db: AsyncDatabase = Depends(dep
         project (ProjectCreate): The project data to create.
 
     Returns:
-        Project: The created project.
+        ProjectDetail: The created project.
     """
     pass  # TODO: Implementation goes here.
 
-@router.put(path="/{id}", response_model=Project, status_code=status.HTTP_200_OK)
-async def update_project(id: str, project: ProjectUpdate, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> Project:
+@router.put(path="/{id}", response_model=ProjectDetail, status_code=status.HTTP_200_OK)
+async def update_project(id: str, project: ProjectUpdate, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
     """
     Endpoint to update an existing project.
 
@@ -61,7 +61,7 @@ async def update_project(id: str, project: ProjectUpdate, db: AsyncDatabase = De
         project (ProjectUpdate): The updated project data.
 
     Returns:
-        Project: The updated project.
+        ProjectDetail: The updated project.
     """
     pass  # TODO: Implementation goes here.
 
