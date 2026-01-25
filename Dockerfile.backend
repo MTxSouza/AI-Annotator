@@ -1,5 +1,5 @@
-# Base image.
-FROM python:3.12-slim
+# --- BASE STAGE ---
+FROM python:3.12-slim as base
 # Install system dependencies.
 COPY ./backend/requirements.txt /tmp
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
@@ -11,4 +11,18 @@ COPY ./backend ./backend
 EXPOSE 8000
 # Run the application.
 ENV PYTHONPATH=/home
+
+# --- STAGE FOR TESTING ---
+FROM base AS testing
+# Install test dependencies.
+COPY ./tests/backend/requirements.txt /tmp
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+# Copy test code.
+COPY ./tests/backend ./tests/backend
+# Copy mock data for tests.
+COPY ./tests/mocks ./tests/mocks
+ENTRYPOINT [ "pytest", "/home/tests/backend" ]
+
+# --- STAGE FOR PRODUCTION ---
+FROM base AS production
 ENTRYPOINT [ "python", "/home/backend/app.py" ]

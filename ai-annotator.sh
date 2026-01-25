@@ -15,7 +15,7 @@ load_env_file() {
 
 build_application() {
     echo "🔧 Building AI-Annotator application..."
-    docker compose build -q
+    docker compose --profile app build -q
     echo ""
     echo "✅ Build complete!"
     exit 0
@@ -23,7 +23,7 @@ build_application() {
 
 deploy_application() {
     echo "🚀 Starting AI-Annotator application..."
-    docker compose up -d
+    docker compose --profile app up -d
     echo ""
     echo "✅ Application is running at http://127.0.0.1:8000"
     exit 0
@@ -31,7 +31,7 @@ deploy_application() {
 
 stop_application() {
     echo "🛑 Stopping AI-Annotator application..."
-    docker compose down
+    docker compose --profile app down
     echo ""
     echo "✅ Application stopped."
     exit 0
@@ -39,9 +39,18 @@ stop_application() {
 
 clean_application() {
     echo "🧹 Cleaning up AI-Annotator application..."
-    docker compose down --rmi all -v
+    docker compose --profile app down --rmi all -v
     echo ""
     echo "✅ Cleanup complete."
+    exit 0
+}
+
+test_application() {
+    echo "🧪 Running backend tests..."
+    docker compose --profile unittest up --build --abort-on-container-exit
+    echo ""
+    echo "✅ Backend tests completed."
+    docker compose --profile unittest down -v
     exit 0
 }
 
@@ -57,6 +66,8 @@ if [ "$ARG0" = "--help" ] || [ "$ARG0" = "-h" ]; then
     echo "  --run, -r   Runs the docker compose command to start the AI-Annotator application."
     echo "  --stop, -s   Runs the docker compose command to stop the AI-Annotator application."
     echo "  --clean, -c   Runs the docker compose command to stop and remove all containers, networks, images, and volumes."
+    echo ""
+    echo "  --test, -t   Runs the backend tests using pytest. Only for development purposes."
     exit 0
 fi
 
@@ -150,6 +161,25 @@ elif [ "$ARG0" = "--clean" ] || [ "$ARG0" = "-c" ]; then
 
     # Clean application.
     clean_application
+
+elif [ "$ARG0" = "--test" ] || [ "$ARG0" = "-t" ]; then
+
+    # Check --help option.
+    if [ "$ARG1" = "--help" ] || [ "$ARG1" = "-h" ]; then
+        echo "Usage: ai-annotator.sh --test [--help|-h]"
+        echo ""
+        echo "This command runs the backend tests for the AI-Annotator application."
+        echo ""
+        echo "Options:"
+        echo "  --help, -h    Show this help message and exit."
+        echo ""
+        echo "This command executes the backend tests using pytest. It is intended for development"
+        echo "purposes only."
+        exit 0
+    fi
+
+    # Run backend tests.
+    test_application
 
 else
     echo "Invalid option. Use --help to see available commands."

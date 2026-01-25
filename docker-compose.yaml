@@ -12,6 +12,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+      target: production
     container_name: ai_annotator_backend
     ports:
       - "8000:8000"
@@ -19,3 +20,17 @@ services:
       - ${LOCAL_STORAGE_PATH}/static:/app/storage
     depends_on:
       - database
+    profiles:
+      - app
+  backend-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: testing
+    container_name: ai_annotator_backend_tests
+    volumes:
+      - ${LOCAL_STORAGE_PATH}/static:/app/storage
+    depends_on:
+      - database
+    profiles:
+      - unittest
