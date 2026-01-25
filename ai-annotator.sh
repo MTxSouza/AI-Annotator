@@ -50,15 +50,7 @@ test_application() {
     docker compose --profile unittest up --build --abort-on-container-exit
     echo ""
     echo "✅ Backend tests completed."
-    docker compose --profile unittest down -v
-    exit 0
-}
-
-clean_test_application() {
-    echo "🧹 Cleaning up backend test environment..."
     docker compose --profile unittest down --rmi all -v
-    echo ""
-    echo "✅ Backend test environment cleanup complete."
     exit 0
 }
 
@@ -76,7 +68,6 @@ if [ "$ARG0" = "--help" ] || [ "$ARG0" = "-h" ]; then
     echo "  --clean, -c   Runs the docker compose command to stop and remove all containers, networks, images, and volumes."
     echo ""
     echo "  --test, -t   Runs the backend tests using pytest. Only for development purposes."
-    echo "  --clean-test, -ct   Cleans up the backend test environment by removing containers, images, and volumes."
     exit 0
 fi
 
@@ -189,25 +180,6 @@ elif [ "$ARG0" = "--test" ] || [ "$ARG0" = "-t" ]; then
 
     # Run backend tests.
     test_application
-
-elif [ "$ARG0" = "--clean-test" ] || [ "$ARG0" = "-ct" ]; then
-
-    # Check --help option.
-    if [ "$ARG1" = "--help" ] || [ "$ARG1" = "-h" ]; then
-        echo "Usage: ai-annotator.sh --clean-test [--help|-h]"
-        echo ""
-        echo "This command cleans up the backend test environment for the AI-Annotator application."
-        echo ""
-        echo "Options:"
-        echo "  --help, -h    Show this help message and exit."
-        echo ""
-        echo "This command removes all containers, images, and volumes associated with the backend"
-        echo "test environment."
-        exit 0
-    fi
-
-    # Clean backend test environment.
-    clean_test_application
 
 else
     echo "Invalid option. Use --help to see available commands."
