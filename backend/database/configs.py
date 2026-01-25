@@ -119,7 +119,7 @@ class DatabaseConfig:
         cls._check_client_initialized()
 
         # Drop the database.
-        await cls.__client.drop_database(name=cls.__database_name)
+        await cls.__client.drop_database(name_or_database=cls.__database_name)
 
     # Properties.
     @property
