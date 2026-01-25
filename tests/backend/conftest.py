@@ -20,6 +20,6 @@ def client():
         response = client.get(url="/health")
         assert response.status_code == 200
         health_check_response = response.json()
-        assert health_check_response.get("ok") is True
+        assert health_check_response.get("ok") == 1.0
 
         yield client
