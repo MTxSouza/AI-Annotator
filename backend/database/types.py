@@ -1,49 +1,29 @@
 """
 Module with custom types for database operations.
 """
+from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Annotated
 
 from bson import ObjectId
-from pydantic.json_schema import GetJsonSchemaHandler, JsonSchemaValue
-from pydantic_core import core_schema
+from pydantic import BeforeValidator, PlainSerializer, WithJsonSchema
 
 
 # Types.
-class PyObjectId(ObjectId):
-    """
-    Custom type to handle ObjectId in Pydantic models.
-    """
-
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v, *args, **kwargs):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid ObjectId")
+def validate_py_object_id(v, *args, **kwargs):
+    if isinstance(v, ObjectId):
+        return v
+    if ObjectId.is_valid(v):
         return ObjectId(v)
+    raise ValueError("Invalid ObjectId")
 
-    @classmethod
-    def __get_pydantic_core_schema__(cls, source_type: Any, handler: Any) -> core_schema.CoreSchema:
-        return core_schema.json_or_python_schema(
-            json_schema=core_schema.str_schema(),
-            python_schema=core_schema.union_schema([
-                core_schema.is_instance_schema(ObjectId),
-                core_schema.chain_schema([
-                    core_schema.str_schema(),
-                    core_schema.no_info_plain_validator_function(cls.validate),
-                ])
-            ]),
-            serialization=core_schema.plain_serializer_function_ser_schema(
-                lambda x: str(x)
-            )
-        )
-
-    @classmethod
-    def __get_pydantic_json_schema__(cls, core_schema: JsonSchemaValue, handler: GetJsonSchemaHandler) -> JsonSchemaValue:
-        return {"type": "string"}
+PyObjectId = Annotated[
+    ObjectId,
+    BeforeValidator(func=validate_py_object_id),
+    PlainSerializer(func=lambda oid: str(oid), return_type=str),
+    WithJsonSchema(json_schema={"type": "string"})
+]
+PyDateTime = Annotated[datetime, PlainSerializer(func=lambda dt: dt.isoformat())]
 
 class TaskType(str, Enum):
     """

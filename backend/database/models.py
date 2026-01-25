@@ -1,11 +1,9 @@
 """
 Module with common database models inherited by all API models.
 """
-from datetime import datetime
-
 from pydantic import BaseModel, ConfigDict, Field
 
-from backend.database.types import PyObjectId
+from backend.database.types import PyDateTime, PyObjectId
 from backend.database.utils import get_current_datetime
 
 
@@ -14,8 +12,8 @@ class _TimestampModel(BaseModel):
     """
     Base timestamp model inherited by all API models.
     """
-    created_at: datetime = Field(default_factory=get_current_datetime, description="The creation timestamp.")
-    updated_at: datetime = Field(default_factory=get_current_datetime, description="The last update timestamp.")
+    created_at: PyDateTime = Field(default_factory=get_current_datetime, description="The creation timestamp.")
+    updated_at: PyDateTime = Field(default_factory=get_current_datetime, description="The last update timestamp.")
 
 class CommonResponseModel(_TimestampModel):
     """
@@ -26,10 +24,7 @@ class CommonResponseModel(_TimestampModel):
     model_config = ConfigDict(
         populate_by_name=True,
         from_attributes=True,
-        json_encoders={
-            PyObjectId: str,
-            datetime: lambda dt: dt.isoformat()
-        }
+        arbitrary_types_allowed=True
     )
 
 class CommonRequestModel(BaseModel):
