@@ -3,7 +3,7 @@ Module with all endpoints related to project operations.
 """
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
-from fastapi.params import Param
+from fastapi.params import Param, Path
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import (Project, ProjectCreate,
@@ -36,7 +36,10 @@ async def get_projects_endpoint(
     return await get_projects(db=db, limit=limit, offset=offset)
 
 @router.get(path="/{id}", name="Get Project", response_model=ProjectDetail, status_code=status.HTTP_200_OK)
-async def get_project_endpoint(id: str, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
+async def get_project_endpoint(
+    id: str = Path(..., description="The ID of the project to retrieve."),
+    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
+    ) -> ProjectDetail:
     """
     Endpoint to get a project by its ID.
 
@@ -52,7 +55,10 @@ async def get_project_endpoint(id: str, db: AsyncDatabase = Depends(dependency=D
     return project
 
 @router.post(path="/", name="Create Project", response_model=ProjectDetail, status_code=status.HTTP_201_CREATED)
-async def create_project_endpoint(project: ProjectCreate, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
+async def create_project_endpoint(
+    project: ProjectCreate,
+    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
+    ) -> ProjectDetail:
     """
     Endpoint to create a new project.
 
@@ -73,7 +79,11 @@ async def create_project_endpoint(project: ProjectCreate, db: AsyncDatabase = De
     return new_project
 
 @router.put(path="/{id}", name="Update Project", response_model=ProjectDetail, status_code=status.HTTP_200_OK)
-async def update_project_endpoint(id: str, project: ProjectUpdate, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> ProjectDetail:
+async def update_project_endpoint(
+    project: ProjectUpdate,
+    id: str = Path(..., description="The ID of the project to update."),
+    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
+    ) -> ProjectDetail:
     """
     Endpoint to update an existing project.
 
@@ -94,7 +104,10 @@ async def update_project_endpoint(id: str, project: ProjectUpdate, db: AsyncData
     return updated_project
 
 @router.delete(path="/{id}", name="Delete Project", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_project_endpoint(id: str, db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)) -> None:
+async def delete_project_endpoint(
+    id: str = Path(..., description="The ID of the project to delete."),
+    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
+    ) -> None:
     """
     Endpoint to delete a project by its ID.
 
