@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 COPY ./tests/backend ./tests/backend
 # Copy mock data for tests.
 COPY ./tests/mocks ./tests/mocks
-ENTRYPOINT [ "pytest", "/home/tests/backend" ]
+ENTRYPOINT [ "pytest", "-s", "-v", "/home/tests/backend" ]
 
 # --- STAGE FOR PRODUCTION ---
 FROM base AS production
