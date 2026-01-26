@@ -13,10 +13,10 @@ from backend.database.configs import DatabaseConfig
 
 
 # Session-wide fixtures.
-@pytest.fixture(scope="session", autouse=True)
-def client():
+@pytest.fixture(scope="session")
+def app_instance():
     """
-    Fixture to provide the API client for tests.
+    Fixture to provide the FastAPI app instance.
     """
     # Test lifespan context.
     @asynccontextmanager
@@ -35,9 +35,15 @@ def client():
         await DatabaseConfig.close_client()
 
     app.router.lifespan_context = test_lifespan
+    return app
 
+@pytest.fixture(scope="session", autouse=True)
+def client(app_instance: FastAPI):
+    """
+    Fixture to provide the API client for tests.
+    """
     # Provide the API client for tests.
-    with TestClient(app=app) as client:
+    with TestClient(app=app_instance) as client:
 
         # Health check before running tests.
         response = client.get(url="/health")
