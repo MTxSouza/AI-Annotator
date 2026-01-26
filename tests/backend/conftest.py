@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from pymongo import MongoClient
 
 from backend.app import app
 from backend.configs import BackendSettings
@@ -52,3 +53,16 @@ def client(app_instance: FastAPI):
         assert health_check_response.get("ok") == 1.0
 
         yield client
+
+@pytest.fixture(autouse=True)
+def clear_database():
+    """
+    Fixture to clear the database before each test.
+    """
+    # Clear the database before each test.
+    client = MongoClient(
+        host=BackendSettings.database_uri,
+        port=BackendSettings.database_port
+    )
+    client.drop_database(BackendSettings.database_name)
+    yield
