@@ -35,6 +35,7 @@ app = FastAPI(
     title=BackendSettings.app_name,
     version=BackendSettings.api_version,
     lifespan=lifespan,
+    root_path=BackendSettings.api_root_path,
     dependencies=[Depends(dependency=DatabaseConfig.get_database)]
 )
 

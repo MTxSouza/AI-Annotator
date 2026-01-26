@@ -27,7 +27,6 @@ def setup_routers(app: FastAPI, api_version: str) -> None:
         raise ModuleNotFoundError("Module %s not found." % module_path)
 
     # Include all routers in the FastAPI application.
-    api_prefix = "/api/%s" % api_version
     for _, module_name, _ in pkgutil.iter_modules(path=router_module.__path__):
 
         # Skip special modules.
@@ -40,7 +39,7 @@ def setup_routers(app: FastAPI, api_version: str) -> None:
 
         # Look for the router attribute and include it.
         if hasattr(internal_module, "router"):
-            app.include_router(router=internal_module.router, prefix=api_prefix)
+            app.include_router(router=internal_module.router)
 
 # Classes.
 class BackendSettings(BaseSettings):
@@ -60,6 +59,14 @@ class BackendSettings(BaseSettings):
     database_uri: str = "mongodb://database"
     database_port: int = 27017
     database_name: str = os.getenv("AI_ANNOTATOR_DATABASE_NAME", "ai_annotator_db")
+
+    # Properties.
+    @property
+    def api_root_path(self) -> str:
+        """
+        Property to get the API root path.
+        """
+        return "/api/%s" % self.api_version
 
 # Instantiate the settings.
 BackendSettings = BackendSettings()
