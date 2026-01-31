@@ -60,6 +60,10 @@ class BackendSettings(BaseSettings):
     database_port: int = 27017
     database_name: str = os.getenv("AI_ANNOTATOR_DATABASE_NAME", "ai_annotator_db")
 
+    jwt_algorithm: str = "HS256"
+    secret_key: str = os.getenv("AI_ANNOTATOR_SECRET_KEY", "your_default_secret_key")
+    access_token_expire_minutes: int = 60 * 24  # 1 day
+
     # Properties.
     @property
     def api_root_path(self) -> str:
