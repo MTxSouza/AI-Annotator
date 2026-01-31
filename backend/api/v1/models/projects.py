@@ -3,7 +3,7 @@ Main module with all schemas used in Projects collection.
 """
 from typing import Optional
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from backend.database.models import (CommonRequestModel, CommonResponseModel,
                                      CommonUpdateModel)
@@ -11,34 +11,52 @@ from backend.database.types import TaskType
 
 
 # Schemas.
-class Project(CommonResponseModel):
+class _DB(BaseModel):
     """
-    Project model.
+    Project model in the database.
     """
+    # Fields.
     name: str = Field(..., description="The name of the project.")
     description: Optional[str] = Field(default=None, description="The description of the project.")
     task_type: TaskType = Field(..., description="The type of task for the project.")
-    is_private: Optional[bool] = Field(default=False, description="Whether the project is private or public.")
+    is_private: bool = Field(default=False, description="Whether the project is private or public.")
+    password_hash: Optional[str] = Field(default=None, description="The hashed password for the project if it is private.")
 
-class ProjectDetail(Project):
-    """
-    Project model with detailed information.
-    """
-    num_samples: Optional[int] = Field(default=0, description="The number of samples in the project.")
-    num_annotations: Optional[int] = Field(default=0, description="The number of annotations in the project.")
-
-class ProjectCreate(CommonRequestModel):
+class Create(_DB, CommonRequestModel):
     """
     Project creation model.
     """
-    name: str = Field(..., description="The name of the project.")
-    task_type: TaskType = Field(..., description="The type of task for the project.")
-    password: Optional[str] = Field(default=None, description="The password for the project if it is private.")
+    # Fields.
+    password: Optional[str] = Field(default=None, description="The password for the project if it should be private.")
 
-class ProjectUpdate(CommonUpdateModel):
+    # To be excluded.
+    is_private: Optional[bool] = Field(default=None, exclude=True)
+    password_hash: Optional[str] = Field(default=None, exclude=True)
+
+class Update(_DB, CommonUpdateModel):
     """
     Project update model.
     """
-    name: Optional[str] = Field(default=None, description="The name of the project.")
-    description: Optional[str] = Field(default=None, description="The description of the project.")
-    password: Optional[str] = Field(default=None, description="The password for the project if it is private.")
+    # Fields.
+    name: Optional[str] = Field(default=None)
+    password: Optional[str] = Field(default=None, description="The password for the project if it should be private.")
+
+    # To be excluded.
+    task_type: Optional[TaskType] = Field(default=None, exclude=True)
+    is_private: Optional[bool] = Field(default=None, exclude=True)
+    password_hash: Optional[str] = Field(default=None, exclude=True)
+
+class ProjectSimple(_DB, CommonResponseModel):
+    """
+    Simple Project model.
+    """
+    # To be excluded.
+    password_hash: Optional[str] = Field(default=None, exclude=True)
+
+class Project(ProjectSimple):
+    """
+    Project model.
+    """
+    # Additional Fields.
+    num_samples: Optional[int] = Field(default=0, description="The number of samples in the project.")
+    num_annotations: Optional[int] = Field(default=0, description="The number of annotations in the project.")

@@ -6,8 +6,8 @@ from fastapi.exceptions import HTTPException
 from fastapi.params import Param, Path
 from pymongo.asynchronous.database import AsyncDatabase
 
-from backend.api.v1.models.projects import (Project, ProjectCreate,
-                                            ProjectDetail, ProjectUpdate)
+from backend.api.v1.models.projects import (Create, Project, ProjectSimple,
+                                            Update)
 from backend.api.v1.utils.projects import (create_project, delete_project,
                                            get_project_by_id,
                                            get_project_by_name, get_projects,
@@ -21,25 +21,25 @@ router = APIRouter(
 )
 
 # Endpoints.
-@router.get(path="/", name="Get Projects", response_model=list[Project], status_code=status.HTTP_200_OK)
+@router.get(path="/", name="Get Projects", response_model=list[ProjectSimple], status_code=status.HTTP_200_OK)
 async def get_projects_endpoint(
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
     limit: int = Param(default=10, ge=1, le=100),
     offset: int = Param(default=0, ge=0)
-    ) -> list[Project]:
+    ) -> list[ProjectSimple]:
     """
     Endpoint to get all projects.
 
     Returns:
-        list[Project]: List of all projects.
+        list[ProjectSimple]: List of all projects.
     """
     return await get_projects(db=db, limit=limit, offset=offset)
 
-@router.get(path="/{id}", name="Get Project", response_model=ProjectDetail, status_code=status.HTTP_200_OK)
+@router.get(path="/{id}", name="Get Project", response_model=Project, status_code=status.HTTP_200_OK)
 async def get_project_endpoint(
     id: str = Path(..., description="The ID of the project to retrieve."),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
-    ) -> ProjectDetail:
+    ) -> Project:
     """
     Endpoint to get a project by its ID.
 
@@ -54,11 +54,11 @@ async def get_project_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
     return project
 
-@router.post(path="/", name="Create Project", response_model=ProjectDetail, status_code=status.HTTP_201_CREATED)
+@router.post(path="/", name="Create Project", response_model=Project, status_code=status.HTTP_201_CREATED)
 async def create_project_endpoint(
-    project: ProjectCreate,
+    project: Create,
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
-    ) -> ProjectDetail:
+    ) -> Project:
     """
     Endpoint to create a new project.
 
@@ -66,7 +66,7 @@ async def create_project_endpoint(
         project (ProjectCreate): The project data to create.
 
     Returns:
-        ProjectDetail: The created project.
+        Project: The created project.
     """
     # Check if a project with the same name already exists.
     existing_project = await get_project_by_name(db=db, project_name=project.name)
@@ -78,12 +78,12 @@ async def create_project_endpoint(
 
     return new_project
 
-@router.put(path="/{id}", name="Update Project", response_model=ProjectDetail, status_code=status.HTTP_200_OK)
+@router.put(path="/{id}", name="Update Project", response_model=Project, status_code=status.HTTP_200_OK)
 async def update_project_endpoint(
-    project: ProjectUpdate,
+    project: Update,
     id: str = Path(..., description="The ID of the project to update."),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
-    ) -> ProjectDetail:
+    ) -> Project:
     """
     Endpoint to update an existing project.
 
@@ -92,7 +92,7 @@ async def update_project_endpoint(
         project (ProjectUpdate): The updated project data.
 
     Returns:
-        ProjectDetail: The updated project.
+        Project: The updated project.
     """
     # Check if the project exists.
     if await get_project_by_id(db=db, project_id=id) is None:
