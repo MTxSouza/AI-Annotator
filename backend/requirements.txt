@@ -3,5 +3,4 @@ uvicorn[standard]
 pymongo
 pydantic_settings
 slowapi
-passlib[bcrypt]
 python-jose
