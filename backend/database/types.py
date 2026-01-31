@@ -25,8 +25,8 @@ PyObjectId = Annotated[
 ]
 PyDateTime = Annotated[datetime, PlainSerializer(func=lambda dt: dt.isoformat())]
 
-class TaskType(str, Enum):
+class Task(str, Enum):
     """
-    Enum for task types.
+    Enum for tasks.
     """
     OBJECT_DETECTION = "Object Detection"

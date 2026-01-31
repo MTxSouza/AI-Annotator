@@ -13,7 +13,7 @@ def project_payload() -> dict:
     """
     return {
         "name": "Test Project",
-        "task_type": "Object Detection"
+        "task": "Object Detection"
     }
 
 # Tests.
@@ -30,7 +30,7 @@ def test_create_project(client: TestClient, project_payload: dict):
     # Assert the response data.
     response_data = response.json()
     assert response_data["name"] == project_payload["name"]
-    assert response_data["task_type"] == project_payload["task_type"]
+    assert response_data["task"] == project_payload["task"]
     assert response_data["description"] is None
     assert response_data["is_private"] is False
 
@@ -50,7 +50,7 @@ def test_create_project_with_password(client: TestClient, project_payload: dict)
     # Assert the response data.
     response_data = response.json()
     assert response_data["name"] == project_payload["name"]
-    assert response_data["task_type"] == project_payload["task_type"]
+    assert response_data["task"] == project_payload["task"]
     assert response_data["description"] is None
     assert response_data["is_private"] is True
 
@@ -86,7 +86,7 @@ def test_get_non_private_project(client: TestClient, project_payload: dict):
     # Assert the response data.
     response_data = response.json()
     assert response_data["name"] == project_payload["name"]
-    assert response_data["task_type"] == project_payload["task_type"]
+    assert response_data["task"] == project_payload["task"]
 
 def test_get_private_project(client: TestClient, project_payload: dict):
     """
@@ -126,4 +126,4 @@ def test_get_private_project(client: TestClient, project_payload: dict):
     # Assert the response data.
     response_data = response.json()
     assert response_data["name"] == project_payload["name"]
-    assert response_data["task_type"] == project_payload["task_type"]
+    assert response_data["task"] == project_payload["task"]

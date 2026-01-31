@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from backend.database.models import (CommonRequestModel, CommonResponseModel,
                                      CommonUpdateModel)
-from backend.database.types import TaskType
+from backend.database.types import Task
 
 
 # Schemas.
@@ -18,7 +18,7 @@ class _DB(BaseModel):
     # Fields.
     name: str = Field(..., description="The name of the project.")
     description: Optional[str] = Field(default=None, description="The description of the project.")
-    task_type: TaskType = Field(..., description="The type of task for the project.")
+    task: Task = Field(..., description="The task for the project.")
     password_hash: Optional[str] = Field(default=None, description="The hashed password for the project if it is private.")
 
 class Create(_DB, CommonRequestModel):
@@ -40,7 +40,7 @@ class Update(_DB, CommonUpdateModel):
     password: Optional[str] = Field(default=None, min_length=1, description="The password for the project if it should be private.")
 
     # To be excluded.
-    task_type: Optional[TaskType] = Field(default=None, exclude=True)
+    task: Optional[Task] = Field(default=None, exclude=True)
     password_hash: Optional[str] = Field(default=None, exclude=True)
 
 class ProjectSimple(_DB, CommonResponseModel):
