@@ -5,6 +5,8 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from backend.api.v1.models.task_configs import (ObjectDetectionTaskConfig,
+                                                SemanticSegmentationTaskConfig)
 from backend.database.models import (CommonRequestModel, CommonResponseModel,
                                      CommonUpdateModel)
 from backend.database.types import Task
@@ -13,6 +15,7 @@ from backend.database.types import Task
 __MIN_NAME_LENGTH__: int = 1
 __MAX_NAME_LENGTH__: int = 64
 __MAX_DESCRIPTION_LENGTH__: int = 500
+__PROJECT_CONFIGS__ = ObjectDetectionTaskConfig | SemanticSegmentationTaskConfig
 
 # Schemas.
 class _DB(BaseModel):
@@ -64,3 +67,4 @@ class Project(ProjectSimple):
     # Additional Fields.
     num_samples: Optional[int] = Field(default=0, description="The number of samples in the project.")
     num_annotations: Optional[int] = Field(default=0, description="The number of annotations in the project.")
+    configs: __PROJECT_CONFIGS__ = Field(..., description="The task configurations for the project.")

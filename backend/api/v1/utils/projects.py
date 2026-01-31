@@ -7,10 +7,12 @@ from fastapi.params import Path
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import Project
+from backend.api.v1.models.task_configs import (ObjectDetectionTaskConfig,
+                                                SemanticSegmentationTaskConfig)
 from backend.api.v1.utils.auth import (decode_access_token, hash_password,
                                        oauth2_scheme, throw_bearer_error)
 from backend.database.configs import Collections, DatabaseConfig
-from backend.database.types import PyObjectId
+from backend.database.types import PyObjectId, Task
 
 
 # Functions.
@@ -76,7 +78,45 @@ async def get_project_by_id(
 
     # Query project by ID.
     project_id = PyObjectId(oid=project_id)
-    project = await collection.find_one({"_id": project_id})
+    pipeline = [
+        {"$match": {"_id": project_id}},
+        {"$lookup": {
+            "from": Collections.TASK_CONFIGS.value.name,
+            "localField": "_id",
+            "foreignField": "project_id",
+            "as": "configs"
+        }},
+        {"$set": {"configs": {"$first": "$configs"}}}
+    ]
+    cursor = await collection.aggregate(pipeline)
+    project = await cursor.to_list(length=1)
+    project = project.pop() if project else None
+
+    # Setup private field if project exists.
+    if project is not None:
+        project = setup_private_field(project=project)
+
+    return project
+
+async def get_project_by_name(
+    db: AsyncDatabase,
+    project_name: str
+    ) -> dict | None:
+    """
+    Utility function to get a project by its name.
+
+    Args:
+        db (AsyncDatabase): The database instance.
+        project_name (str): The name of the project.
+
+    Returns:
+        dict | None: The project with the given name or None if not found.
+    """
+    # Get projects collection.
+    collection = db.get_collection(name=Collections.PROJECTS.value.name)
+
+    # Query project by name.
+    project = await collection.find_one({"name": project_name})
 
     # Setup private field if project exists.
     if project is not None:
@@ -128,32 +168,6 @@ async def get_authenticated_project(
 
     return Project.model_validate(obj=project)
 
-async def get_project_by_name(
-    db: AsyncDatabase,
-    project_name: str
-    ) -> dict | None:
-    """
-    Utility function to get a project by its name.
-
-    Args:
-        db (AsyncDatabase): The database instance.
-        project_name (str): The name of the project.
-
-    Returns:
-        dict | None: The project with the given name or None if not found.
-    """
-    # Get projects collection.
-    collection = db.get_collection(name=Collections.PROJECTS.value.name)
-
-    # Query project by name.
-    project = await collection.find_one({"name": project_name})
-
-    # Setup private field if project exists.
-    if project is not None:
-        project = setup_private_field(project=project)
-
-    return project
-
 def set_project_password(
     project_data: dict
     ) -> dict:
@@ -188,14 +202,17 @@ async def create_project(
     Returns:
         dict: The created project.
     """
-    # Get projects collection.
-    collection = db.get_collection(name=Collections.PROJECTS.value.name)
+    # Get project and task config collections.
+    project_collection = db.get_collection(name=Collections.PROJECTS.value.name)
+    task_config_collection = db.get_collection(name=Collections.TASK_CONFIGS.value.name)
 
     # Check if the project contains a password.
     project_data = set_project_password(project_data=project_data)
 
     # Insert new project.
-    result = await collection.insert_one(project_data)
+    result = await project_collection.insert_one(project_data)
+    task_config_data = {"project_id": result.inserted_id}
+    await task_config_collection.insert_one(task_config_data)
 
     # Retrieve the created project.
     created_project = await get_project_by_id(db=db, project_id=result.inserted_id)
