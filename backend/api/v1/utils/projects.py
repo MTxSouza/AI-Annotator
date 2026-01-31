@@ -123,7 +123,7 @@ async def get_authenticated_project(
             status_code=status.HTTP_401_UNAUTHORIZED
         )
 
-    if decoded_token.get("sub") != project["_id"]:
+    if decoded_token.get("sub") != str(project["_id"]):
         throw_baerer_error(
             message="Token subject does not match project ID",
             status_code=status.HTTP_403_FORBIDDEN
