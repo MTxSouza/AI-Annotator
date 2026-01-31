@@ -30,3 +30,4 @@ class Task(str, Enum):
     Enum for tasks.
     """
     OBJECT_DETECTION = "Object Detection"
+    SEMANTIC_SEGMENTATION = "Semantic Segmentation"
