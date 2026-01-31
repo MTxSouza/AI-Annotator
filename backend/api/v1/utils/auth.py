@@ -6,9 +6,10 @@ import hmac
 import os
 from datetime import datetime, timedelta, timezone
 
-from fastapi import HTTPException
+from fastapi import status
+from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+from jose import ExpiredSignatureError, JWTError, jwt
 
 from backend.configs import BackendSettings
 
@@ -140,8 +141,16 @@ def decode_access_token(token: str) -> dict | None:
         # Decode the JWT token.
         decoded_token = jwt.decode(token=token, key=__SECRET_KEY__, algorithms=__JWT_ALGORITHM__)
         return decoded_token
+    except ExpiredSignatureError:
+        throw_bearer_error(
+            message="Token has expired",
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
     except JWTError:
-        return None
+        throw_bearer_error(
+            message="Invalid token",
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
 
 def throw_bearer_error(message: str, status_code: int) -> None:
     """

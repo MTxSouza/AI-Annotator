@@ -7,7 +7,8 @@ from fastapi.params import Path
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.utils.auth import (decode_access_token, hash_password,
-                                       oauth2_scheme, throw_bearer_error)
+                                       is_token_expired, oauth2_scheme,
+                                       throw_bearer_error)
 from backend.database.configs import Collections, DatabaseConfig
 from backend.database.types import PyObjectId
 
@@ -115,14 +116,10 @@ async def get_authenticated_project(
             status_code=status.HTTP_401_UNAUTHORIZED
         )
 
-    # Validate token subject.
+    # Get decoded token.
     decoded_token = decode_access_token(token=token)
-    if not decoded_token:
-        throw_bearer_error(
-            message="Invalid token",
-            status_code=status.HTTP_401_UNAUTHORIZED
-        )
 
+    # Check token subject matches project ID.
     if decoded_token.get("sub") != str(project["_id"]):
         throw_bearer_error(
             message="Token subject does not match project ID",
