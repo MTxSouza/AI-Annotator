@@ -1,10 +1,14 @@
 """
 Module with all utilities related to project operations.
 """
+from fastapi import Depends, status
+from fastapi.exceptions import HTTPException
+from fastapi.params import Path
 from pymongo.asynchronous.database import AsyncDatabase
 
-from backend.api.v1.utils.auth import hash_password
-from backend.database.configs import Collections
+from backend.api.v1.utils.auth import (decode_access_token, hash_password,
+                                       oauth2_scheme, throw_baerer_error)
+from backend.database.configs import Collections, DatabaseConfig
 from backend.database.types import PyObjectId
 
 
@@ -76,6 +80,54 @@ async def get_project_by_id(
     # Setup private field if project exists.
     if project is not None:
         project = setup_private_field(project=project)
+
+    return project
+
+async def get_authenticated_project(
+    id: str = Path(..., description="The ID of the project."),
+    token: str = Depends(dependency=oauth2_scheme),
+    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
+    ):
+    """
+    Utility function to get an authenticated project by its ID.
+
+    Args:
+        id (str): The ID of the project.
+        token (str): The access token.
+        db (AsyncDatabase): The database instance.
+
+    Returns:
+        dict | None: The authenticated project or None if not found.
+    """
+    # Get project.
+    project = await get_project_by_id(db=db, project_id=id)
+    if project is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+
+    # Check if the project is private.
+    if not project.get("is_private"):
+        return project
+
+    # Check if the token is valid.
+    if token is None:
+        throw_baerer_error(
+            message="Not authenticated to access this private project",
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
+
+    # Validate token subject.
+    decoded_token = decode_access_token(token=token)
+    if not decoded_token:
+        throw_baerer_error(
+            message="Invalid token",
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
+
+    if decoded_token.get("sub") != project["_id"]:
+        throw_baerer_error(
+            message="Token subject does not match project ID",
+            status_code=status.HTTP_403_FORBIDDEN
+        )
 
     return project
 

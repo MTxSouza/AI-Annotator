@@ -4,6 +4,7 @@ Module with all utilities related to authentication operations.
 import hashlib
 from datetime import datetime, timedelta, timezone
 
+from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 
@@ -79,3 +80,20 @@ def decode_access_token(token: str) -> dict | None:
         return decoded_token
     except JWTError:
         return None
+
+def throw_baerer_error(message: str, status_code: int) -> None:
+    """
+    Utility function to throw a 401 Bearer authentication error.
+
+    Args:
+        message (str): The error message.
+        status_code (int): The HTTP status code.
+
+    Raises:
+        HTTPException: The 401 Bearer authentication error.
+    """
+    raise HTTPException(
+        status_code=status_code,
+        detail=message,
+        headers={"WWW-Authenticate": "Bearer"}
+    )
