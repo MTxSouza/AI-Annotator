@@ -7,10 +7,9 @@ from fastapi.params import Path
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import Project
-from backend.api.v1.models.task_configs import (ObjectDetectionTaskConfig,
-                                                SemanticSegmentationTaskConfig)
 from backend.api.v1.utils.auth import (decode_access_token, hash_password,
                                        oauth2_scheme, throw_bearer_error)
+from backend.api.v1.utils.task_configs import setup_task_config
 from backend.database.configs import Collections, DatabaseConfig
 from backend.database.types import PyObjectId, Task
 
@@ -206,7 +205,7 @@ async def create_project(
 
     # Insert new project.
     result = await project_collection.insert_one(project_data)
-    task_config_data = {"project_id": result.inserted_id}
+    task_config_data = setup_task_config(project_id=result.inserted_id, task=project_data["task"])
     await task_config_collection.insert_one(task_config_data)
 
     # Retrieve the created project.
