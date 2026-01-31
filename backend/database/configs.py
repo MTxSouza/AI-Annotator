@@ -34,6 +34,10 @@ class Collections(Enum):
         name="projects",
         index_configs=[_IndexConfig(name="name", is_indexed=True, is_unique=True)]
     )
+    TASK_CONFIGS = _CollectionConfig(
+        name="task_configs",
+        index_configs=[_IndexConfig(name="project_id", is_unique=True)]
+    )
 
 # Classes.
 class DatabaseConfig:
