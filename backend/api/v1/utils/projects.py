@@ -7,8 +7,7 @@ from fastapi.params import Path
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.utils.auth import (decode_access_token, hash_password,
-                                       is_token_expired, oauth2_scheme,
-                                       throw_bearer_error)
+                                       oauth2_scheme, throw_bearer_error)
 from backend.database.configs import Collections, DatabaseConfig
 from backend.database.types import PyObjectId
 
