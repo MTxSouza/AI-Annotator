@@ -11,8 +11,8 @@ from backend.api.v1.models.projects import (Create, Project, ProjectSimple,
                                             Update)
 from backend.api.v1.utils.projects import (create_project, delete_project,
                                            get_authenticated_project,
-                                           get_project_by_id,
-                                           get_project_by_name, get_projects,
+                                           get_project_by_id, get_projects,
+                                           is_project_name_exists,
                                            update_project)
 from backend.database.configs import DatabaseConfig
 from backend.limiter import limiter
@@ -69,8 +69,7 @@ async def create_project_endpoint(
         Project: The created project.
     """
     # Check if a project with the same name already exists.
-    existing_project = await get_project_by_name(db=db, project_name=project.name)
-    if existing_project is not None:
+    if await is_project_name_exists(db=db, project_name=project.name):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Project with the same name already exists")
 
     # Create the project.

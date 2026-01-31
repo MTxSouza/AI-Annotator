@@ -98,31 +98,26 @@ async def get_project_by_id(
 
     return project
 
-async def get_project_by_name(
-    db: AsyncDatabase,
-    project_name: str
-    ) -> dict | None:
+async def is_project_name_exists(
+    project_name: str,
+    db: AsyncDatabase
+    ) -> bool:
     """
-    Utility function to get a project by its name.
+    Utility function to check if a project name already exists.
 
     Args:
-        db (AsyncDatabase): The database instance.
         project_name (str): The name of the project.
+        db (AsyncDatabase): The database instance.
 
     Returns:
-        dict | None: The project with the given name or None if not found.
+        bool: True if the project name exists, False otherwise.
     """
     # Get projects collection.
     collection = db.get_collection(name=Collections.PROJECTS.value.name)
 
-    # Query project by name.
-    project = await collection.find_one({"name": project_name})
-
-    # Setup private field if project exists.
-    if project is not None:
-        project = setup_private_field(project=project)
-
-    return project
+    # Check if a project with the same name exists.
+    existing_project = await collection.find_one({"name": project_name})
+    return existing_project is not None
 
 async def get_authenticated_project(
     id: str = Path(..., description="The ID of the project."),
