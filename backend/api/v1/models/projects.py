@@ -9,6 +9,10 @@ from backend.database.models import (CommonRequestModel, CommonResponseModel,
                                      CommonUpdateModel)
 from backend.database.types import Task
 
+# Global Variables.
+__MIN_NAME_LENGTH__: int = 1
+__MAX_NAME_LENGTH__: int = 64
+__MAX_DESCRIPTION_LENGTH__: int = 500
 
 # Schemas.
 class _DB(BaseModel):
@@ -16,8 +20,8 @@ class _DB(BaseModel):
     Project model in the database.
     """
     # Fields.
-    name: str = Field(..., description="The name of the project.")
-    description: Optional[str] = Field(default=None, description="The description of the project.")
+    name: str = Field(..., min_length=__MIN_NAME_LENGTH__, max_length=__MAX_NAME_LENGTH__, description="The name of the project.")
+    description: Optional[str] = Field(default=None, max_length=__MAX_DESCRIPTION_LENGTH__, description="The description of the project.")
     task: Task = Field(..., description="The task for the project.")
     password_hash: Optional[str] = Field(default=None, description="The hashed password for the project if it is private.")
 
@@ -36,7 +40,7 @@ class Update(_DB, CommonUpdateModel):
     Project update model.
     """
     # Fields.
-    name: Optional[str] = Field(default=None)
+    name: Optional[str] = Field(default=None, min_length=__MIN_NAME_LENGTH__, max_length=__MAX_NAME_LENGTH__)
     password: Optional[str] = Field(default=None, min_length=1, description="The password for the project if it should be private.")
 
     # To be excluded.
