@@ -31,3 +31,49 @@ class Task(str, Enum):
     """
     OBJECT_DETECTION = "Object Detection"
     SEMANTIC_SEGMENTATION = "Semantic Segmentation"
+
+class FileFormat(str, Enum):
+    """
+    Enum for image file formats.
+    """
+    # Images.
+    JPEG = "jpeg"
+    PNG = "png"
+
+    # Texts.
+    TXT = "txt"
+
+    # Audios.
+    WAV = "wav"
+    MP3 = "mp3"
+
+    # Class methods.
+    @classmethod
+    def get_image_formats(cls) -> list["FileFormat"]:
+        """
+        Get all image file formats.
+
+        Returns:
+            list[FileFormat]: List of all image file formats.
+        """
+        return [cls.JPEG, cls.PNG]
+
+    @classmethod
+    def get_text_formats(cls) -> list["FileFormat"]:
+        """
+        Get all text file formats.
+
+        Returns:
+            list[FileFormat]: List of all text file formats.
+        """
+        return [cls.TXT]
+
+    @classmethod
+    def get_audio_formats(cls) -> list["FileFormat"]:
+        """
+        Get all audio file formats.
+
+        Returns:
+            list[FileFormat]: List of all audio file formats.
+        """
+        return [cls.WAV, cls.MP3]
