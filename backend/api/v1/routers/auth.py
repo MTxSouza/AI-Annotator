@@ -3,6 +3,7 @@ Module with all endpoints related to authentication operations.
 """
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
+from fastapi.requests import Request
 from fastapi.security import OAuth2PasswordRequestForm
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -10,6 +11,7 @@ from backend.api.v1.models.auth import Token
 from backend.api.v1.utils.auth import check_password, create_access_token
 from backend.api.v1.utils.projects import get_project_by_id
 from backend.database.configs import DatabaseConfig
+from backend.limiter import limiter
 
 # Instantiate the router.
 router = APIRouter(
@@ -20,7 +22,9 @@ router = APIRouter(
 
 # Endpoints.
 @router.post(path="/token", response_model=Token, status_code=status.HTTP_201_CREATED)
+@limiter.limit("3/minute")
 async def authenticate_access_token(
+    request: Request,
     auth_form: OAuth2PasswordRequestForm = Depends(dependency=OAuth2PasswordRequestForm),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
     ) -> Token:

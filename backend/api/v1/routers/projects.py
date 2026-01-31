@@ -4,6 +4,7 @@ Module with all endpoints related to project operations.
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.params import Param
+from fastapi.requests import Request
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import (Create, Project, ProjectSimple,
@@ -14,6 +15,7 @@ from backend.api.v1.utils.projects import (create_project, delete_project,
                                            get_project_by_name, get_projects,
                                            update_project)
 from backend.database.configs import DatabaseConfig
+from backend.limiter import limiter
 
 # Instantiate the router.
 router = APIRouter(
@@ -51,7 +53,9 @@ async def get_project_endpoint(project: Project = Depends(dependency=get_authent
     return project
 
 @router.post(path="/", name="Create Project", response_model=Project, status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/minute")
 async def create_project_endpoint(
+    request: Request,
     project: Create,
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
     ) -> Project:

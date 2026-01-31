@@ -36,6 +36,7 @@ def app_instance():
         await DatabaseConfig.close_client()
 
     app.router.lifespan_context = test_lifespan
+    app.state.limiter.enabled = False  # Disable rate limiter for tests.
     return app
 
 @pytest.fixture(scope="session", autouse=True)
