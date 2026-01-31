@@ -87,7 +87,7 @@ async def get_authenticated_project(
     id: str = Path(..., description="The ID of the project."),
     token: str = Depends(dependency=oauth2_scheme),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
-    ):
+    ) -> dict:
     """
     Utility function to get an authenticated project by its ID.
 
@@ -97,7 +97,7 @@ async def get_authenticated_project(
         db (AsyncDatabase): The database instance.
 
     Returns:
-        dict | None: The authenticated project or None if not found.
+        dict: The authenticated project.
     """
     # Get project.
     project = await get_project_by_id(db=db, project_id=id)
