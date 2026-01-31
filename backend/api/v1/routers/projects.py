@@ -94,7 +94,7 @@ async def update_project_endpoint(
     id = str(project.id)
 
     # Update the project.
-    updated_project = await update_project(db=db, project_id=id, project_data=update.model_dump())
+    updated_project = await update_project(db=db, project_id=id, project_data=update.model_dump(exclude_unset=True))
 
     return updated_project
 
