@@ -6,6 +6,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.params import Path
 from pymongo.asynchronous.database import AsyncDatabase
 
+from backend.api.v1.models.projects import Project
 from backend.api.v1.utils.auth import (decode_access_token, hash_password,
                                        oauth2_scheme, throw_bearer_error)
 from backend.database.configs import Collections, DatabaseConfig
@@ -87,7 +88,7 @@ async def get_authenticated_project(
     id: str = Path(..., description="The ID of the project."),
     token: str = Depends(dependency=oauth2_scheme),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
-    ) -> dict:
+    ) -> Project:
     """
     Utility function to get an authenticated project by its ID.
 
@@ -97,7 +98,7 @@ async def get_authenticated_project(
         db (AsyncDatabase): The database instance.
 
     Returns:
-        dict: The authenticated project.
+        Project: The authenticated project.
     """
     # Get project.
     project = await get_project_by_id(db=db, project_id=id)
@@ -106,7 +107,7 @@ async def get_authenticated_project(
 
     # Check if the project is private.
     if not project.get("is_private"):
-        return project
+        return Project.model_validate(obj=project)
 
     # Check if the token is valid.
     if token is None:
@@ -125,7 +126,7 @@ async def get_authenticated_project(
             status_code=status.HTTP_403_FORBIDDEN
         )
 
-    return project
+    return Project.model_validate(obj=project)
 
 async def get_project_by_name(
     db: AsyncDatabase,
