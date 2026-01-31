@@ -74,7 +74,7 @@ async def create_project_endpoint(
 
     return new_project
 
-@router.put(path="/{id}", name="Update Project", response_model=Project, status_code=status.HTTP_200_OK)
+@router.put(path="/{id}", name="Update Project", response_model=Project, status_code=status.HTTP_201_CREATED)
 async def update_project_endpoint(
     update: Update,
     project: Project = Depends(dependency=get_authenticated_project),
