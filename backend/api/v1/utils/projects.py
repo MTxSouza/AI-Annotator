@@ -3,6 +3,7 @@ Module with all utilities related to project operations.
 """
 from pymongo.asynchronous.database import AsyncDatabase
 
+from backend.api.v1.utils.auth import hash_password
 from backend.database.configs import Collections
 from backend.database.types import PyObjectId
 
@@ -20,7 +21,7 @@ def setup_private_field(project: dict) -> dict:
         dict: The project with the private field set.
     """
     # Set private field.
-    project["is_private"] = project.get("password") is not None
+    project["is_private"] = project.get("hashed_password") is not None
     return project
 
 async def get_projects(
@@ -104,6 +105,26 @@ async def get_project_by_name(
 
     return project
 
+def set_project_password(
+    project_data: dict
+    ) -> dict:
+    """
+    Utility function to check and hash the password
+    in the project update data if it exists.
+
+    Args:
+        project_data (dict): The project update data.
+
+    Returns:
+        dict: The project update data with hashed password if applicable.
+    """
+    # Check if the project contains a password.
+    if project_data.get("password"):
+        project_data["hashed_password"] = hash_password(password=project_data.pop("password"))
+    else:
+        project_data["hashed_password"] = None
+    return project_data
+
 async def create_project(
     db: AsyncDatabase,
     project_data: dict
@@ -121,14 +142,14 @@ async def create_project(
     # Get projects collection.
     collection = db.get_collection(name=Collections.PROJECTS.value.name)
 
+    # Check if the project contains a password.
+    project_data = set_project_password(project_data=project_data)
+
     # Insert new project.
     result = await collection.insert_one(project_data)
 
     # Retrieve the created project.
-    created_project = await collection.find_one({"_id": result.inserted_id})
-
-    # Setup private field.
-    created_project = setup_private_field(project=created_project)
+    created_project = await get_project_by_id(db=db, project_id=result.inserted_id)
 
     return created_project
 
@@ -151,6 +172,9 @@ async def update_project(
     # Get projects collection.
     collection = db.get_collection(name=Collections.PROJECTS.value.name)
 
+    # Check if the project contains a password.
+    project_data = set_project_password(project_data=project_data)
+
     # Update the project.
     project_id = PyObjectId(oid=project_id)
     await collection.update_one(
@@ -159,10 +183,7 @@ async def update_project(
     )
 
     # Retrieve the updated project.
-    updated_project = await collection.find_one({"_id": project_id})
-
-    # Setup private field.
-    updated_project = setup_private_field(project=updated_project)
+    updated_project = await get_project_by_id(db=db, project_id=project_id)
 
     return updated_project
 

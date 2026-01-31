@@ -19,7 +19,6 @@ class _DB(BaseModel):
     name: str = Field(..., description="The name of the project.")
     description: Optional[str] = Field(default=None, description="The description of the project.")
     task_type: TaskType = Field(..., description="The type of task for the project.")
-    is_private: bool = Field(default=False, description="Whether the project is private or public.")
     password_hash: Optional[str] = Field(default=None, description="The hashed password for the project if it is private.")
 
 class Create(_DB, CommonRequestModel):
@@ -27,10 +26,9 @@ class Create(_DB, CommonRequestModel):
     Project creation model.
     """
     # Fields.
-    password: Optional[str] = Field(default=None, description="The password for the project if it should be private.")
+    password: Optional[str] = Field(default=None, min_length=1, description="The password for the project if it should be private.")
 
     # To be excluded.
-    is_private: Optional[bool] = Field(default=None, exclude=True)
     password_hash: Optional[str] = Field(default=None, exclude=True)
 
 class Update(_DB, CommonUpdateModel):
@@ -39,17 +37,19 @@ class Update(_DB, CommonUpdateModel):
     """
     # Fields.
     name: Optional[str] = Field(default=None)
-    password: Optional[str] = Field(default=None, description="The password for the project if it should be private.")
+    password: Optional[str] = Field(default=None, min_length=1, description="The password for the project if it should be private.")
 
     # To be excluded.
     task_type: Optional[TaskType] = Field(default=None, exclude=True)
-    is_private: Optional[bool] = Field(default=None, exclude=True)
     password_hash: Optional[str] = Field(default=None, exclude=True)
 
 class ProjectSimple(_DB, CommonResponseModel):
     """
     Simple Project model.
     """
+    # Fields.
+    is_private: bool = Field(default=False, description="Whether the project is private or public.")
+
     # To be excluded.
     password_hash: Optional[str] = Field(default=None, exclude=True)
 

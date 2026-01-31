@@ -8,7 +8,6 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import (Create, Project, ProjectSimple,
                                             Update)
-from backend.api.v1.utils.auth import hash_password
 from backend.api.v1.utils.projects import (create_project, delete_project,
                                            get_project_by_id,
                                            get_project_by_name, get_projects,
@@ -73,16 +72,9 @@ async def create_project_endpoint(
     existing_project = await get_project_by_name(db=db, project_name=project.name)
     if existing_project is not None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Project with the same name already exists")
-    project_dict = project.model_dump()
-
-    # Check if the project contains a password.
-    if project.password is not None:
-        project_dict["is_private"] = True
-        project_dict["hashed_password"] = hash_password(password=project.password)
-        del project_dict["password"]  # Remove plain password.
 
     # Create the project.
-    new_project = await create_project(db=db, project_data=project_dict)
+    new_project = await create_project(db=db, project_data=project.model_dump())
 
     return new_project
 
