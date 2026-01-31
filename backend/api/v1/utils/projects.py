@@ -31,6 +31,26 @@ def setup_private_field(project: dict) -> dict:
     project["is_private"] = project.get("hashed_password") is not None
     return project
 
+def set_project_password(
+    project_data: dict
+    ) -> dict:
+    """
+    Utility function to check and hash the password
+    in the project update data if it exists.
+
+    Args:
+        project_data (dict): The project update data.
+
+    Returns:
+        dict: The project update data with hashed password if applicable.
+    """
+    # Check if the project contains a password.
+    if project_data.get("password"):
+        project_data["hashed_password"] = hash_password(password=project_data.pop("password"))
+    else:
+        project_data["hashed_password"] = None
+    return project_data
+
 async def get_projects(
     db: AsyncDatabase,
     limit: int,
@@ -162,26 +182,6 @@ async def get_authenticated_project(
         )
 
     return Project.model_validate(obj=project)
-
-def set_project_password(
-    project_data: dict
-    ) -> dict:
-    """
-    Utility function to check and hash the password
-    in the project update data if it exists.
-
-    Args:
-        project_data (dict): The project update data.
-
-    Returns:
-        dict: The project update data with hashed password if applicable.
-    """
-    # Check if the project contains a password.
-    if project_data.get("password"):
-        project_data["hashed_password"] = hash_password(password=project_data.pop("password"))
-    else:
-        project_data["hashed_password"] = None
-    return project_data
 
 async def create_project(
     db: AsyncDatabase,
