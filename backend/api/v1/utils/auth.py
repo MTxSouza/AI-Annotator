@@ -2,6 +2,8 @@
 Module with all utilities related to authentication operations.
 """
 import hashlib
+import hmac
+import os
 from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException
@@ -14,23 +16,76 @@ from backend.configs import BackendSettings
 __JWT_ALGORITHM__ = BackendSettings.jwt_algorithm
 __SECRET_KEY__ = BackendSettings.secret_key
 __ACCESS_TOKEN_EXPIRE_MINUTES__ = BackendSettings.access_token_expire_minutes
-del BackendSettings.jwt_algorithm, BackendSettings.secret_key # Remove sensitive information from settings after use.
+__SALT_LENGTH__ = BackendSettings.salt_length
+__PASSWORD_HASH_ALGORITHM__ = BackendSettings.password_hash_algorithm
+__PASSWORD_HASH_ITERATIONS__ = BackendSettings.password_hash_iterations
+del BackendSettings.jwt_algorithm, \
+    BackendSettings.secret_key, \
+    BackendSettings.access_token_expire_minutes, \
+    BackendSettings.salt_length, \
+    BackendSettings.password_hash_algorithm, \
+    BackendSettings.password_hash_iterations # Remove sensitive information from settings after use.
 
 # Instantiate the OAuth2 scheme.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token", auto_error=False)
 
 # Functions.
-def hash_password(password: str) -> str:
+def format_hashed_password(password: str, salt: str) -> str:
     """
-    Hash a password.
+    Format a password using `$` as separator.
+
+    Args:
+        password (str): The password to be formatted.
+        salt (str): The salt used in the password hashing.
+
+    Returns:
+        str: The formatted password.
+    """
+    return "%s$%s$%d$%s" % (__PASSWORD_HASH_ALGORITHM__, salt, __PASSWORD_HASH_ITERATIONS__, password)
+
+def unformat_hashed_password(formatted_password: str) -> tuple[str, str, int, str]:
+    """
+    Unformat a hashed password into its components.
+
+    Args:
+        formatted_password (str): The formatted password.
+
+    Returns:
+        tuple[str, str]: A tuple containing the salt and the hashed password.
+    """
+    _, salt, _, hashed_password = formatted_password.split(sep="$")
+    return salt, hashed_password
+
+def hash_password(password: str, salt: str | None = None) -> str:
+    """
+    Hash a password and return the hashed formated in the 
+    format: {algorithm}${salt}${iterations}${hashed_password}.
 
     Args:
         password (str): The password to be hashed.
+        salt (str | None): The salt to be used. If None, a new salt is generated.
 
     Returns:
         str: The hashed password.
     """
-    return hashlib.sha256(string=password.encode(encoding="utf-8")).hexdigest()
+    # Create salt.
+    if salt is None:
+        salt = os.urandom(__SALT_LENGTH__).hex()
+
+    # Create hash.
+    encoded_password = password.encode(encoding="utf-8")
+    encoded_salt = salt.encode(encoding="utf-8")
+
+    hashed_password = hashlib.pbkdf2_hmac(
+        hash_name=__PASSWORD_HASH_ALGORITHM__,
+        password=encoded_password,
+        salt=encoded_salt,
+        iterations=__PASSWORD_HASH_ITERATIONS__
+    ).hex()
+
+    # Format hashed password with salt.
+    hashed_password = format_hashed_password(password=hashed_password, salt=salt)
+    return hashed_password
 
 def check_password(password: str, hashed_password: str) -> bool:
     """
@@ -43,7 +98,14 @@ def check_password(password: str, hashed_password: str) -> bool:
     Returns:
         bool: True if the password matches the hash, False otherwise.
     """
-    return hash_password(password=password) == hashed_password
+    # Unformat hashed password.
+    salt, _ = unformat_hashed_password(formatted_password=hashed_password)
+
+    # Hash provided password.
+    hashed_provided_password = hash_password(password=password, salt=salt)
+
+    # Check password.
+    return hmac.compare_digest(hashed_provided_password, hashed_password)
 
 def create_access_token(data: dict) -> str:
     """
