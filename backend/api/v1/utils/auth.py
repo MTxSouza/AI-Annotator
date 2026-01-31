@@ -30,18 +30,18 @@ del BackendSettings.jwt_algorithm, \
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token", auto_error=False)
 
 # Functions.
-def format_hashed_password(password: str, salt: str) -> str:
+def format_hashed_password(hashed_password: str, salt: str) -> str:
     """
     Format a password using `$` as separator.
 
     Args:
-        password (str): The password to be formatted.
+        hashed_password (str): The hashed password to be formatted.
         salt (str): The salt used in the password hashing.
 
     Returns:
         str: The formatted password.
     """
-    return "%s$%s$%d$%s" % (__PASSWORD_HASH_ALGORITHM__, salt, __PASSWORD_HASH_ITERATIONS__, password)
+    return "%s$%s$%d$%s" % (__PASSWORD_HASH_ALGORITHM__, salt, __PASSWORD_HASH_ITERATIONS__, hashed_password)
 
 def unformat_hashed_password(formatted_password: str) -> tuple[str, str, int, str]:
     """
@@ -53,7 +53,7 @@ def unformat_hashed_password(formatted_password: str) -> tuple[str, str, int, st
     Returns:
         tuple[str, str]: A tuple containing the salt and the hashed password.
     """
-    _, salt, _, hashed_password = formatted_password.split(sep="$")
+    _, salt, _, hashed_password = formatted_password.split(sep="$", maxsplit=3)
     return salt, hashed_password
 
 def hash_password(password: str, salt: str | None = None) -> str:
@@ -84,7 +84,7 @@ def hash_password(password: str, salt: str | None = None) -> str:
     ).hex()
 
     # Format hashed password with salt.
-    hashed_password = format_hashed_password(password=hashed_password, salt=salt)
+    hashed_password = format_hashed_password(hashed_password=hashed_password, salt=salt)
     return hashed_password
 
 def check_password(password: str, hashed_password: str) -> bool:
@@ -143,7 +143,7 @@ def decode_access_token(token: str) -> dict | None:
     except JWTError:
         return None
 
-def throw_baerer_error(message: str, status_code: int) -> None:
+def throw_bearer_error(message: str, status_code: int) -> None:
     """
     Utility function to throw a 401 Bearer authentication error.
 

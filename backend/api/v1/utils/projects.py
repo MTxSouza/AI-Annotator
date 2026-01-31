@@ -7,7 +7,7 @@ from fastapi.params import Path
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.utils.auth import (decode_access_token, hash_password,
-                                       oauth2_scheme, throw_baerer_error)
+                                       oauth2_scheme, throw_bearer_error)
 from backend.database.configs import Collections, DatabaseConfig
 from backend.database.types import PyObjectId
 
@@ -110,7 +110,7 @@ async def get_authenticated_project(
 
     # Check if the token is valid.
     if token is None:
-        throw_baerer_error(
+        throw_bearer_error(
             message="Not authenticated to access this private project",
             status_code=status.HTTP_401_UNAUTHORIZED
         )
@@ -118,13 +118,13 @@ async def get_authenticated_project(
     # Validate token subject.
     decoded_token = decode_access_token(token=token)
     if not decoded_token:
-        throw_baerer_error(
+        throw_bearer_error(
             message="Invalid token",
             status_code=status.HTTP_401_UNAUTHORIZED
         )
 
     if decoded_token.get("sub") != str(project["_id"]):
-        throw_baerer_error(
+        throw_bearer_error(
             message="Token subject does not match project ID",
             status_code=status.HTTP_403_FORBIDDEN
         )
