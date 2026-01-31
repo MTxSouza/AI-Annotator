@@ -52,7 +52,7 @@ class ProjectSimple(_DB, CommonResponseModel):
     Simple Project model.
     """
     # Fields.
-    is_private: bool = Field(default=False, description="Whether the project is private or public.")
+    is_private: Optional[bool] = Field(default=False, description="Whether the project is private or public.")
 
     # To be excluded.
     password_hash: Optional[str] = Field(default=None, exclude=True)
