@@ -1,11 +1,11 @@
 """
 Module with all utilities related to authentication operations.
 """
+import hashlib
 from datetime import datetime, timedelta, timezone
 
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from backend.configs import BackendSettings
 
@@ -14,9 +14,6 @@ __JWT_ALGORITHM__ = BackendSettings.jwt_algorithm
 __SECRET_KEY__ = BackendSettings.secret_key
 __ACCESS_TOKEN_EXPIRE_MINUTES__ = BackendSettings.access_token_expire_minutes
 del BackendSettings.jwt_algorithm, BackendSettings.secret_key # Remove sensitive information from settings after use.
-
-# Instantiate the password context for hashing.
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Instantiate the OAuth2 scheme.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token", auto_error=False)
@@ -32,7 +29,7 @@ def hash_password(password: str) -> str:
     Returns:
         str: The hashed password.
     """
-    return pwd_context.hash(secret=password)
+    return hashlib.sha256(string=password.encode(encoding="utf-8")).hexdigest()
 
 def check_password(password: str, hashed_password: str) -> bool:
     """
@@ -45,7 +42,7 @@ def check_password(password: str, hashed_password: str) -> bool:
     Returns:
         bool: True if the password matches the hash, False otherwise.
     """
-    return pwd_context.verify(secret=password, hash=hashed_password)
+    return hash_password(password=password) == hashed_password
 
 def create_access_token(data: dict) -> str:
     """
