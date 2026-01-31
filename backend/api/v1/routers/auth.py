@@ -19,7 +19,7 @@ router = APIRouter(
 )
 
 # Endpoints.
-@router.post(path="/token", response_model=Token, status_code=status.HTTP_200_OK)
+@router.post(path="/token", response_model=Token, status_code=status.HTTP_201_CREATED)
 async def authenticate_access_token(
     auth_form: OAuth2PasswordRequestForm = Depends(dependency=OAuth2PasswordRequestForm),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
