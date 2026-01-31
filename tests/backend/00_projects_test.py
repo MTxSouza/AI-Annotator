@@ -114,7 +114,7 @@ def test_get_private_project(client: TestClient, project_payload: dict):
     auth_response = client.post(url="/auth/token", data={"username": project_id, "password": project_payload["password"]})
 
     # Assert the authentication response status code.
-    assert auth_response.status_code == 200
+    assert auth_response.status_code == 201
     access_token = auth_response.json()["access_token"]
 
     # Retrieve the project with the access token.
@@ -127,3 +127,151 @@ def test_get_private_project(client: TestClient, project_payload: dict):
     response_data = response.json()
     assert response_data["name"] == project_payload["name"]
     assert response_data["task"] == project_payload["task"]
+
+def test_update_project_name(client: TestClient, project_payload: dict):
+    """
+    Test updating a project's name.
+    """
+    # Create a project.
+    response = client.post(url="/projects/", json=project_payload)
+    assert response.status_code == 201
+    project_id = response.json()["_id"]
+
+    # Update the project's name.
+    updated_name = "Updated Project Name"
+    update_payload = {"name": updated_name}
+    response = client.put(url="/projects/%s" % project_id, json=update_payload)
+
+    # Assert the response status code.
+    assert response.status_code == 201
+
+    # Assert the response data.
+    response_data = response.json()
+    assert response_data["name"] == updated_name
+    assert response_data["task"] == project_payload["task"]
+
+def test_update_private_project_name(client: TestClient, project_payload: dict):
+    """
+    Test updating a private project's name.
+    """
+    # Add password to the payload.
+    project_payload["password"] = "securepassword"
+
+    # Create a project.
+    response = client.post(url="/projects/", json=project_payload)
+    assert response.status_code == 201
+    project_id = response.json()["_id"]
+
+    # Update the project's name.
+    updated_name = "Updated Project Name"
+    update_payload = {"name": updated_name}
+    response = client.put(url="/projects/%s" % project_id, json=update_payload)
+
+    # Assert the response status code.
+    assert response.status_code == 401
+
+    # Assert the response data.
+    response_data = response.json()
+    assert response_data["detail"] == "Not authenticated to access this private project"
+
+    # Authenticate to get access token.
+    auth_response = client.post(url="/auth/token", data={"username": project_id, "password": project_payload["password"]})
+
+    # Assert the authentication response status code.
+    assert auth_response.status_code == 201
+    access_token = auth_response.json()["access_token"]
+
+    # Update the project's name with the access token.
+    response = client.put(url="/projects/%s" % project_id, json=update_payload, headers={"Authorization": f"Bearer {access_token}"})
+
+    # Assert the response status code.
+    assert response.status_code == 201
+
+    # Assert the response data.
+    response_data = response.json()
+    assert response_data["name"] == updated_name
+    assert response_data["task"] == project_payload["task"]
+
+def test_update_project_password(client: TestClient, project_payload: dict):
+    """
+    Test updating a project's password.
+    """
+    # Create a project.
+    response = client.post(url="/projects/", json=project_payload)
+    assert response.status_code == 201
+    project_id = response.json()["_id"]
+
+    # Get the project to ensure it is non-private.
+    response = client.get(url="/projects/%s" % project_id)
+    assert response.status_code == 200
+
+    # Assert the response data.
+    response_data = response.json()
+    assert not response_data["is_private"]
+
+    # Update the project's password.
+    new_password = "newsecurepassword"
+    update_payload = {"password": new_password}
+    response = client.put(url="/projects/%s" % project_id, json=update_payload)
+
+    # Assert the response status code.
+    assert response.status_code == 201
+
+    # Get the project to ensure it is now private.
+    response = client.get(url="/projects/%s" % project_id)
+    assert response.status_code == 401
+
+    # Assert the response data.
+    response_data = response.json()
+    assert response_data["detail"] == "Not authenticated to access this private project"
+
+    # Authenticate to get access token.
+    auth_response = client.post(url="/auth/token", data={"username": project_id, "password": new_password})
+    assert auth_response.status_code == 201
+    access_token = auth_response.json()["access_token"]
+
+    # Retrieve the project with the access token.
+    response = client.get(url="/projects/%s" % project_id, headers={"Authorization": f"Bearer {access_token}"})
+    assert response.status_code == 200
+
+    # Assert the response data.
+    response_data = response.json()
+    assert response_data["name"] == project_payload["name"]
+    assert response_data["task"] == project_payload["task"]
+    assert response_data["is_private"]
+    assert "password" not in response_data
+    assert "hashed_password" not in response_data
+
+def test_update_private_project_to_non_private(client: TestClient, project_payload: dict):
+    """
+    Test updating a private project to be non-private.
+    """
+    # Add password to the payload.
+    project_payload["password"] = "securepassword"
+
+    # Create a private project.
+    response = client.post(url="/projects/", json=project_payload)
+    assert response.status_code == 201
+    project_id = response.json()["_id"]
+
+    # Authenticate to get access token.
+    auth_response = client.post(url="/auth/token", data={"username": project_id, "password": project_payload["password"]})
+    assert auth_response.status_code == 201
+    access_token = auth_response.json()["access_token"]
+
+    # Update the project's password to None (make it non-private).
+    update_payload = {"password": None}
+    response = client.put(url="/projects/%s" % project_id, json=update_payload, headers={"Authorization": f"Bearer {access_token}"})
+
+    # Assert the response status code.
+    assert response.status_code == 201
+
+    # Get the project to ensure it is now non-private.
+    response = client.get(url="/projects/%s" % project_id)
+    assert response.status_code == 200
+
+    # Assert the response data.
+    response_data = response.json()
+    assert response_data["name"] == project_payload["name"]
+    assert response_data["task"] == project_payload["task"]
+    assert not response_data["is_private"]
