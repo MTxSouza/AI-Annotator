@@ -16,17 +16,17 @@ from backend.database.types import PyObjectId
 
 # Functions.
 async def get_projects(
-    db: AsyncDatabase,
     limit: int,
-    offset: int
+    offset: int,
+    db: AsyncDatabase
     ) -> list[dict]:
     """
     Utility function to get all projects from the database.
 
     Args:
-        db (AsyncDatabase): The database instance.
         limit (int): The maximum number of projects to retrieve.
         offset (int): The number of projects to skip.
+        db (AsyncDatabase): The database instance.
 
     Returns:
         list[dict]: List of all projects.
@@ -41,15 +41,15 @@ async def get_projects(
     return projects
 
 async def get_project_by_id(
-    db: AsyncDatabase,
-    project_id: str
+    project_id: str,
+    db: AsyncDatabase
     ) -> dict | None:
     """
     Utility function to get a project by its ID.
 
     Args:
-        db (AsyncDatabase): The database instance.
         project_id (str): The ID of the project.
+        db (AsyncDatabase): The database instance.
 
     Returns:
         dict | None: The project with the given ID or None if not found.
@@ -141,15 +141,15 @@ async def get_authenticated_project(
     return Project.model_validate(obj=project)
 
 async def create_project(
-    db: AsyncDatabase,
-    project_data: dict
+    project_data: dict,
+    db: AsyncDatabase
     ) -> dict:
     """
     Utility function to create a new project.
 
     Args:
-        db (AsyncDatabase): The database instance.
         project_data (dict): The project data to create.
+        db (AsyncDatabase): The database instance.
 
     Returns:
         dict: The created project.
@@ -169,17 +169,17 @@ async def create_project(
     return created_project
 
 async def update_project(
-    db: AsyncDatabase,
     project_id: str,
-    project_data: dict
+    project_data: dict,
+    db: AsyncDatabase
     ) -> dict:
     """
     Utility function to update an existing project.
 
     Args:
-        db (AsyncDatabase): The database instance.
         project_id (str): The ID of the project to update.
         project_data (dict): The updated project data.
+        db (AsyncDatabase): The database instance.
 
     Returns:
         dict: The updated project.
@@ -200,15 +200,15 @@ async def update_project(
     return updated_project
 
 async def delete_project(
-    db: AsyncDatabase,
-    project_id: str
+    project_id: str,
+    db: AsyncDatabase
     ) -> None:
     """
     Utility function to delete a project by its ID.
 
     Args:
-        db (AsyncDatabase): The database instance.
         project_id (str): The ID of the project to delete.
+        db (AsyncDatabase): The database instance.
     """
     # Get projects collection.
     collection = db.get_collection(name=Collections.PROJECTS.value.name)
