@@ -37,7 +37,7 @@ async def get_projects_endpoint(
     Returns:
         list[ProjectSimple]: List of all projects.
     """
-    return await get_projects(db=db, limit=limit, offset=offset)
+    return await get_projects(limit=limit, offset=offset, db=db)
 
 @router.get(path="/{id}", name="Get Project", response_model=Project, status_code=status.HTTP_200_OK)
 async def get_project_endpoint(project: Project = Depends(dependency=get_authenticated_project)) -> Project:
