@@ -38,6 +38,13 @@ class Collections(Enum):
         name="task_configs",
         index_configs=[_IndexConfig(name="project_id", is_unique=True)]
     )
+    FILES = _CollectionConfig(
+        name="files",
+        index_configs=[
+            _IndexConfig(name="file_hash", is_indexed=True, is_unique=True),
+            _IndexConfig(name="filename", is_indexed=True, is_unique=True)
+        ]
+    )
 
 # Classes.
 class DatabaseConfig:
