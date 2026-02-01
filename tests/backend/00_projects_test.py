@@ -279,3 +279,71 @@ def test_update_private_project_to_non_private(client: TestClient, project_paylo
     assert response_data["name"] == project_payload["name"]
     assert response_data["task"] == project_payload["task"]
     assert not response_data["is_private"]
+
+def test_delete_project(client: TestClient, project_payload: dict):
+    """
+    Test deleting a project.
+    """
+    # Create a project.
+    response = client.post(url="/projects/", json=project_payload)
+    assert response.status_code == 201
+    project_id = response.json()["_id"]
+
+    # Delete the project.
+    response = client.delete(url="/projects/%s" % project_id)
+
+    # Assert the response status code.
+    assert response.status_code == 204
+
+    # Attempt to retrieve the deleted project.
+    response = client.get(url="/projects/%s" % project_id)
+
+    # Assert the response status code for not found.
+    assert response.status_code == 404
+
+    # Assert the response data.
+    response_data = response.json()
+    assert response_data["detail"] == "Project not found"
+
+def test_delete_private_project(client: TestClient, project_payload: dict):
+    """
+    Test deleting a private project.
+    """
+    # Add password to the payload.
+    project_payload["password"] = "securepassword"
+
+    # Create a private project.
+    response = client.post(url="/projects/", json=project_payload)
+    assert response.status_code == 201
+    project_id = response.json()["_id"]
+
+    # Attempt to delete the project without authentication.
+    response = client.delete(url="/projects/%s" % project_id)
+
+    # Assert the response status code.
+    assert response.status_code == 401
+
+    # Assert the response data.
+    response_data = response.json()
+    assert response_data["detail"] == "Not authenticated to access this private project"
+
+    # Authenticate to get access token.
+    auth_response = client.post(url="/auth/token", data={"username": project_id, "password": project_payload["password"]})
+    assert auth_response.status_code == 201
+    access_token = auth_response.json()["access_token"]
+
+    # Delete the project with the access token.
+    response = client.delete(url="/projects/%s" % project_id, headers={"Authorization": f"Bearer {access_token}"})
+
+    # Assert the response status code.
+    assert response.status_code == 204
+
+    # Attempt to retrieve the deleted project.
+    response = client.get(url="/projects/%s" % project_id)
+
+    # Assert the response status code for not found.
+    assert response.status_code == 404
+
+    # Assert the response data.
+    response_data = response.json()
+    assert response_data["detail"] == "Project not found"
