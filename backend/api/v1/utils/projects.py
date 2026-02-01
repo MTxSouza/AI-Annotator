@@ -93,7 +93,7 @@ async def is_project_name_exists(
     collection = db.get_collection(name=Collections.PROJECTS.value.name)
 
     # Check if a project with the same name exists.
-    existing_project = await collection.find_one({"name": project_name})
+    existing_project = await collection.find_one({"name": project_name}, {"_id": 1})
     return existing_project is not None
 
 async def get_authenticated_project(
