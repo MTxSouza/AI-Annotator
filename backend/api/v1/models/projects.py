@@ -3,10 +3,11 @@ Main module with all schemas used in Projects collection.
 """
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field, model_validator
 
 from backend.api.v1.models.task_configs import (ObjectDetectionTaskConfig,
                                                 SemanticSegmentationTaskConfig)
+from backend.api.v1.utils.auth import hash_password
 from backend.database.models import (CommonRequestModel, CommonResponseModel,
                                      CommonUpdateModel)
 from backend.database.types import Task
@@ -26,17 +27,21 @@ class _DB(BaseModel):
     name: str = Field(..., min_length=__MIN_NAME_LENGTH__, max_length=__MAX_NAME_LENGTH__, description="The name of the project.")
     description: Optional[str] = Field(default=None, max_length=__MAX_DESCRIPTION_LENGTH__, description="The description of the project.")
     task: Task = Field(..., description="The task for the project.")
-    password_hash: Optional[str] = Field(default=None, description="The hashed password for the project if it is private.")
+    hashed_password: Optional[str] = Field(default=None, description="The hashed password for the project if it is private.")
 
 class Create(_DB, CommonRequestModel):
     """
     Project creation model.
     """
     # Fields.
-    password: Optional[str] = Field(default=None, min_length=1, description="The password for the project if it should be private.")
+    password: Optional[str] = Field(default=None, min_length=1, exclude=True, description="The password for the project if it should be private.")
 
-    # To be excluded.
-    password_hash: Optional[str] = Field(default=None, exclude=True)
+    # Validators.
+    @model_validator(mode="after")
+    def compute_hashed_password(self) -> "Create":
+        if self.password:
+            self.hashed_password = hash_password(password=self.password)
+        return self
 
 class Update(_DB, CommonUpdateModel):
     """
@@ -44,21 +49,37 @@ class Update(_DB, CommonUpdateModel):
     """
     # Fields.
     name: Optional[str] = Field(default=None, min_length=__MIN_NAME_LENGTH__, max_length=__MAX_NAME_LENGTH__)
-    password: Optional[str] = Field(default=None, min_length=1, description="The password for the project if it should be private.")
+    password: Optional[str] = Field(default=None, min_length=1, exclude=True, description="The password for the project if it should be private.")
 
     # To be excluded.
     task: Optional[Task] = Field(default=None, exclude=True)
-    password_hash: Optional[str] = Field(default=None, exclude=True)
+
+    # Validators.
+    @model_validator(mode="after")
+    def compute_hashed_password(self) -> "Update":
+        if self.password:
+            self.hashed_password = hash_password(password=self.password)
+        elif "password" in self.model_fields_set:
+            self.hashed_password = None
+        return self
 
 class ProjectSimple(_DB, CommonResponseModel):
     """
     Simple Project model.
     """
-    # Fields.
-    is_private: Optional[bool] = Field(default=False, description="Whether the project is private or public.")
-
     # To be excluded.
-    password_hash: Optional[str] = Field(default=None, exclude=True)
+    hashed_password: Optional[str] = Field(default=None, exclude=True)
+
+    # Computed Fields.
+    @computed_field(description="Whether the project is private or public.")
+    def is_private(self) -> bool:
+        """
+        Computed field to determine if the project is private.
+
+        Returns:
+            bool: True if the project is private, False otherwise.
+        """
+        return self.hashed_password is not None
 
 class Project(ProjectSimple):
     """

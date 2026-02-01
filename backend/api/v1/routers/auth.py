@@ -41,8 +41,8 @@ async def authenticate_access_token(
     if project is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
-    # Check if the project is private.
-    if not project["is_private"]:
+    # Check if the project is not private.
+    if not project["hashed_password"]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Project is not private")
 
     # Check if the password is correct.

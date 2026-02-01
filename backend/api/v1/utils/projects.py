@@ -7,49 +7,14 @@ from fastapi.params import Path
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import Project
-from backend.api.v1.utils.auth import (decode_access_token, hash_password,
-                                       oauth2_scheme, throw_bearer_error)
+from backend.api.v1.utils.auth import (decode_access_token, oauth2_scheme,
+                                       throw_bearer_error)
 from backend.api.v1.utils.task_configs import setup_task_config
 from backend.database.configs import Collections, DatabaseConfig
 from backend.database.types import PyObjectId
 
 
 # Functions.
-def setup_private_field(project: dict) -> dict:
-    """
-    Utility function to check and setup the private
-    field project with it has a password.
-
-    Args:
-        project (dict): The project data.
-
-    Returns:
-        dict: The project with the private field set.
-    """
-    # Set private field.
-    project["is_private"] = project.get("hashed_password") is not None
-    return project
-
-def set_project_password(
-    project_data: dict
-    ) -> dict:
-    """
-    Utility function to check and hash the password
-    in the project update data if it exists.
-
-    Args:
-        project_data (dict): The project update data.
-
-    Returns:
-        dict: The project update data with hashed password if applicable.
-    """
-    # Check if the project contains a password.
-    if project_data.get("password"):
-        project_data["hashed_password"] = hash_password(password=project_data.pop("password"))
-    else:
-        project_data["hashed_password"] = None
-    return project_data
-
 async def get_projects(
     db: AsyncDatabase,
     limit: int,
@@ -72,9 +37,6 @@ async def get_projects(
     # Query projects.
     cursor = collection.find().skip(offset).limit(limit)
     projects = await cursor.to_list()
-
-    # Setup private field for each project.
-    projects = list(map(setup_private_field, projects))
 
     return projects
 
@@ -110,10 +72,6 @@ async def get_project_by_id(
     cursor = await collection.aggregate(pipeline)
     project = await cursor.to_list(length=1)
     project = project.pop() if project else None
-
-    # Setup private field if project exists.
-    if project is not None:
-        project = setup_private_field(project=project)
 
     return project
 
@@ -160,7 +118,7 @@ async def get_authenticated_project(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
     # Check if the project is private.
-    if not project.get("is_private"):
+    if not project.get("hashed_password"):
         return Project.model_validate(obj=project)
 
     # Check if the token is valid.
@@ -200,9 +158,6 @@ async def create_project(
     project_collection = db.get_collection(name=Collections.PROJECTS.value.name)
     task_config_collection = db.get_collection(name=Collections.TASK_CONFIGS.value.name)
 
-    # Check if the project contains a password.
-    project_data = set_project_password(project_data=project_data)
-
     # Insert new project.
     result = await project_collection.insert_one(project_data)
     task_config_data = setup_task_config(project_id=result.inserted_id, task=project_data["task"])
@@ -231,9 +186,6 @@ async def update_project(
     """
     # Get projects collection.
     collection = db.get_collection(name=Collections.PROJECTS.value.name)
-
-    # Check if the project contains a password.
-    project_data = set_project_password(project_data=project_data)
 
     # Update the project.
     project_id = PyObjectId(oid=project_id)

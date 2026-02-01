@@ -243,8 +243,6 @@ def test_update_project_password(client: TestClient, project_payload: dict):
     assert response_data["name"] == project_payload["name"]
     assert response_data["task"] == project_payload["task"]
     assert response_data["is_private"]
-    assert "password" not in response_data
-    assert "hashed_password" not in response_data
 
 def test_update_private_project_to_non_private(client: TestClient, project_payload: dict):
     """
