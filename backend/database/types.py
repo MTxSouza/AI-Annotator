@@ -25,6 +25,14 @@ PyObjectId = Annotated[
 ]
 PyDateTime = Annotated[datetime, PlainSerializer(func=lambda dt: dt.isoformat())]
 
+class FileUploadStatus(str, Enum):
+    """
+    Enum for file upload status.
+    """
+    CREATED = "Created"
+    SKIPPED = "Skipped"
+    FAILED = "Failed"
+
 class Task(str, Enum):
     """
     Enum for tasks.
