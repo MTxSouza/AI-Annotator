@@ -27,9 +27,9 @@ router = APIRouter(
 # Endpoints.
 @router.get(path="/", name="Get Projects", response_model=list[ProjectSimple], status_code=status.HTTP_200_OK)
 async def get_projects_endpoint(
-    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
     limit: int = Param(default=10, ge=1, le=100),
-    offset: int = Param(default=0, ge=0)
+    offset: int = Param(default=0, ge=0),
+    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
     ) -> list[ProjectSimple]:
     """
     Endpoint to get all projects.
