@@ -4,3 +4,4 @@ pymongo
 pydantic_settings
 slowapi
 python-jose
+pillow
