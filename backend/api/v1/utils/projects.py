@@ -11,7 +11,7 @@ from backend.api.v1.utils.auth import (decode_access_token, hash_password,
                                        oauth2_scheme, throw_bearer_error)
 from backend.api.v1.utils.task_configs import setup_task_config
 from backend.database.configs import Collections, DatabaseConfig
-from backend.database.types import PyObjectId, Task
+from backend.database.types import PyObjectId
 
 
 # Functions.
