@@ -360,6 +360,7 @@ async def create_file_records(
             db=db,
             file_hash=file_hash
         )
+        processed_file_records.append(file_record.model_dump())
 
     return processed_file_records
 
