@@ -41,7 +41,7 @@ async def get_files_endpoint(
 @limiter.limit("10/minute")
 async def upload_image_file_endpoint(
     request: Request,
-    file_list: list[UploadFile] = File(...),
+    file_list: UploadFile | list[UploadFile] = File(...),
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
     ) -> UploadedFileListResponse:
@@ -49,7 +49,7 @@ async def upload_image_file_endpoint(
     Endpoint to upload an image file.
 
     Args:
-        file_list (list[UploadFile]): The list of image files to upload.
+        file_list (UploadFile | list[UploadFile]): The image file or list of image files to upload.
 
     Returns:
         UploadedFileListResponse: The uploaded image files.
