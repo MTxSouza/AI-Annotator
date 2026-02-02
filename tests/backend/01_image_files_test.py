@@ -65,14 +65,14 @@ def list_image_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
     return image_file_list
 
 @pytest.fixture
-def corrupt_image_file_payload() -> tuple[str, tuple[str, io.BytesIO, str]]:
+def corrupt_image_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
     """
     Fixture to provide a corrupt image file payload.
     """
     # Create corrupt image bytes.
     buffer = io.BytesIO(b"This is not a valid image file.")
 
-    return ("file_list", ("corrupt_image.png", buffer, "image/png"))
+    return [("file_list", ("corrupt_image.png", buffer, "image/png"))]
 
 # Tests.
 def test_create_image_file_record(
@@ -135,7 +135,7 @@ def test_create_duplicate_file_record(
 def test_create_corrupt_image_file_record(
     client: TestClient,
     project_payload: dict,
-    corrupt_image_file_payload: tuple[str, tuple[str, io.BytesIO, str]],
+    corrupt_image_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
     reset_file_directory: None  # Used to reset file directory
     ):
     """
@@ -147,14 +147,13 @@ def test_create_corrupt_image_file_record(
     project_id = project_response.json()["_id"]
 
     # Create file record.
-    file_response = client.post(url="/files/%s/images/" % project_id, files=[corrupt_image_file_payload])
+    file_response = client.post(url="/files/%s/images/" % project_id, files=corrupt_image_file_payload)
     assert file_response.status_code == 201
 
     # Check response.
     file_response_json = file_response.json()
     assert "data" in file_response_json
-    assert len(file_response_json["data"]) == 1
-
-    file_data = file_response_json["data"][0]
-    assert file_data["status"] == "Failed"
-    assert file_data["message"] == "Corrupted file: %s." % corrupt_image_file_payload[1][0]
+    assert len(file_response_json["data"]) == len(corrupt_image_file_payload)
+    for i, file_data in enumerate(iterable=file_response_json["data"]):
+        assert file_data["status"] == "Failed"
+        assert file_data["message"] == "Corrupted file: %s." % corrupt_image_file_payload[i][1][0]
