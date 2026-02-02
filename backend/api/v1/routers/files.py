@@ -10,10 +10,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 from backend.api.v1.models.files import (AudioFile, ImageFile, TextFile,
                                          UploadedFileListResponse)
 from backend.api.v1.models.projects import Project
-from backend.api.v1.utils.files import (create_file_records, get_files,
-                                        is_file_exists, process_audio_record,
-                                        process_image_record,
-                                        process_text_record)
+from backend.api.v1.utils.files import create_image_file_records, get_files
 from backend.api.v1.utils.projects import get_authenticated_project
 from backend.database.configs import DatabaseConfig
 from backend.limiter import limiter
@@ -61,9 +58,8 @@ async def upload_image_file_endpoint(
     project_id = project.id
 
     # Process images.
-    data = await create_file_records(
+    data = await create_image_file_records(
         file_list=file_list,
-        file_processor=process_image_record,
         project_id=project_id,
         db=db
     )
@@ -86,17 +82,8 @@ async def upload_text_file_endpoint(
     Returns:
         UploadedFileListResponse: The uploaded text files.
     """
-    # Get project ID.
-    project_id = project.id
-
-    # Process texts.
-    data = await create_file_records(
-        file_list=file_list,
-        file_processor=process_text_record,
-        project_id=project_id,
-        db=db
-    )
-    return UploadedFileListResponse(data=data)
+    # NOT IMPLEMENTED YET.
+    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Text file upload not implemented yet.")
 
 @router.post(path="/{id}/audios/", response_model=UploadedFileListResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("10/minute")
@@ -115,14 +102,5 @@ async def upload_audio_file_endpoint(
     Returns:
         UploadedFileListResponse: The uploaded audio files.
     """
-    # Get project ID.
-    project_id = project.id
-
-    # Process audios.
-    data = await create_file_records(
-        file_list=file_list,
-        file_processor=process_audio_record,
-        project_id=project_id,
-        db=db
-    )
-    return UploadedFileListResponse(data=data)
+    # NOT IMPLEMENTED YET.
+    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Audio file upload not implemented yet.")

@@ -184,12 +184,60 @@ async def is_file_exists(
     existing_file = await get_file_by_it_hash(file_hash=file_hash, db=db)
     return existing_file is not None
 
+def _sync_check_image_corruption(
+    file: UploadFile
+    ) -> bool:
+    """
+    Synchronous utility function to check if an image file is corrupted.
+
+    Args:
+        file (UploadFile): The upload file to check.
+
+    Returns:
+        bool: True if the image file is corrupted, False otherwise.
+    """
+    try:
+        with Image.open(fp=file.file) as img_buffer:
+            img_buffer.verify()
+        return False
+    except (UnidentifiedImageError, OSError):
+        return True
+
+def _sync_get_image_metadata(
+    file: UploadFile
+    ) -> dict:
+    """
+    Synchronous utility function to get metadata of an image upload file.
+
+    Args:
+        file (UploadFile): The upload file to get metadata for.
+
+    Returns:
+        dict: Metadata of the upload file.
+    """
+    # Get file extension.
+    file_size = file.size
+    file_extension = file.content_type.split(sep="/")[-1].lower()
+
+    # Get image dimensions.
+    with Image.open(fp=file.file) as img_buffer:
+        width, height = img_buffer.size
+        channels = len(img_buffer.getbands())
+
+    return {
+        "format": file_extension,
+        "size_in_bytes": file_size,
+        "width": width,
+        "height": height,
+        "channels": channels
+    }
+
 async def process_image_record(
     file: UploadFile,
     file_metadata: dict,
+    file_hash: str,
     project_id: str,
-    db: AsyncDatabase,
-    file_hash: str = None
+    db: AsyncDatabase
     ) -> UploadedFileResponse:
     """
     Utility function to process an image file and create its record in the database.
@@ -197,9 +245,9 @@ async def process_image_record(
     Args:
         file (UploadFile): The upload file to process.
         file_metadata (dict): The metadata of the upload file.
+        file_hash (str): The hash of the upload file.
         project_id (str): The project ID associated with the file.
         db (AsyncDatabase): The database instance.
-        file_hash (str): The hash of the upload file. (Default: None)
 
     Returns:
         UploadedFileResponse: The response model for the uploaded image file.
@@ -215,28 +263,9 @@ async def process_image_record(
             message="Invalid file format for image file: %s." % file_metadata["format"]
         )
 
-    # Check if image is corrupted.
-    try:
-        with Image.open(fp=file.file) as img_buffer:
-            img_buffer.verify()
-    except (UnidentifiedImageError, OSError):
-        return UploadedFileResponse(
-            status=FileUploadStatus.FAILED,
-            message="Corrupted image file: %s." % file.filename
-        )
-
-    # Get image dimensions.
-    with Image.open(fp=file.file) as img_buffer:
-        width, height = img_buffer.size
-        channels = len(img_buffer.getbands())
-
     # Create image filename to record.
     file_format = FileFormat(file_metadata["format"])
     unique_filename = generate_unique_filename(file_format=file_format)
-
-    # Get file hash.
-    if not file_hash:
-        file_hash = await run_in_threadpool(func=get_upload_file_hash, file=file)
 
     # Save file to disk.
     save_upload_file_to_disk(file=file, unique_filename=unique_filename)
@@ -249,9 +278,9 @@ async def process_image_record(
         filename=unique_filename,
         file_format=file_format,
         size_in_bytes=file_metadata["size_in_bytes"],
-        width=width,
-        height=height,
-        channels=channels
+        width=file_metadata["width"],
+        height=file_metadata["height"],
+        channels=file_metadata["channels"]
     )
     await collection.insert_one(document=image_file.model_dump())
 
@@ -262,55 +291,11 @@ async def process_image_record(
         size_in_bytes=file_metadata["size_in_bytes"]
     )
 
-async def process_text_record(
-    file: UploadFile,
-    file_metadata: dict,
-    project_id: str,
-    db: AsyncDatabase
-    ) -> UploadedFileResponse:
-    """
-    Utility function to process a text file and create its record in the database.
-
-    Args:
-        file (UploadFile): The upload file to process.
-        file_metadata (dict): The metadata of the upload file.
-        project_id (str): The project ID associated with the file.
-        db (AsyncDatabase): The database instance.
-
-    Returns:
-        UploadedFileResponse: The response model for the uploaded text file.
-    """
-    return UploadedFileResponse(
-        status=FileUploadStatus.FAILED,
-        message="Text file processing not implemented yet."
-    )
-
-async def process_audio_record(
-    file: UploadFile,
-    file_metadata: dict,
-    project_id: str,
-    db: AsyncDatabase
-    ) -> UploadedFileResponse:
-    """
-    Utility function to process an audio file and create its record in the database.
-
-    Args:
-        file (UploadFile): The upload file to process.
-        file_metadata (dict): The metadata of the upload file.
-        project_id (str): The project ID associated with the file.
-        db (AsyncDatabase): The database instance.
-
-    Returns:
-        UploadedFileResponse: The response model for the uploaded audio file.
-    """
-    return UploadedFileResponse(
-        status=FileUploadStatus.FAILED,
-        message="Audio file processing not implemented yet."
-    )
-
 async def create_file_records(
     file_list: UploadFile | list[UploadFile],
     file_processor: callable,
+    sync_file_validator: callable,
+    sync_get_file_metadata: callable,
     project_id: str,
     db: AsyncDatabase
     ) -> list[dict]:
@@ -351,24 +336,57 @@ async def create_file_records(
                 status=FileUploadStatus.SKIPPED,
                 message="File '%s' already exists." % file.filename
             )
+            processed_file_records.append(file_record.model_dump())
+            continue
 
-        else:
-            # Get file metadata.
-            file_metadata = await run_in_threadpool(func=get_file_metadata, file=file)
-
-            # Process file and create record.
-            file_record = await run_in_threadpool(
-                func=file_processor,
-                file=file,
-                file_metadata=file_metadata,
-                project_id=project_id,
-                db=db,
-                file_hash=file_hash
+        # Check file is corrupted.
+        is_corrupted = await run_in_threadpool(func=sync_file_validator, file=file)
+        if is_corrupted:
+            file_record = UploadedFileResponse(
+                status=FileUploadStatus.FAILED,
+                message="Corrupted file: %s." % file.filename
             )
+            processed_file_records.append(file_record.model_dump())
+            continue
 
-        processed_file_records.append(file_record.model_dump())
+        # Get file metadata.
+        file_metadata = await run_in_threadpool(func=sync_get_file_metadata, file=file)
+
+        # Process file and create record.
+        file_record = await file_processor(
+            file=file,
+            file_metadata=file_metadata,
+            project_id=project_id,
+            db=db,
+            file_hash=file_hash
+        )
 
     return processed_file_records
+
+async def create_image_file_records(
+    file_list: UploadFile | list[UploadFile],
+    project_id: str,
+    db: AsyncDatabase
+    ) -> list[dict]:
+    """
+    Utility function to create image file records in the database.
+
+    Args:
+        file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to create records for.
+        project_id (str): The project ID associated with the files.
+        db (AsyncDatabase): The database instance.
+
+    Returns:
+        list[dict]: List of created image file records.
+    """
+    return await create_file_records(
+        file_list=file_list,
+        file_processor=process_image_record,
+        sync_file_validator=_sync_check_image_corruption,
+        sync_get_file_metadata=_sync_get_image_metadata,
+        project_id=project_id,
+        db=db
+    )
 
 async def set_project_id_in_file_record(
     file_id: PyObjectId,
