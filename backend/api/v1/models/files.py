@@ -190,4 +190,4 @@ class UploadedFileListResponse(BaseModel):
         Returns:
             int: The total size in bytes of uploaded files.
         """
-        return sum(file.size_in_bytes if file.status == FileUploadStatus.CREATED else 0.0 for file in self.data)
+        return int(sum(file.size_in_bytes if file.status == FileUploadStatus.CREATED else 0.0 for file in self.data))
