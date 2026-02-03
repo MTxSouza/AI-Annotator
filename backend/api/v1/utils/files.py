@@ -20,6 +20,7 @@ from backend.database.types import FileFormat, FileUploadStatus, PyObjectId
 # Global variables.
 STATIC_FILE_DIRECTORY = "/app/storage"
 FILE_CHUNK_SIZE = 64 * 1024  # 64 KB
+FILE_FORMAT_CHUNK_SIZE = 512  # 512 Bytes
 
 # Functions.
 def generate_unique_filename(
@@ -184,6 +185,27 @@ async def is_file_exists(
     existing_file = await get_file_by_it_hash(file_hash=file_hash, db=db)
     return existing_file is not None
 
+def _sync_get_file_format(
+    file: UploadFile
+    ) -> FileFormat | None:
+    """
+    Utility function to get the file format of an upload file.
+
+    Args:
+        file (UploadFile): The upload file to get the format for.
+
+    Returns:
+        FileFormat | None: The file format if detected, None otherwise.
+    """
+    # Move cursor to the beginning of the file.
+    file.file.seek(0)
+
+    # Load file bytes.
+    file_bytes = file.file.read(FILE_FORMAT_CHUNK_SIZE)
+
+    # Check file format.
+    return FileFormat._check_file_format(file_bytes=file_bytes)
+
 def _sync_check_image_corruption(
     file: UploadFile
     ) -> bool:
@@ -197,6 +219,7 @@ def _sync_check_image_corruption(
         bool: True if the image file is corrupted, False otherwise.
     """
     try:
+        file.file.seek(0)
         with Image.open(fp=file.file) as img_buffer:
             img_buffer.verify()
         return False
@@ -217,20 +240,33 @@ def _sync_get_image_metadata(
     """
     # Get file extension.
     file_size = file.size
-    file_extension = file.content_type.split(sep="/")[-1].lower()
 
     # Get image dimensions.
+    file.file.seek(0)
     with Image.open(fp=file.file) as img_buffer:
         width, height = img_buffer.size
         channels = len(img_buffer.getbands())
 
     return {
-        "format": file_extension,
         "size_in_bytes": file_size,
         "width": width,
         "height": height,
         "channels": channels
     }
+
+def _is_valid_image_file_format(
+    file_format: FileFormat
+    ) -> bool:
+    """
+    Utility function to check if a file format is a valid image file format.
+
+    Args:
+        file_format (FileFormat): The file format to check.
+
+    Returns:
+        bool: True if the file format is a valid image file format, False otherwise.
+    """
+    return file_format in FileFormat.get_image_formats()
 
 async def process_image_record(
     file: UploadFile,
@@ -294,6 +330,7 @@ async def process_image_record(
 async def create_file_records(
     file_list: UploadFile | list[UploadFile],
     file_processor: callable,
+    is_valid_file_format: callable,
     sync_file_validator: callable,
     sync_get_file_metadata: callable,
     project_id: str,
@@ -305,6 +342,9 @@ async def create_file_records(
     Args:
         file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to create records for.
         file_processor (callable): The function to process and create the file record.
+        is_valid_file_format (callable): The function to validate the file format.
+        sync_file_validator (callable): The synchronous function to validate the file.
+        sync_get_file_metadata (callable): The synchronous function to get file metadata.
         project_id (str): The project ID associated with the files.
         db (AsyncDatabase): The database instance.
 
@@ -339,6 +379,24 @@ async def create_file_records(
             processed_file_records.append(file_record.model_dump())
             continue
 
+        # Check file format.
+        file_format = await run_in_threadpool(func=_sync_get_file_format, file=file)  # Common function to get file format.
+        if file_format is None:
+            file_record = UploadedFileResponse(
+                status=FileUploadStatus.FAILED,
+                message="Invalid file format: %s. This file format is not supported at all." % file.content_type
+            )
+            processed_file_records.append(file_record.model_dump())
+            continue
+
+        if not is_valid_file_format(file_format=file_format):
+            file_record = UploadedFileResponse(
+                status=FileUploadStatus.FAILED,
+                message="Invalid file format for this type of file: %s." % file_format.value
+            )
+            processed_file_records.append(file_record.model_dump())
+            continue
+
         # Check file is corrupted.
         is_corrupted = await run_in_threadpool(func=sync_file_validator, file=file)
         if is_corrupted:
@@ -351,6 +409,7 @@ async def create_file_records(
 
         # Get file metadata.
         file_metadata = await run_in_threadpool(func=sync_get_file_metadata, file=file)
+        file_metadata["format"] = file_format.value  # Ensure format is consistent.
 
         # Process file and create record.
         file_record = await file_processor(
@@ -383,6 +442,7 @@ async def create_image_file_records(
     return await create_file_records(
         file_list=file_list,
         file_processor=process_image_record,
+        is_valid_file_format=_is_valid_image_file_format,
         sync_file_validator=_sync_check_image_corruption,
         sync_get_file_metadata=_sync_get_image_metadata,
         project_id=project_id,
