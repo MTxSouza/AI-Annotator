@@ -85,3 +85,45 @@ class FileFormat(str, Enum):
             list[FileFormat]: List of all audio file formats.
         """
         return [cls.WAV, cls.MP3]
+
+    @classmethod
+    def _check_file_format(cls, file_bytes: bytes) -> "FileFormat | None":
+        """
+        Check the file format based on the file bytes.
+
+        Args:
+            file_bytes (bytes): The file bytes to check.
+
+        Returns:
+            FileFormat | None: The detected file format or None if not detected.
+        """
+        # Determine possible formats.
+        POSSIBLE_FORMATS = [
+            # Images.
+            (cls.JPEG, [
+                b"\xFF\xD8\xFF\xDB",
+                b"\xFF\xD8\xFF\xE0\00\10\4A\46\49\46\00\01",
+                b"\xFF\xD8\xFF\xEE"
+            ]),
+            (cls.PNG, [b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"]),
+            # Texts.
+            (cls.TXT, [
+                b"",
+                b"\xEF\xBB\xBF",        # UTF-8 BOM
+                b"\xFF\xFE",            # UTF-16 LE BOM
+                b"\xFE\xFF",            # UTF-16 BE BOM
+                b"\xFF\xFE\x00\x00",    # UTF-32 LE BOM
+                b"\x00\x00\xFE\xFF",    # UTF-32 BE BOM,
+                b"\x0E\xFE\xFF"         # UTF-7 BOM
+            ]),
+            # Audios.
+            (cls.WAV, [b"\x52\x49\x46\x46"]),
+            (cls.MP3, [b"\x49\x44\x33"])
+        ]
+
+        # Look for matching signatures.
+        for file_format, signatures in POSSIBLE_FORMATS:
+            for signature in signatures:
+                if file_bytes.startswith(signature):
+                    return file_format
+        return None
