@@ -274,7 +274,7 @@ def _sync_get_image_metadata(
     Returns:
         dict: Metadata of the upload file.
     """
-    # Get file extension.
+    # Get file size.
     file_size = file.size
 
     # Get image dimensions.
