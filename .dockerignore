@@ -3,3 +3,6 @@ __pycache__/
 .env
 .venv
 *.md
+*.log
+storage/
+.git
