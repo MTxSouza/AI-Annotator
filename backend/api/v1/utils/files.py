@@ -226,6 +226,42 @@ def _sync_check_image_corruption(
     except (UnidentifiedImageError, OSError):
         return True
 
+def _sync_check_text_corruption(
+    file: UploadFile
+    ) -> bool:
+    """
+    Synchronous utility function to check if a text file is corrupted.
+
+    Args:
+        file (UploadFile): The upload file to check.
+
+    Returns:
+        bool: True if the text file is corrupted, False otherwise.
+    """
+    try:
+        file.file.seek(0)
+
+        # Load file bytes.
+        file_bytes = file.file.read(FILE_FORMAT_CHUNK_SIZE)
+
+        # Check Null bytes.
+        if b"\x00" in file_bytes:
+            return True
+
+        # Try decoding the file bytes to check for encoding issues.
+        file_bytes.decode(encoding="utf-8")
+
+    except UnicodeDecodeError:
+        return True
+    
+    except Exception:
+        return True
+
+    finally:
+        file.file.seek(0)
+
+    return False
+
 def _sync_get_image_metadata(
     file: UploadFile
     ) -> dict:
