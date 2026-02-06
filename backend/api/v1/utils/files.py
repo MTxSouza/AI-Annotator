@@ -290,6 +290,39 @@ def _sync_get_image_metadata(
         "channels": channels
     }
 
+def _sync_get_text_metadata(
+    file: UploadFile
+    ) -> dict:
+    """
+    Synchronous utility function to get metadata of a text upload file.
+
+    Args:
+        file (UploadFile): The upload file to get metadata for.
+
+    Returns:
+        dict: Metadata of the upload file.
+    """
+    # Get file size.
+    file_size = file.size
+
+    # Check number of lines, words and characters.
+    file.file.seek(0)
+    number_of_lines = 0
+    number_of_words = 0
+    number_of_characters = 0
+    for line in file.file:
+        decoded_line = line.decode(encoding="utf-8", errors="ignore")
+        number_of_lines += 1
+        number_of_words += len(decoded_line.split())
+        number_of_characters += len(decoded_line)
+
+    return {
+        "size_in_bytes": file_size,
+        "number_of_lines": number_of_lines,
+        "number_of_words": number_of_words,
+        "number_of_characters": number_of_characters
+    }
+
 def _is_valid_image_file_format(
     file_format: FileFormat
     ) -> bool:
@@ -303,6 +336,20 @@ def _is_valid_image_file_format(
         bool: True if the file format is a valid image file format, False otherwise.
     """
     return file_format in FileFormat.get_image_formats()
+
+def _is_valid_text_file_format(
+    file_format: FileFormat
+    ) -> bool:
+    """
+    Utility function to check if a file format is a valid text file format.
+
+    Args:
+        file_format (FileFormat): The file format to check.
+
+    Returns:
+        bool: True if the file format is a valid text file format, False otherwise.
+    """
+    return file_format in FileFormat.get_text_formats()
 
 async def process_image_record(
     file: UploadFile,
@@ -360,6 +407,65 @@ async def process_image_record(
     return UploadedFileResponse(
         status=FileUploadStatus.CREATED,
         message="Image file '%s' uploaded successfully." % file.filename,
+        size_in_bytes=file_metadata["size_in_bytes"]
+    )
+
+async def process_text_record(
+    file: UploadFile,
+    file_metadata: dict,
+    file_hash: str,
+    project_id: str,
+    db: AsyncDatabase
+    ) -> UploadedFileResponse:
+    """
+    Utility function to process a text file and create its record in the database.
+
+    Args:
+        file (UploadFile): The upload file to process.
+        file_metadata (dict): The metadata of the upload file.
+        file_hash (str): The hash of the upload file.
+        project_id (str): The project ID associated with the file.
+        db (AsyncDatabase): The database instance.
+
+    Returns:
+        UploadedFileResponse: The response model for the uploaded text file.
+    """
+    # Check project ID type.
+    if isinstance(project_id, str):
+        project_id = PyObjectId(oid=project_id)
+
+    # Check file format.
+    if file_metadata["format"] not in FileFormat.get_text_formats():
+        return UploadedFileResponse(
+            status=FileUploadStatus.FAILED,
+            message="Invalid file format for text file: %s." % file_metadata["format"]
+        )
+
+    # Create text filename to record.
+    file_format = FileFormat(file_metadata["format"])
+    unique_filename = generate_unique_filename(file_format=file_format)
+
+    # Save file to disk.
+    save_upload_file_to_disk(file=file, unique_filename=unique_filename)
+
+    # Create text file record in the database.
+    collection = db.get_collection(name=Collections.FILES.value.name)
+    text_file = TextFile_Create(
+        project_id_list=[project_id],
+        file_hash=file_hash,
+        filename=unique_filename,
+        file_format=file_format,
+        size_in_bytes=file_metadata["size_in_bytes"],
+        number_of_lines=file_metadata["number_of_lines"],
+        number_of_words=file_metadata["number_of_words"],
+        number_of_characters=file_metadata["number_of_characters"]
+    )
+    await collection.insert_one(document=text_file.model_dump())
+
+    # Create response model.
+    return UploadedFileResponse(
+        status=FileUploadStatus.CREATED,
+        message="Text file '%s' uploaded successfully." % file.filename,
         size_in_bytes=file_metadata["size_in_bytes"]
     )
 
@@ -481,6 +587,32 @@ async def create_image_file_records(
         is_valid_file_format=_is_valid_image_file_format,
         sync_file_validator=_sync_check_image_corruption,
         sync_get_file_metadata=_sync_get_image_metadata,
+        project_id=project_id,
+        db=db
+    )
+
+async def create_text_file_records(
+    file_list: UploadFile | list[UploadFile],
+    project_id: str,
+    db: AsyncDatabase
+    ) -> list[dict]:
+    """
+    Utility function to create text file records in the database.
+
+    Args:
+        file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to create records for.
+        project_id (str): The project ID associated with the files.
+        db (AsyncDatabase): The database instance.
+
+    Returns:
+        list[dict]: List of created text file records.
+    """
+    return await create_file_records(
+        file_list=file_list,
+        file_processor=process_text_record,
+        is_valid_file_format=_is_valid_text_file_format,
+        sync_file_validator=_sync_check_text_corruption,
+        sync_get_file_metadata=_sync_get_text_metadata,
         project_id=project_id,
         db=db
     )

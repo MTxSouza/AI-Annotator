@@ -10,7 +10,8 @@ from pymongo.asynchronous.database import AsyncDatabase
 from backend.api.v1.models.files import (AudioFile, ImageFile, TextFile,
                                          UploadedFileListResponse)
 from backend.api.v1.models.projects import Project
-from backend.api.v1.utils.files import create_image_file_records, get_files
+from backend.api.v1.utils.files import (create_image_file_records,
+                                        create_text_file_records, get_files)
 from backend.api.v1.utils.projects import get_authenticated_project
 from backend.database.configs import DatabaseConfig
 from backend.limiter import limiter
@@ -69,7 +70,7 @@ async def upload_image_file_endpoint(
 @limiter.limit("10/minute")
 async def upload_text_file_endpoint(
     request: Request,
-    file_list: list[UploadFile] = File(...),
+    file_list: UploadFile | list[UploadFile] = File(...),
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
     ) -> UploadedFileListResponse:
@@ -82,8 +83,16 @@ async def upload_text_file_endpoint(
     Returns:
         UploadedFileListResponse: The uploaded text files.
     """
-    # NOT IMPLEMENTED YET.
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Text file upload not implemented yet.")
+    # Get project ID.
+    project_id = project.id
+
+    # Process texts.
+    data = await create_text_file_records(
+        file_list=file_list,
+        project_id=project_id,
+        db=db
+    )
+    return UploadedFileListResponse(data=data)
 
 @router.post(path="/{id}/audios/", response_model=UploadedFileListResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("10/minute")

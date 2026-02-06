@@ -73,9 +73,9 @@ class TextFile_DB(__File):
     Text file model in the database.
     """
     # Fields.
-    encoding: str = Field(..., description="The encoding of the text file.")
-    number_of_characters: int = Field(..., ge=0, description="The number of characters in the text file.")
+    number_of_lines: int = Field(..., ge=0, description="The number of lines in the text file.")
     number_of_words: int = Field(..., ge=0, description="The number of words in the text file.")
+    number_of_characters: int = Field(..., ge=0, description="The number of characters in the text file.")
 
     # Validators.
     @field_validator("file_format")
