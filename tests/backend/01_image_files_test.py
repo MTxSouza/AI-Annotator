@@ -8,17 +8,6 @@ import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
-from backend.api.v1.utils.files import STATIC_FILE_DIRECTORY
-
-
-# Module-wide fixtures.
-@pytest.fixture
-def reset_file_directory():
-    """
-    Fixture to reset the file storage directory before each module.
-    """
-    # Reset the static file directory.
-    shutil.rmtree(STATIC_FILE_DIRECTORY, ignore_errors=True)
 
 # Mocks.
 @pytest.fixture

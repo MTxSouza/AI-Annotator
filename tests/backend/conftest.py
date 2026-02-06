@@ -1,6 +1,7 @@
 """
 Main module that setup main configurations for backend tests.
 """
+import shutil
 from contextlib import asynccontextmanager
 
 import pytest
@@ -8,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pymongo import MongoClient
 
+from backend.api.v1.utils.files import STATIC_FILE_DIRECTORY
 from backend.app import app
 from backend.configs import BackendSettings
 from backend.database.configs import DatabaseConfig
@@ -67,3 +69,12 @@ def clear_database():
     )
     client.drop_database(BackendSettings.database_name)
     yield
+
+# Module-wide fixtures.
+@pytest.fixture
+def reset_file_directory():
+    """
+    Fixture to reset the file storage directory before each module.
+    """
+    # Reset the static file directory.
+    shutil.rmtree(STATIC_FILE_DIRECTORY, ignore_errors=True)
