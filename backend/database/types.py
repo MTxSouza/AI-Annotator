@@ -107,7 +107,11 @@ class FileFormat(str, Enum):
             ]),
             (cls.PNG, [b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"]),
             # Texts.
-            (cls.TXT, [b"\xEF\xBB\xBF"]), # UTF-8 BOM
+            (cls.TXT, [
+                b"\xEF\xBB\xBF",    # UTF-8 BOM
+                b"\xFF\xFE",        # UTF-16 LE BOM
+                b"\xFE\xFF"         # UTF-16 BE BOM 
+            ]),
             # Audios.
             (cls.WAV, [b"\x52\x49\x46\x46"]),
             (cls.MP3, [b"\x49\x44\x33"])
@@ -118,4 +122,37 @@ class FileFormat(str, Enum):
             for signature in signatures:
                 if file_bytes.startswith(signature):
                     return file_format
+
+        # Extra fallback: check if the file is a UTF-8 text file.
+        if cls.is_utf8_text(file_bytes=file_bytes):
+            return cls.TXT
+
         return None
+
+    # Static methods.
+    @staticmethod
+    def is_utf8_text(file_bytes: bytes) -> bool:
+        """
+        Check if the file bytes represent a UTF-8 text file.
+
+        Args:
+            file_bytes (bytes): The file bytes to check.
+
+        Returns:
+            bool: True if the file is a UTF-8 text file, False otherwise.
+        """
+        # Check Null bytes.
+        if b"\x00" in file_bytes:
+            return False
+
+        # Try decoding the file bytes to check for encoding issues.
+        try:
+            file_bytes.decode(encoding="utf-8")
+
+        except UnicodeDecodeError:
+            return False
+
+        except Exception:
+            return False
+
+        return True

@@ -244,16 +244,10 @@ def _sync_check_text_corruption(
         # Load file bytes.
         file_bytes = file.file.read(FILE_FORMAT_CHUNK_SIZE)
 
-        # Check Null bytes.
-        if b"\x00" in file_bytes:
-            return True
+        # Check if the file bytes can be decoded as UTF-8.
+        if not FileFormat.is_utf8_text(file_bytes=file_bytes):
+             return True
 
-        # Try decoding the file bytes to check for encoding issues.
-        file_bytes.decode(encoding="utf-8")
-
-    except UnicodeDecodeError:
-        return True
-    
     except Exception:
         return True
 
