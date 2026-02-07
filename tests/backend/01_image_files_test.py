@@ -2,7 +2,6 @@
 Module used to test image file-related endpoints.
 """
 import io
-import shutil
 
 import pytest
 from fastapi.testclient import TestClient
