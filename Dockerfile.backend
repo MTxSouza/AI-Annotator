@@ -15,7 +15,7 @@ ENV PYTHONPATH=/home
 # --- STAGE FOR TESTING ---
 FROM base AS testing
 # Install test dependencies.
-COPY ./requirements-dev.txt /tmp
+COPY ./requirements-dev.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 # Copy test code.
 COPY ./tests/backend ./tests/backend
