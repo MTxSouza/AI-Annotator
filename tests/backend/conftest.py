@@ -70,7 +70,17 @@ def clear_database():
     client.drop_database(BackendSettings.database_name)
     yield
 
-# Module-wide fixtures.
+# Global fixtures to be used during all tests.
+@pytest.fixture
+def project_payload() -> dict:
+    """
+    Fixture to provide a sample project payload.
+    """
+    return {
+        "name": "Test Project",
+        "task": "Object Detection"
+    }
+
 @pytest.fixture
 def reset_file_directory():
     """

@@ -10,16 +10,6 @@ from PIL import Image
 
 # Mocks.
 @pytest.fixture
-def project_payload() -> dict:
-    """
-    Fixture to provide a sample project payload.
-    """
-    return {
-        "name": "Test Project",
-        "task": "Object Detection"
-    }
-
-@pytest.fixture
 def list_image_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
     """
     Fixture to provide a list of image file payloads.
