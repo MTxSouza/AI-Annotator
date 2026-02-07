@@ -1,6 +1,7 @@
 """
 Main module that setup main configurations for backend tests.
 """
+
 import shutil
 from contextlib import asynccontextmanager
 
@@ -21,6 +22,7 @@ def app_instance():
     """
     Fixture to provide the FastAPI app instance.
     """
+
     # Test lifespan context.
     @asynccontextmanager
     async def test_lifespan(app: FastAPI):
@@ -29,7 +31,7 @@ def app_instance():
         await DatabaseConfig.initialize_client(
             uri=BackendSettings.database_uri,
             database_name=BackendSettings.database_name,
-            port=BackendSettings.database_port
+            port=BackendSettings.database_port,
         )
         await DatabaseConfig._drop_database()  # Clean database before tests.
         yield
@@ -41,6 +43,7 @@ def app_instance():
     app.state.limiter.enabled = False  # Disable rate limiter for tests.
     return app
 
+
 @pytest.fixture(scope="session", autouse=True)
 def client(app_instance: FastAPI):
     """
@@ -48,7 +51,6 @@ def client(app_instance: FastAPI):
     """
     # Provide the API client for tests.
     with TestClient(app=app_instance) as client:
-
         # Health check before running tests.
         response = client.get(url="/health")
         assert response.status_code == 200
@@ -57,18 +59,17 @@ def client(app_instance: FastAPI):
 
         yield client
 
+
 @pytest.fixture(autouse=True)
 def clear_database():
     """
     Fixture to clear the database before each test.
     """
     # Clear the database before each test.
-    client = MongoClient(
-        host=BackendSettings.database_uri,
-        port=BackendSettings.database_port
-    )
+    client = MongoClient(host=BackendSettings.database_uri, port=BackendSettings.database_port)
     client.drop_database(BackendSettings.database_name)
     yield
+
 
 # Global fixtures to be used during all tests.
 @pytest.fixture
@@ -76,10 +77,8 @@ def image_project_payload() -> dict:
     """
     Fixture to provide a sample project payload for image files.
     """
-    return {
-        "name": "Test Project",
-        "task": "Object Detection"
-    }
+    return {"name": "Test Project", "task": "Object Detection"}
+
 
 @pytest.fixture
 def reset_file_directory():

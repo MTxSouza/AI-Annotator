@@ -1,6 +1,7 @@
 """
 Main module with all database configurations.
 """
+
 from dataclasses import dataclass
 from enum import Enum
 
@@ -14,37 +15,41 @@ class _IndexConfig:
     """
     Class to handle index configuration.
     """
+
     name: str
     is_indexed: bool = False
     is_unique: bool = False
+
 
 @dataclass
 class _CollectionConfig:
     """
     Class to handle collection configuration.
     """
+
     name: str
     index_configs: list[_IndexConfig]
+
 
 class Collections(Enum):
     """
     Enum to handle collection names.
     """
+
     PROJECTS = _CollectionConfig(
-        name="projects",
-        index_configs=[_IndexConfig(name="name", is_indexed=True, is_unique=True)]
+        name="projects", index_configs=[_IndexConfig(name="name", is_indexed=True, is_unique=True)]
     )
     TASK_CONFIGS = _CollectionConfig(
-        name="task_configs",
-        index_configs=[_IndexConfig(name="project_id", is_unique=True)]
+        name="task_configs", index_configs=[_IndexConfig(name="project_id", is_unique=True)]
     )
     FILES = _CollectionConfig(
         name="files",
         index_configs=[
             _IndexConfig(name="file_hash", is_indexed=True, is_unique=True),
-            _IndexConfig(name="filename", is_indexed=True, is_unique=True)
-        ]
+            _IndexConfig(name="filename", is_indexed=True, is_unique=True),
+        ],
     )
+
 
 # Classes.
 class DatabaseConfig:
@@ -78,9 +83,7 @@ class DatabaseConfig:
             for index_config in collection_config.value.index_configs:
                 if index_config.is_indexed or index_config.is_unique:
                     await collection.create_index(
-                        keys=[(index_config.name, 1)],
-                        unique=index_config.is_unique,
-                        background=True
+                        keys=[(index_config.name, 1)], unique=index_config.is_unique, background=True
                     )
 
     @classmethod

@@ -1,8 +1,9 @@
 """
 Module with custom types for database operations.
 """
+
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Annotated, Any
 
 from bson import ObjectId
@@ -17,33 +18,40 @@ def validate_py_object_id(v: Any) -> ObjectId:
         return ObjectId(v)
     raise ValueError("Invalid ObjectId")
 
+
 PyObjectId = Annotated[
     ObjectId,
     BeforeValidator(func=validate_py_object_id),
     PlainSerializer(func=lambda oid: str(oid), return_type=str),
-    WithJsonSchema(json_schema={"type": "string"})
+    WithJsonSchema(json_schema={"type": "string"}),
 ]
 PyDateTime = Annotated[datetime, PlainSerializer(func=lambda dt: dt.isoformat())]
 
-class FileUploadStatus(str, Enum):
+
+class FileUploadStatus(StrEnum):
     """
     Enum for file upload status.
     """
+
     CREATED = "Created"
     SKIPPED = "Skipped"
     FAILED = "Failed"
 
-class Task(str, Enum):
+
+class Task(StrEnum):
     """
     Enum for tasks.
     """
+
     OBJECT_DETECTION = "Object Detection"
     SEMANTIC_SEGMENTATION = "Semantic Segmentation"
 
-class FileFormat(str, Enum):
+
+class FileFormat(StrEnum):
     """
     Enum for image file formats.
     """
+
     # Images.
     JPEG = "jpeg"
     PNG = "png"
@@ -100,21 +108,20 @@ class FileFormat(str, Enum):
         # Determine possible formats.
         POSSIBLE_FORMATS = [
             # Images.
-            (cls.JPEG, [
-                b"\xFF\xD8\xFF\xDB",
-                b"\xFF\xD8\xFF\xE0\00\10\4A\46\49\46\00\01",
-                b"\xFF\xD8\xFF\xEE"
-            ]),
-            (cls.PNG, [b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"]),
+            (cls.JPEG, [b"\xff\xd8\xff\xdb", b"\xff\xd8\xff\xe0\00\10\4A\46\49\46\00\01", b"\xff\xd8\xff\xee"]),
+            (cls.PNG, [b"\x89\x50\x4e\x47\x0d\x0a\x1a\x0a"]),
             # Texts.
-            (cls.TXT, [
-                b"\xEF\xBB\xBF",    # UTF-8 BOM
-                b"\xFF\xFE",        # UTF-16 LE BOM
-                b"\xFE\xFF"         # UTF-16 BE BOM 
-            ]),
+            (
+                cls.TXT,
+                [
+                    b"\xef\xbb\xbf",  # UTF-8 BOM
+                    b"\xff\xfe",  # UTF-16 LE BOM
+                    b"\xfe\xff",  # UTF-16 BE BOM
+                ],
+            ),
             # Audios.
             (cls.WAV, [b"\x52\x49\x46\x46"]),
-            (cls.MP3, [b"\x49\x44\x33"])
+            (cls.MP3, [b"\x49\x44\x33"]),
         ]
 
         # Look for matching signatures.

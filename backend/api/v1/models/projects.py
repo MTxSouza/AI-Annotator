@@ -1,15 +1,12 @@
 """
 Main module with all schemas used in Projects collection.
 """
-from typing import Optional
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-from backend.api.v1.models.task_configs import (ObjectDetectionTaskConfig,
-                                                SemanticSegmentationTaskConfig)
+from backend.api.v1.models.task_configs import ObjectDetectionTaskConfig, SemanticSegmentationTaskConfig
 from backend.api.v1.utils.auth import hash_password
-from backend.database.models import (CommonRequestModel, CommonResponseModel,
-                                     CommonUpdateModel)
+from backend.database.models import CommonRequestModel, CommonResponseModel, CommonUpdateModel
 from backend.database.types import Task
 
 # Global Variables.
@@ -18,23 +15,35 @@ __MAX_NAME_LENGTH__: int = 64
 __MAX_DESCRIPTION_LENGTH__: int = 500
 __PROJECT_CONFIGS__ = ObjectDetectionTaskConfig | SemanticSegmentationTaskConfig
 
+
 # Schemas.
 class _DB(BaseModel):
     """
     Project model in the database.
     """
+
     # Fields.
-    name: str = Field(..., min_length=__MIN_NAME_LENGTH__, max_length=__MAX_NAME_LENGTH__, description="The name of the project.")
-    description: Optional[str] = Field(default=None, max_length=__MAX_DESCRIPTION_LENGTH__, description="The description of the project.")
+    name: str = Field(
+        ..., min_length=__MIN_NAME_LENGTH__, max_length=__MAX_NAME_LENGTH__, description="The name of the project."
+    )
+    description: str | None = Field(
+        default=None, max_length=__MAX_DESCRIPTION_LENGTH__, description="The description of the project."
+    )
     task: Task = Field(..., description="The task for the project.")
-    hashed_password: Optional[str] = Field(default=None, description="The hashed password for the project if it is private.")
+    hashed_password: str | None = Field(
+        default=None, description="The hashed password for the project if it is private."
+    )
+
 
 class Create(_DB, CommonRequestModel):
     """
     Project creation model.
     """
+
     # Fields.
-    password: Optional[str] = Field(default=None, min_length=1, exclude=True, description="The password for the project if it should be private.")
+    password: str | None = Field(
+        default=None, min_length=1, exclude=True, description="The password for the project if it should be private."
+    )
 
     # Validators.
     @model_validator(mode="after")
@@ -43,16 +52,20 @@ class Create(_DB, CommonRequestModel):
             self.hashed_password = hash_password(password=self.password)
         return self
 
+
 class Update(_DB, CommonUpdateModel):
     """
     Project update model.
     """
+
     # Fields.
-    name: Optional[str] = Field(default=None, min_length=__MIN_NAME_LENGTH__, max_length=__MAX_NAME_LENGTH__)
-    password: Optional[str] = Field(default=None, min_length=1, exclude=True, description="The password for the project if it should be private.")
+    name: str | None = Field(default=None, min_length=__MIN_NAME_LENGTH__, max_length=__MAX_NAME_LENGTH__)
+    password: str | None = Field(
+        default=None, min_length=1, exclude=True, description="The password for the project if it should be private."
+    )
 
     # To be excluded.
-    task: Optional[Task] = Field(default=None, exclude=True)
+    task: Task | None = Field(default=None, exclude=True)
 
     # Validators.
     @model_validator(mode="after")
@@ -63,12 +76,14 @@ class Update(_DB, CommonUpdateModel):
             self.hashed_password = None
         return self
 
+
 class ProjectSimple(_DB, CommonResponseModel):
     """
     Simple Project model.
     """
+
     # To be excluded.
-    hashed_password: Optional[str] = Field(default=None, exclude=True)
+    hashed_password: str | None = Field(default=None, exclude=True)
 
     # Computed Fields.
     @computed_field(description="Whether the project is private or public.")
@@ -77,15 +92,17 @@ class ProjectSimple(_DB, CommonResponseModel):
         Computed field to determine if the project is private.
 
         Returns:
-            bool: True if the project is private, False otherwise.
+                bool: True if the project is private, False otherwise.
         """
         return self.hashed_password is not None
+
 
 class Project(ProjectSimple):
     """
     Project model.
     """
+
     # Additional Fields.
-    num_samples: Optional[int] = Field(default=0, description="The number of samples in the project.")
-    num_annotations: Optional[int] = Field(default=0, description="The number of annotations in the project.")
+    num_samples: int | None = Field(default=0, description="The number of samples in the project.")
+    num_annotations: int | None = Field(default=0, description="The number of annotations in the project.")
     configs: __PROJECT_CONFIGS__ = Field(..., description="The task configurations for the project.")

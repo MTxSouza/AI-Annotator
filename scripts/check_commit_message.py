@@ -1,7 +1,8 @@
 """
-This script is a custom hook for pre-commit that checks if the commit message follows the expected 
+This script is a custom hook for pre-commit that checks if the commit message follows the expected
 format. Then, it formats the commit message to match the project conventions.
 """
+
 import re
 import sys
 from enum import Enum
@@ -13,6 +14,7 @@ class CommitType(Enum):
     """
     Enum representing the valid commit types for the project.
     """
+
     FEAT = ("feat", "✨")
     FIX = ("fix", "🐛")
     DOCS = ("docs", "📝")
@@ -29,8 +31,10 @@ def main() -> None:
     Entry point for the script.
 
     Args:
-        message (str, optional): A commit message string to validate. If None, the message will be extracted from the command line arguments.
+        message (str, optional): A commit message string to validate. If None, the message will be
+        extracted from the command line arguments.
     """
+
     # Get the commit message from arguments.
     try:
         commit_msg_filepath = sys.argv[1]
@@ -59,7 +63,8 @@ def main() -> None:
     commit_description_without_non_characters = non_character_pattern_re.sub(repl="", string=commit_description)
     if len(commit_description_without_non_characters) < 10 or len(commit_description_without_non_characters) > 128:
         print(
-            "Error: Invalid commit message description length. The description should be between 10 and 128 characters, "
+            "Error: Invalid commit message description length. "
+            "The description should be between 10 and 128 characters, "
             "excluding non-character symbols."
         )
         sys.exit(1)
@@ -85,8 +90,10 @@ def main() -> None:
     # Capitalize the first letter of the commit description and
     # after any final dot.
     commit_description = commit_description[0].upper() + commit_description[1:]
+
     def capitalize_after_final_dot(match: re.Match) -> str:
         return match.group(0).capitalize()
+
     capitalize_after_final_dot_re = re.compile(pattern=r"(?<=\.\s)(\w)")
     commit_description = capitalize_after_final_dot_re.sub(repl=capitalize_after_final_dot, string=commit_description)
 
@@ -100,10 +107,11 @@ def main() -> None:
     commit_type_emoji = commit_type_emoji.value[1]
 
     # Format the commit message to match the project conventions.
-    formatted_commit_message = "%s %s: %s" % (commit_type_emoji, commit_type, commit_description)
+    formatted_commit_message = f"{commit_type_emoji} {commit_type}: {commit_description}"
 
     # Write the formatted commit message back to the file.
     Path(commit_msg_filepath).write_text(formatted_commit_message, encoding="utf-8")
+
 
 if __name__ == "__main__":
     main()

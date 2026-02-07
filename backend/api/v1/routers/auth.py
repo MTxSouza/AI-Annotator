@@ -1,6 +1,7 @@
 """
 Module with all endpoints related to authentication operations.
 """
+
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
@@ -17,8 +18,9 @@ from backend.limiter import limiter
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
-    dependencies=[Depends(dependency=DatabaseConfig.get_database), Depends(dependency=OAuth2PasswordRequestForm)]
+    dependencies=[Depends(dependency=DatabaseConfig.get_database), Depends(dependency=OAuth2PasswordRequestForm)],
 )
+
 
 # Endpoints.
 @router.post(path="/token", response_model=Token, status_code=status.HTTP_201_CREATED)
@@ -26,10 +28,10 @@ router = APIRouter(
 async def authenticate_access_token(
     request: Request,
     auth_form: OAuth2PasswordRequestForm = Depends(dependency=OAuth2PasswordRequestForm),
-    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database)
-    ) -> Token:
+    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
+) -> Token:
     """
-    Endpoint to authenticate and provide an access token to 
+    Endpoint to authenticate and provide an access token to
     access protected project.
     """
     # Get credentials.
