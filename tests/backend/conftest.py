@@ -72,9 +72,9 @@ def clear_database():
 
 # Global fixtures to be used during all tests.
 @pytest.fixture
-def project_payload() -> dict:
+def image_project_payload() -> dict:
     """
-    Fixture to provide a sample project payload.
+    Fixture to provide a sample project payload for image files.
     """
     return {
         "name": "Test Project",

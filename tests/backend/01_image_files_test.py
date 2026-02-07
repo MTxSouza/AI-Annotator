@@ -73,7 +73,7 @@ def invalid_file_format_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]
 # Tests.
 def test_create_image_file_record(
     client: TestClient,
-    project_payload: dict,
+    image_project_payload: dict,
     list_image_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
     reset_file_directory: None  # Used to reset file directory
     ):
@@ -81,7 +81,7 @@ def test_create_image_file_record(
     Test to create an image file record.
     """
     # Create project first.
-    project_response = client.post(url="/projects/", json=project_payload)
+    project_response = client.post(url="/projects/", json=image_project_payload)
     assert project_response.status_code == 201
     project_id = project_response.json()["_id"]
 
@@ -100,7 +100,7 @@ def test_create_image_file_record(
 
 def test_create_duplicate_file_record(
     client: TestClient,
-    project_payload: dict,
+    image_project_payload: dict,
     list_image_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
     reset_file_directory: None  # Used to reset file directory
     ):
@@ -108,7 +108,7 @@ def test_create_duplicate_file_record(
     Test to create a duplicate image file record.
     """
     # Create project first.
-    project_response = client.post(url="/projects/", json=project_payload)
+    project_response = client.post(url="/projects/", json=image_project_payload)
     assert project_response.status_code == 201
     project_id = project_response.json()["_id"]
 
@@ -130,7 +130,7 @@ def test_create_duplicate_file_record(
 
 def test_create_corrupt_image_file_record(
     client: TestClient,
-    project_payload: dict,
+    image_project_payload: dict,
     corrupt_image_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
     reset_file_directory: None  # Used to reset file directory
     ):
@@ -138,7 +138,7 @@ def test_create_corrupt_image_file_record(
     Test to create a corrupt image file record.
     """
     # Create project first.
-    project_response = client.post(url="/projects/", json=project_payload)
+    project_response = client.post(url="/projects/", json=image_project_payload)
     assert project_response.status_code == 201
     project_id = project_response.json()["_id"]
 
@@ -156,7 +156,7 @@ def test_create_corrupt_image_file_record(
 
 def test_create_invalid_file_format_record(
     client: TestClient,
-    project_payload: dict,
+    image_project_payload: dict,
     invalid_file_format_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
     reset_file_directory: None  # Used to reset file directory
     ):
@@ -164,7 +164,7 @@ def test_create_invalid_file_format_record(
     Test to create an invalid file format record.
     """
     # Create project first.
-    project_response = client.post(url="/projects/", json=project_payload)
+    project_response = client.post(url="/projects/", json=image_project_payload)
     assert project_response.status_code == 201
     project_id = project_response.json()["_id"]
 
