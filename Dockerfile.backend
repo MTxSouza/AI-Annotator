@@ -18,7 +18,7 @@ FROM base AS testing
 COPY ./requirements-dev.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 # Copy test code.
-COPY ./tests/backend ./tests/backend
+COPY ./tests ./tests
 # Copy mock data for tests.
 COPY ./tests/mocks ./tests/mocks
 ENTRYPOINT [ "pytest", "-s", "-v", "/home/tests" ]
