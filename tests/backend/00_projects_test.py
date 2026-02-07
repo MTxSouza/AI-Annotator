@@ -366,3 +366,39 @@ def test_delete_private_project(client: TestClient, project_payload: dict):
     # Assert the response data.
     response_data = response.json()
     assert response_data["detail"] == "Project not found"
+
+
+def test_get_private_project_with_token_of_another_project(client: TestClient, project_payload: dict):
+    """
+    Test retrieving a private project with an access token from another project.
+    """
+    # Add password to the payload.
+    project_payload["password"] = "securepassword"
+
+    # Create the first private project.
+    response = client.post(url="/projects/", json=project_payload)
+    assert response.status_code == 201
+    project_id_1 = response.json()["_id"]
+
+    # Create the second private project.
+    project_payload["name"] = "Second Test Project"
+    response = client.post(url="/projects/", json=project_payload)
+    assert response.status_code == 201
+    project_id_2 = response.json()["_id"]
+
+    # Authenticate to get access token for the first project.
+    auth_response_1 = client.post(
+        url="/auth/token", data={"username": project_id_1, "password": project_payload["password"]}
+    )
+    assert auth_response_1.status_code == 201
+    access_token_1 = auth_response_1.json()["access_token"]
+
+    # Attempt to retrieve the second private project with the first project's access token.
+    response = client.get(url=f"/projects/{project_id_2}", headers={"Authorization": f"Bearer {access_token_1}"})
+
+    # Assert the response status code.
+    assert response.status_code == 403
+
+    # Assert the response data.
+    response_data = response.json()
+    assert response_data["detail"] == "Token subject does not match project ID"
