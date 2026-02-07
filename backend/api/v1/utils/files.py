@@ -528,7 +528,7 @@ async def create_file_records(
         if not is_valid_file_format(file_format=file_format):
             file_record = UploadedFileResponse(
                 status=FileUploadStatus.FAILED,
-                message="Invalid file format for this type of file: %s." % file_format.value
+                message="Invalid file format for this project: %s." % file_format.value
             )
             processed_file_records.append(file_record.model_dump())
             continue

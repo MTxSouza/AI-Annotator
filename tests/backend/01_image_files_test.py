@@ -178,4 +178,4 @@ def test_create_invalid_file_format_record(
     assert len(file_response_json["data"]) == len(invalid_file_format_payload)
     for i, file_data in enumerate(iterable=file_response_json["data"]):
         assert file_data["status"] == "Failed"
-        assert file_data["message"] == "Invalid file format for this type of file: txt."
+        assert file_data["message"] == "Invalid file format for this project: txt."
