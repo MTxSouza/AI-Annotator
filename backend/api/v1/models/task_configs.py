@@ -45,10 +45,7 @@ class ObjectDetectionTaskConfig(__ObjectTaskConfig):
     Object detection task configuration model.
     """
 
-    # Fields.
-    add_segmentation_mask: bool | None = Field(
-        default=False, description="Whether to add segmentation masks for detected objects."
-    )
+    pass
 
 
 class SemanticSegmentationTaskConfig(__ObjectTaskConfig):
