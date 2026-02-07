@@ -1,0 +1,22 @@
+repos:
+  # Lint and format Python code with Ruff.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+  # Validate commit messages.
+  - repo: local
+    hooks:
+      - id: check-commit-message
+        name: Validate & Format Commit Message
+        entry: python3 scripts/check_commit_message.py
+        language: python
+        stages: [commit-msg]
