@@ -15,13 +15,13 @@ ENV PYTHONPATH=/home
 # --- STAGE FOR TESTING ---
 FROM base AS testing
 # Install test dependencies.
-COPY ./tests/backend/requirements.txt /tmp
+COPY ./requirements-dev.txt /tmp
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 # Copy test code.
 COPY ./tests/backend ./tests/backend
 # Copy mock data for tests.
 COPY ./tests/mocks ./tests/mocks
-ENTRYPOINT [ "pytest", "-s", "-v", "/home/tests/backend" ]
+ENTRYPOINT [ "pytest", "-s", "-v", "/home/tests" ]
 
 # --- STAGE FOR PRODUCTION ---
 FROM base AS production
