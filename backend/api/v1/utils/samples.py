@@ -94,6 +94,7 @@ async def create_sample(
         )
 
     # Create sample document.
+    sample_data_dict["project_id"] = project_id_obj
     result = await sample_collection.insert_one(sample_data_dict)
 
     # Retrieve the created sample.
