@@ -369,10 +369,11 @@ async def process_image_record(
         channels=file_metadata["channels"],
     ).model_dump()
     image_file["project_id_list"] = [project_id_obj]  # Ensure project_id_list is set correctly.
-    await collection.insert_one(document=image_file)
+    result = await collection.insert_one(document=image_file)
 
     # Create response model.
     return UploadedFileResponse(
+        file_id=result.inserted_id,
         status=FileUploadStatus.CREATED,
         message=f"Image file '{file.filename}' uploaded successfully.",
         size_in_bytes=file_metadata["size_in_bytes"],
@@ -427,10 +428,11 @@ async def process_text_record(
         number_of_characters=file_metadata["number_of_characters"],
     ).model_dump()
     text_file["project_id_list"] = [project_id_obj]  # Ensure project_id_list is set correctly.
-    await collection.insert_one(document=text_file)
+    result = await collection.insert_one(document=text_file)
 
     # Create response model.
     return UploadedFileResponse(
+        file_id=result.inserted_id,
         status=FileUploadStatus.CREATED,
         message=f"Text file '{file.filename}' uploaded successfully.",
         size_in_bytes=file_metadata["size_in_bytes"],

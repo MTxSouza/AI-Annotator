@@ -5,7 +5,7 @@ Main module with all schemas used in Files collection.
 from pydantic import BaseModel, Field, computed_field, field_validator
 
 from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId
-from backend.database.models import CommonRequestModel, CommonResponseModel, CommonUpdateModel
+from backend.database.models import CommonModel, CommonRequestModel, CommonResponseModel, CommonUpdateModel
 
 
 # Schemas.
@@ -188,11 +188,12 @@ class AudioFile(AudioFile_DB):
 
 
 # - Multiple Files.
-class UploadedFileResponse(BaseModel):
+class UploadedFileResponse(CommonModel):
     """
     Response model for uploaded file.
     """
 
+    file_id: str | PyObjectId | None = Field(default=None, description="The ID of the uploaded file.")
     status: FileUploadStatus = Field(..., description="Status of the uploaded file.")
     message: str = Field(..., description="Message for the uploaded file.")
     size_in_bytes: int | None = Field(default=0, description="The size of the uploaded file in bytes.")
