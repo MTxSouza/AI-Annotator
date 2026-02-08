@@ -2,7 +2,7 @@
 Main module with all database configurations.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from pymongo import AsyncMongoClient
@@ -28,7 +28,7 @@ class _CollectionConfig:
     """
 
     name: str
-    index_configs: list[_IndexConfig] | None = []
+    index_configs: list[_IndexConfig] = field(default_factory=list)
 
 
 class Collections(Enum):
