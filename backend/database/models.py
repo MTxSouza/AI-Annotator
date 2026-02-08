@@ -9,7 +9,16 @@ from backend.database.utils import get_current_datetime
 
 
 # Schemas.
-class _TimestampModel(BaseModel):
+class CommonModel(BaseModel):
+    """
+    Common model inherited by all API models.
+    """
+
+    # Config.
+    model_config = ConfigDict(populate_by_name=True, from_attributes=True, arbitrary_types_allowed=True)
+
+
+class _TimestampModel(CommonModel):
     """
     Base timestamp model inherited by all API models.
     """
@@ -27,9 +36,6 @@ class CommonResponseModel(_TimestampModel):
     # Fields.
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
 
-    # Config.
-    model_config = ConfigDict(populate_by_name=True, from_attributes=True, arbitrary_types_allowed=True)
-
 
 class CommonRequestModel(_TimestampModel):
     """
@@ -37,7 +43,7 @@ class CommonRequestModel(_TimestampModel):
     """
 
     # Config.
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
 
 class CommonUpdateModel(_TimestampModel):
@@ -49,4 +55,4 @@ class CommonUpdateModel(_TimestampModel):
     created_at: PyDateTime | None = Field(default=None, exclude=True)  # type: ignore
 
     # Config.
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
