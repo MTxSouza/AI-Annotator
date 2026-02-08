@@ -28,3 +28,23 @@ async def get_samples(limit: int, offset: int, db: AsyncDatabase) -> list[dict]:
     samples = await cursor.to_list()
 
     return samples
+
+
+async def get_sample_by_id(sample_id: str, db: AsyncDatabase) -> dict | None:
+    """
+    Get a sample by its ID.
+
+    Args:
+            sample_id (str): The ID of the sample to retrieve.
+            db (AsyncDatabase): The database instance.
+
+    Returns:
+            dict | None: The sample with the specified ID or None if not found.
+    """
+    # Get samples collection.
+    collection = db.get_collection(name=Collections.SAMPLES.value.name)
+
+    # Query sample by ID.
+    sample = await collection.find_one({"_id": sample_id})
+
+    return sample

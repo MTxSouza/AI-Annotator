@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, status
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.samples import ObjectDetectionSample
-from backend.api.v1.utils.samples import get_samples
+from backend.api.v1.utils.samples import get_sample_by_id, get_samples
 from backend.database.configs import DatabaseConfig
 
 # Instantiate the router.
@@ -27,3 +27,17 @@ async def get_samples_endpoint(
             list: List of all samples.
     """
     return await get_samples(limit=limit, offset=offset, db=db)  # type: ignore
+
+
+@router.get(path="/{id}", response_model=ObjectDetectionSample, status_code=status.HTTP_200_OK)
+async def get_sample_endpoint(
+    id: str,
+    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
+) -> ObjectDetectionSample:
+    """
+    Endpoint to get a sample by ID.
+
+    Returns:
+            ObjectDetectionSample: The sample with the specified ID.
+    """
+    return await get_sample_by_id(sample_id=id, db=db)  # type: ignore
