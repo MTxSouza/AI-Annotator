@@ -80,7 +80,7 @@ def test_create_object_detection_sample(
     project_id = project["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/files/{project_id}/images/", files=image_file_payload)
+    file_response = client.post(url=f"/files/{project_id}/", files=image_file_payload)
     assert file_response.status_code == 201
     file_list = file_response.json()["data"]
     assert len(file_list) == 1
