@@ -27,21 +27,24 @@ class CommitType(Enum):
 
 
 # Functions.
-def main() -> None:
+def main(log: bool = True) -> None:
     """
     Entry point for the script.
 
     Args:
-        message (str, optional): A commit message string to validate. If None, the message will be
-        extracted from the command line arguments.
+        log (bool): Whether to log the results to the console. Defaults to True.
     """
+
+    # Log utility.
+    def logger(message: str):
+        print(message) if log else None
 
     # Get the commit message from arguments.
     try:
         commit_msg_filepath = sys.argv[1]
         commit_message = Path(commit_msg_filepath).read_text(encoding="utf-8").strip()
     except Exception as e:
-        print("Error: Unable to read the commit message file. " + str(e))
+        logger("Error: Unable to read the commit message file. " + str(e))
         sys.exit(1)
 
     # Extract the commit message from the match object.
@@ -49,7 +52,7 @@ def main() -> None:
     commit_message_pattern_re = re.compile(pattern=r"^(" + "|".join(commit_type_list) + r"):\s*(.+)$", flags=re.DOTALL)
     valid_commit_message_match = commit_message_pattern_re.match(string=commit_message)
     if not valid_commit_message_match:
-        print(
+        logger(
             "Error: Invalid commit message format. Please use the following format: "
             "<type>: <description> where <type> is one of " + ", ".join(commit_type_list) + " "
             "and <description> is a brief description of the changes (10-128 characters)."
@@ -63,7 +66,7 @@ def main() -> None:
     non_character_pattern_re = re.compile(pattern=r"[^\w]+")
     commit_description_without_non_characters = non_character_pattern_re.sub(repl="", string=commit_description)
     if len(commit_description_without_non_characters) < 10 or len(commit_description_without_non_characters) > 128:
-        print(
+        logger(
             "Error: Invalid commit message description length. "
             "The description should be between 10 and 128 characters, "
             "excluding non-character symbols."
@@ -78,7 +81,7 @@ def main() -> None:
     # Block invalid characters in the commit description.
     invalid_characters_re = re.compile(pattern=r"[^a-zA-Z0-9 _.,\-\/()\[\]\"':;]")
     if invalid_characters_re.search(string=commit_description):
-        print(
+        logger(
             "Error: Invalid characters found in the commit message description. "
             "Only alphanumeric characters and common punctuation are allowed."
         )
