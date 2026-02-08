@@ -5,6 +5,7 @@ Module with all utilities related to sample operations.
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.database.configs import Collections
+from backend.database.enums import PyObjectId
 
 
 # Functions.
@@ -48,3 +49,40 @@ async def get_sample_by_id(sample_id: str, db: AsyncDatabase) -> dict | None:
     sample = await collection.find_one({"_id": sample_id})
 
     return sample
+
+
+async def create_sample(sample_data: dict, project_id: str | PyObjectId, db: AsyncDatabase) -> dict:
+    """
+    Create a new sample in the database.
+
+    Args:
+            sample_data (dict): The data for the new sample.
+            project_id (str | PyObjectId): The ID of the associated project.
+            db (AsyncDatabase): The database instance.
+
+    Returns:
+            dict: The created sample with its ID.
+    """
+    # Get sample and file collections.
+    sample_collection = db.get_collection(name=Collections.SAMPLES.value.name)
+    file_collection = db.get_collection(name=Collections.FILES.value.name)
+
+    # Check if associated file exists.
+    file_id = sample_data.get("file_id")
+    file_id_obj = PyObjectId(oid=file_id)
+    file = await file_collection.find_one({"_id": file_id_obj})
+    if not file:
+        raise ValueError(f"File with ID {file_id} does not exist.")
+
+    # Check if file belongs to the specified project.
+    project_id_obj = PyObjectId(oid=project_id)
+    if project_id_obj not in file.get("project_id_list", []):
+        raise ValueError(f"File with ID {file_id} does not belong to project with ID {project_id}.")
+
+    # Create sample document.
+    result = await sample_collection.insert_one(sample_data)
+
+    # Retrieve the created sample.
+    created_sample = await sample_collection.find_one({"_id": result.inserted_id})
+
+    return created_sample  # type: ignore
