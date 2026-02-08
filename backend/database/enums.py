@@ -43,8 +43,13 @@ class Task(StrEnum):
     Enum for tasks.
     """
 
+    # Image.
     OBJECT_DETECTION = "Object Detection"
     SEMANTIC_SEGMENTATION = "Semantic Segmentation"
+
+    # Text.
+    TEXT_CLASSIFICATION = "Text Classification"
+    SENTENCE_TAGGING = "Sentence Tagging"
 
 
 class FileFormat(StrEnum):
