@@ -12,6 +12,17 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-added-large-files
+  # Check project typing.
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.19.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [
+          "fastapi",
+          "pydantic",
+          "pymongo"
+        ]
+        args: [--config-file=pyproject.toml]
   # Validate commit messages.
   - repo: local
     hooks:

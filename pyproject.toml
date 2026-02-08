@@ -1,3 +1,4 @@
+# Ruff.
 [tool.ruff]
 line-length = 120
 target-version = "py312"
@@ -12,3 +13,16 @@ indent-style = "space"
 
 [tool.ruff.lint.isort]
 known-first-party = ["backend", "scripts"]
+
+# Mypy.
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+explicit_package_bases = true
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_untyped_fields = true
