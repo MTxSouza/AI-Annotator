@@ -541,56 +541,6 @@ async def create_file_records(
     return processed_file_records
 
 
-# async def create_image_file_records(
-#     file_list: UploadFile | list[UploadFile], project_id: str | PyObjectId, db: AsyncDatabase
-# ) -> list[dict]:
-#     """
-#     Utility function to create image file records in the database.
-
-#     Args:
-#             file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to create records for.
-#             project_id (str | PyObjectId): The project ID associated with the files.
-#             db (AsyncDatabase): The database instance.
-
-#     Returns:
-#             list[dict]: List of created image file records.
-#     """
-#     return await create_file_records(
-#         file_list=file_list,
-#         file_processor=process_image_record,
-#         is_valid_file_format=_is_valid_image_file_format,
-#         sync_file_validator=_sync_check_image_corruption,
-#         sync_get_file_metadata=_sync_get_image_metadata,
-#         project_id=project_id,
-#         db=db,
-#     )
-
-
-# async def create_text_file_records(
-#     file_list: UploadFile | list[UploadFile], project_id: str | PyObjectId, db: AsyncDatabase
-# ) -> list[dict]:
-#     """
-#     Utility function to create text file records in the database.
-
-#     Args:
-#             file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to create records for.
-#             project_id (str | PyObjectId): The project ID associated with the files.
-#             db (AsyncDatabase): The database instance.
-
-#     Returns:
-#             list[dict]: List of created text file records.
-#     """
-#     return await create_file_records(
-#         file_list=file_list,
-#         file_processor=process_text_record,
-#         is_valid_file_format=_is_valid_text_file_format,
-#         sync_file_validator=_sync_check_text_corruption,
-#         sync_get_file_metadata=_sync_get_text_metadata,
-#         project_id=project_id,
-#         db=db,
-#     )
-
-
 async def set_project_id_in_file_record(
     file_id: str | PyObjectId, project_id: str | PyObjectId, db: AsyncDatabase
 ) -> None:
