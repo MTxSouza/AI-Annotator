@@ -81,6 +81,14 @@ def image_project_payload() -> dict:
 
 
 @pytest.fixture
+def text_project_payload() -> dict:
+    """
+    Fixture to provide a sample project payload for text files.
+    """
+    return {"name": "Test Project", "task": "Text Classification"}
+
+
+@pytest.fixture
 def reset_file_directory():
     """
     Fixture to reset the file storage directory before each module.
