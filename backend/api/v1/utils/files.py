@@ -466,17 +466,33 @@ async def create_file_records(
     task_name: str = task.get("task")  # type: ignore
 
     # Get task-file utility mapping.
+    file_type_map = {
+        # Images.
+        Task.OBJECT_DETECTION.value: "image",
+        # Texts.
+        Task.TEXT_CLASSIFICATION.value: "text",
+    }
+    file_type = file_type_map.get(task_name)
+    if not file_type:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported task: {task_name}.")
+
     task_map = {
-        Task.OBJECT_DETECTION.value: {
+        "image": {
             "file_processor": process_image_record,
             "is_valid_file_format": _is_valid_image_file_format,
             "sync_file_validator": _sync_check_image_corruption,
             "sync_get_file_metadata": _sync_get_image_metadata,
-        }
+        },
+        "text": {
+            "file_processor": process_text_record,
+            "is_valid_file_format": _is_valid_text_file_format,
+            "sync_file_validator": _sync_check_text_corruption,
+            "sync_get_file_metadata": _sync_get_text_metadata,
+        },
     }
-    task_utils = task_map.get(task_name)
+    task_utils = task_map.get(file_type)
     if not task_utils:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported task: {task_name}.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported file type: {file_type}.")
 
     file_processor: Callable = task_utils["file_processor"]  # type: ignore
     is_valid_file_format: Callable = task_utils["is_valid_file_format"]  # type: ignore
