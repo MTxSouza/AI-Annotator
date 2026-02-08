@@ -2,13 +2,14 @@
 Main module with all schemas used in Samples collection.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from backend.database.models import CommonResponseModel
 from backend.database.types import PyObjectId
 
 
 # Schemas.
-class __Sample(BaseModel):
+class __Sample(CommonResponseModel):
     """
     Sample model in the database.
     """
@@ -42,3 +43,11 @@ class ObjectDetectionSample_DB(ObjectSample_DB):
     )
     width: float = Field(..., ge=0.0, le=1.0, description="The width of the bounding box (normalized).")
     height: float = Field(..., ge=0.0, le=1.0, description="The height of the bounding box (normalized).")
+
+
+class ObjectDetectionSample(ObjectDetectionSample_DB):
+    """
+    Object detection sample model for API responses.
+    """
+
+    pass
