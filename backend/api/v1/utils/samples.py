@@ -4,6 +4,7 @@ Module with all utilities related to sample operations.
 
 from pymongo.asynchronous.database import AsyncDatabase
 
+from backend.api.v1.models.samples import ObjectDetectionSample_Create
 from backend.database.configs import Collections
 from backend.database.enums import PyObjectId
 
@@ -51,12 +52,14 @@ async def get_sample_by_id(sample_id: str, db: AsyncDatabase) -> dict | None:
     return sample
 
 
-async def create_sample(sample_data: dict, project_id: str | PyObjectId, db: AsyncDatabase) -> dict:
+async def create_sample(
+    sample_data: dict | ObjectDetectionSample_Create, project_id: str | PyObjectId, db: AsyncDatabase
+) -> dict:
     """
     Create a new sample in the database.
 
     Args:
-            sample_data (dict): The data for the new sample.
+            sample_data (dict | ObjectDetectionSample_Create): The data for the new sample.
             project_id (str | PyObjectId): The ID of the associated project.
             db (AsyncDatabase): The database instance.
 
@@ -67,8 +70,14 @@ async def create_sample(sample_data: dict, project_id: str | PyObjectId, db: Asy
     sample_collection = db.get_collection(name=Collections.SAMPLES.value.name)
     file_collection = db.get_collection(name=Collections.FILES.value.name)
 
+    # Convert sample_data to dict.
+    if isinstance(sample_data, ObjectDetectionSample_Create):
+        sample_data_dict = sample_data.model_dump()
+    else:
+        sample_data_dict = sample_data
+
     # Check if associated file exists.
-    file_id = sample_data.get("file_id")
+    file_id = sample_data_dict.get("file_id")
     file_id_obj = PyObjectId(oid=file_id)
     file = await file_collection.find_one({"_id": file_id_obj})
     if not file:
@@ -80,7 +89,7 @@ async def create_sample(sample_data: dict, project_id: str | PyObjectId, db: Asy
         raise ValueError(f"File with ID {file_id} does not belong to project with ID {project_id}.")
 
     # Create sample document.
-    result = await sample_collection.insert_one(sample_data)
+    result = await sample_collection.insert_one(sample_data_dict)
 
     # Retrieve the created sample.
     created_sample = await sample_collection.find_one({"_id": result.inserted_id})
