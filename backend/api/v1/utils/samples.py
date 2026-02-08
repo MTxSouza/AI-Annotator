@@ -2,6 +2,8 @@
 Module with all utilities related to sample operations.
 """
 
+from fastapi import status
+from fastapi.exceptions import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.samples import ObjectDetectionSample_Create
@@ -81,12 +83,15 @@ async def create_sample(
     file_id_obj = PyObjectId(oid=file_id)
     file = await file_collection.find_one({"_id": file_id_obj})
     if not file:
-        raise ValueError(f"File with ID {file_id} does not exist.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"File with ID {file_id} does not exist.")
 
     # Check if file belongs to the specified project.
     project_id_obj = PyObjectId(oid=project_id)
     if project_id_obj not in file.get("project_id_list", []):
-        raise ValueError(f"File with ID {file_id} does not belong to project with ID {project_id}.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File with ID {file_id} does not belong to project with ID {project_id}.",
+        )
 
     # Create sample document.
     result = await sample_collection.insert_one(sample_data_dict)
