@@ -8,14 +8,15 @@ import uuid
 from collections.abc import Callable, Generator
 from pathlib import Path
 
-from fastapi import UploadFile
+from fastapi import UploadFile, status
 from fastapi.concurrency import run_in_threadpool
+from fastapi.exceptions import HTTPException
 from PIL import Image, UnidentifiedImageError
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.files import ImageFile_Create, TextFile_Create, UploadedFileResponse
 from backend.database.configs import Collections
-from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId
+from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId, Task
 
 # Global variables.
 STATIC_FILE_DIRECTORY = "/app/storage"
@@ -441,10 +442,6 @@ async def process_text_record(
 
 async def create_file_records(
     file_list: UploadFile | list[UploadFile],
-    file_processor: Callable,
-    is_valid_file_format: Callable,
-    sync_file_validator: Callable,
-    sync_get_file_metadata: Callable,
     project_id: str | PyObjectId,
     db: AsyncDatabase,
 ) -> list[dict]:
@@ -453,10 +450,6 @@ async def create_file_records(
 
     Args:
             file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to create records for.
-            file_processor (callable): The function to process and create the file record.
-            is_valid_file_format (callable): The function to validate the file format.
-            sync_file_validator (callable): The synchronous function to validate the file.
-            sync_get_file_metadata (callable): The synchronous function to get file metadata.
             project_id (str | PyObjectId): The project ID associated with the files.
             db (AsyncDatabase): The database instance.
 
@@ -466,6 +459,29 @@ async def create_file_records(
     # Check if single file is provided.
     if isinstance(file_list, UploadFile):
         file_list = [file_list]
+
+    # Get project task.
+    project_collection = db.get_collection(name=Collections.PROJECTS.value.name)
+    task: dict = await project_collection.find_one({"_id": PyObjectId(oid=project_id)}, {"task": 1})  # type: ignore
+    task_name: str = task.get("task")  # type: ignore
+
+    # Get task-file utility mapping.
+    task_map = {
+        Task.OBJECT_DETECTION.value: {
+            "file_processor": process_image_record,
+            "is_valid_file_format": _is_valid_image_file_format,
+            "sync_file_validator": _sync_check_image_corruption,
+            "sync_get_file_metadata": _sync_get_image_metadata,
+        }
+    }
+    task_utils = task_map.get(task_name)
+    if not task_utils:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported task: {task_name}.")
+
+    file_processor: Callable = task_utils["file_processor"]  # type: ignore
+    is_valid_file_format: Callable = task_utils["is_valid_file_format"]  # type: ignore
+    sync_file_validator: Callable = task_utils["sync_file_validator"]  # type: ignore
+    sync_get_file_metadata: Callable = task_utils["sync_get_file_metadata"]  # type: ignore
 
     # Process each file.
     processed_file_records = []
@@ -525,54 +541,54 @@ async def create_file_records(
     return processed_file_records
 
 
-async def create_image_file_records(
-    file_list: UploadFile | list[UploadFile], project_id: str | PyObjectId, db: AsyncDatabase
-) -> list[dict]:
-    """
-    Utility function to create image file records in the database.
+# async def create_image_file_records(
+#     file_list: UploadFile | list[UploadFile], project_id: str | PyObjectId, db: AsyncDatabase
+# ) -> list[dict]:
+#     """
+#     Utility function to create image file records in the database.
 
-    Args:
-            file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to create records for.
-            project_id (str | PyObjectId): The project ID associated with the files.
-            db (AsyncDatabase): The database instance.
+#     Args:
+#             file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to create records for.
+#             project_id (str | PyObjectId): The project ID associated with the files.
+#             db (AsyncDatabase): The database instance.
 
-    Returns:
-            list[dict]: List of created image file records.
-    """
-    return await create_file_records(
-        file_list=file_list,
-        file_processor=process_image_record,
-        is_valid_file_format=_is_valid_image_file_format,
-        sync_file_validator=_sync_check_image_corruption,
-        sync_get_file_metadata=_sync_get_image_metadata,
-        project_id=project_id,
-        db=db,
-    )
+#     Returns:
+#             list[dict]: List of created image file records.
+#     """
+#     return await create_file_records(
+#         file_list=file_list,
+#         file_processor=process_image_record,
+#         is_valid_file_format=_is_valid_image_file_format,
+#         sync_file_validator=_sync_check_image_corruption,
+#         sync_get_file_metadata=_sync_get_image_metadata,
+#         project_id=project_id,
+#         db=db,
+#     )
 
 
-async def create_text_file_records(
-    file_list: UploadFile | list[UploadFile], project_id: str | PyObjectId, db: AsyncDatabase
-) -> list[dict]:
-    """
-    Utility function to create text file records in the database.
+# async def create_text_file_records(
+#     file_list: UploadFile | list[UploadFile], project_id: str | PyObjectId, db: AsyncDatabase
+# ) -> list[dict]:
+#     """
+#     Utility function to create text file records in the database.
 
-    Args:
-            file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to create records for.
-            project_id (str | PyObjectId): The project ID associated with the files.
-            db (AsyncDatabase): The database instance.
+#     Args:
+#             file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to create records for.
+#             project_id (str | PyObjectId): The project ID associated with the files.
+#             db (AsyncDatabase): The database instance.
 
-    Returns:
-            list[dict]: List of created text file records.
-    """
-    return await create_file_records(
-        file_list=file_list,
-        file_processor=process_text_record,
-        is_valid_file_format=_is_valid_text_file_format,
-        sync_file_validator=_sync_check_text_corruption,
-        sync_get_file_metadata=_sync_get_text_metadata,
-        project_id=project_id,
-        db=db,
-    )
+#     Returns:
+#             list[dict]: List of created text file records.
+#     """
+#     return await create_file_records(
+#         file_list=file_list,
+#         file_processor=process_text_record,
+#         is_valid_file_format=_is_valid_text_file_format,
+#         sync_file_validator=_sync_check_text_corruption,
+#         sync_get_file_metadata=_sync_get_text_metadata,
+#         project_id=project_id,
+#         db=db,
+#     )
 
 
 async def set_project_id_in_file_record(
