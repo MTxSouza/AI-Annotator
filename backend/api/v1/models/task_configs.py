@@ -21,6 +21,15 @@ class __TaskConfig(CommonResponseModel):
     file_format: list[FileFormat] = Field(..., description="The file formats supported for the task.")
 
 
+class __ClassTaskConfig(__TaskConfig):
+    """
+    Class task configuration model.
+    """
+
+    # Fields.
+    class_name_list: list[str] = Field(default=[], description="The names of the classes for the task.")
+
+
 # - Images.
 class __ImageTaskConfig(__TaskConfig):
     """
@@ -33,16 +42,7 @@ class __ImageTaskConfig(__TaskConfig):
     )
 
 
-class __ObjectTaskConfig(__ImageTaskConfig):
-    """
-    Object task configuration model.
-    """
-
-    # Fields.
-    class_name_list: list[str] = Field(default=[], description="The names of the object classes for the task.")
-
-
-class ObjectDetectionTaskConfig(__ObjectTaskConfig):
+class ObjectDetectionTaskConfig(__ImageTaskConfig, __ClassTaskConfig):
     """
     Object detection task configuration model.
     """
@@ -50,7 +50,7 @@ class ObjectDetectionTaskConfig(__ObjectTaskConfig):
     pass
 
 
-class SemanticSegmentationTaskConfig(__ObjectTaskConfig):
+class SemanticSegmentationTaskConfig(__ImageTaskConfig, __ClassTaskConfig):
     """
     Semantic segmentation task configuration model.
     """
@@ -68,6 +68,14 @@ class __TextTaskConfig(__TaskConfig):
     file_format: list[FileFormat] = Field(
         default=FileFormat.get_text_formats(), description="The text file formats supported for the task."
     )
+
+
+class TextClassificationTaskConfig(__TextTaskConfig, __ClassTaskConfig):
+    """
+    Text classification task configuration model.
+    """
+
+    pass
 
 
 # - Audios.
