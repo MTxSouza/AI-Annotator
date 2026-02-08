@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 # Copy test code.
 COPY ./scripts ./scripts
 COPY ./tests ./tests
-ENTRYPOINT [ "pytest", "-s", "-v", "/home/tests" ]
+ENTRYPOINT [ "pytest", "-s", "-vv", "/home/tests" ]
 
 # --- STAGE FOR PRODUCTION ---
 FROM base AS production
