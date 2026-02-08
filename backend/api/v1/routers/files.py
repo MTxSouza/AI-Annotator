@@ -3,7 +3,6 @@ Module with all endpoints related to file operations.
 """
 
 from fastapi import APIRouter, Depends, UploadFile, status
-from fastapi.exceptions import HTTPException
 from fastapi.params import File, Param
 from fastapi.requests import Request
 from pymongo.asynchronous.database import AsyncDatabase
@@ -35,72 +34,27 @@ async def get_files_endpoint(
     return await get_files(limit=limit, offset=offset, db=db)  # type: ignore
 
 
-@router.post(path="/{id}/images/", response_model=UploadedFileListResponse, status_code=status.HTTP_201_CREATED)
+@router.post(path="/{id}/", response_model=UploadedFileListResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("10/minute")
-async def upload_image_file_endpoint(
+async def upload_file_endpoint(
     request: Request,
     file_list: UploadFile | list[UploadFile] = File(...),  # type: ignore
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> UploadedFileListResponse:
     """
-    Endpoint to upload an image file.
+    Endpoint to upload any file. This endpoint will automatically check the project task and validate
+    the correct file type.
 
     Args:
-            file_list (UploadFile | list[UploadFile]): The image file or list of image files to upload.
+            file_list (UploadFile | list[UploadFile]): The file or list of files to upload.
 
     Returns:
-            UploadedFileListResponse: The uploaded image files.
+            UploadedFileListResponse: The uploaded files.
     """
     # Get project ID.
     project_id = project.id
 
-    # Process images.
+    # Process files.
     data = await create_file_records(file_list=file_list, project_id=project_id, db=db)
     return UploadedFileListResponse(data=data)  # type: ignore
-
-
-@router.post(path="/{id}/texts/", response_model=UploadedFileListResponse, status_code=status.HTTP_201_CREATED)
-@limiter.limit("10/minute")
-async def upload_text_file_endpoint(
-    request: Request,
-    file_list: UploadFile | list[UploadFile] = File(...),  # type: ignore
-    project: Project = Depends(dependency=get_authenticated_project),
-    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
-) -> UploadedFileListResponse:
-    """
-    Endpoint to upload a text file.
-
-    Args:
-            file_list (UploadFile | list[UploadFile]): The list of text files to upload.
-
-    Returns:
-            UploadedFileListResponse: The uploaded text files.
-    """
-    # Get project ID.
-    project_id = project.id
-
-    # Process texts.
-    data = await create_file_records(file_list=file_list, project_id=project_id, db=db)
-    return UploadedFileListResponse(data=data)  # type: ignore
-
-
-@router.post(path="/{id}/audios/", response_model=UploadedFileListResponse, status_code=status.HTTP_201_CREATED)
-@limiter.limit("10/minute")
-async def upload_audio_file_endpoint(
-    request: Request,
-    file_list: UploadFile | list[UploadFile] = File(...),  # type: ignore
-    project: Project = Depends(dependency=get_authenticated_project),
-    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
-) -> UploadedFileListResponse:
-    """
-    Endpoint to upload an audio file.
-
-    Args:
-            file_list (UploadFile | list[UploadFile]): The list of audio files to upload.
-
-    Returns:
-            UploadedFileListResponse: The uploaded audio files.
-    """
-    # NOT IMPLEMENTED YET.
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Audio file upload not implemented yet.")
