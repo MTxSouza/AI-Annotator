@@ -76,7 +76,7 @@ def main() -> None:
     commit_description = trim_whitespace_re.sub(repl=" ", string=commit_description)
 
     # Block invalid characters in the commit description.
-    invalid_characters_re = re.compile(pattern=r"[^a-zA-Z0-9 .,\-\/()\[\]\"':;]")
+    invalid_characters_re = re.compile(pattern=r"[^a-zA-Z0-9 _.,\-\/()\[\]\"':;]")
     if invalid_characters_re.search(string=commit_description):
         print(
             "Error: Invalid characters found in the commit message description. "
