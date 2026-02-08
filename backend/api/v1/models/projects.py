@@ -103,6 +103,6 @@ class Project(ProjectSimple):
     """
 
     # Additional Fields.
-    number_of_files: int | None = Field(default=0, description="The number of files in the project.")
-    number_of_samples: int | None = Field(default=0, description="The number of samples in the project.")
+    number_of_files: int = Field(default=0, description="The number of files in the project.")
+    number_of_samples: int = Field(default=0, description="The number of samples in the project.")
     configs: __PROJECT_CONFIGS__ = Field(..., description="The task configurations for the project.")
