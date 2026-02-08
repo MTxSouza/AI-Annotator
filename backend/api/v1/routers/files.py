@@ -10,7 +10,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.files import AudioFile, ImageFile, TextFile, UploadedFileListResponse
 from backend.api.v1.models.projects import Project
-from backend.api.v1.utils.files import create_image_file_records, create_text_file_records, get_files
+from backend.api.v1.utils.files import create_file_records, get_files
 from backend.api.v1.utils.projects import get_authenticated_project
 from backend.database.configs import DatabaseConfig
 from backend.limiter import limiter
@@ -56,7 +56,7 @@ async def upload_image_file_endpoint(
     project_id = project.id
 
     # Process images.
-    data = await create_image_file_records(file_list=file_list, project_id=project_id, db=db)
+    data = await create_file_records(file_list=file_list, project_id=project_id, db=db)
     return UploadedFileListResponse(data=data)  # type: ignore
 
 
@@ -81,7 +81,7 @@ async def upload_text_file_endpoint(
     project_id = project.id
 
     # Process texts.
-    data = await create_text_file_records(file_list=file_list, project_id=project_id, db=db)
+    data = await create_file_records(file_list=file_list, project_id=project_id, db=db)
     return UploadedFileListResponse(data=data)  # type: ignore
 
 
