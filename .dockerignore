@@ -7,6 +7,7 @@ __pycache__/
 storage/
 .git
 .ruff_cache/
+.mypy_cache/
 LICENSE
 *.toml
 *.sh
