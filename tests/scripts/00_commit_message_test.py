@@ -52,7 +52,7 @@ def run_check_commit_message_function_with_temp_file(commit_message: str) -> str
     """
     temp_file_path = write_commit_message_to_temp_file(commit_message=commit_message)
     sys.argv = ["check_commit_message.py", temp_file_path]
-    check_commit_message_function()
+    check_commit_message_function(log=False)
     return read_commit_message_from_temp_file(file_path=temp_file_path)
 
 
