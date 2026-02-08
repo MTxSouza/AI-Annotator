@@ -2,7 +2,11 @@
 Module with all utilities related to task configuration operations.
 """
 
-from backend.api.v1.models.task_configs import ObjectDetectionTaskConfig, SemanticSegmentationTaskConfig
+from backend.api.v1.models.task_configs import (
+    ObjectDetectionTaskConfig,
+    SemanticSegmentationTaskConfig,
+    TextClassificationTaskConfig,
+)
 from backend.database.enums import PyObjectId, Task
 
 
@@ -20,8 +24,11 @@ def setup_task_config(project_id: str, task: Task) -> dict:
     """
     # Task configuration mapping.
     task_config_mapping = {
+        # Images.
         Task.OBJECT_DETECTION.value: ObjectDetectionTaskConfig,
         Task.SEMANTIC_SEGMENTATION.value: SemanticSegmentationTaskConfig,
+        # Texts.
+        Task.TEXT_CLASSIFICATION.value: TextClassificationTaskConfig,
     }
 
     # Fix task enum if needed.
