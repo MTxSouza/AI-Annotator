@@ -33,11 +33,39 @@ def list_text_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
 # Tests.
 def test_create_text_file_record(
     client: TestClient,
+    text_project_payload: dict,
     list_text_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
     reset_file_directory: None,  # Used to reset file directory
 ):
     """
     Test to create a text file record.
     """
-    # (TODO: IMPLMENTATION GOES HERE. THERE IS NO TASK AVAILABLE FOR TEXT FILES YET)
-    pass
+    # Create project first.
+    project_response = client.post(url="/projects/", json=text_project_payload)
+    assert project_response.status_code == 201
+    project = project_response.json()
+    project_id = project["_id"]
+
+    # Check number of files and samples in project response.
+    assert project["number_of_files"] == 0
+    assert project["number_of_samples"] == 0
+
+    # Create file record.
+    file_response = client.post(url=f"/files/{project_id}/", files=list_text_file_payload)
+    assert file_response.status_code == 201
+
+    # Check response.
+    file_response_json = file_response.json()
+    assert "data" in file_response_json
+    assert len(file_response_json["data"]) == len(list_text_file_payload)
+
+    for i, file_data in enumerate(iterable=file_response_json["data"]):
+        assert file_data["status"] == "Created"
+        assert file_data["message"] == f"Text file '{list_text_file_payload[i][1][0]}' uploaded successfully."
+
+    # Get project again to check number of files and samples.
+    project_response = client.get(url=f"/projects/{project_id}/")
+    assert project_response.status_code == 200
+    project = project_response.json()
+    assert project["number_of_files"] == len(list_text_file_payload)
+    assert project["number_of_samples"] == 0
