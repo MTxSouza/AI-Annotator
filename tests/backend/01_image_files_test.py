@@ -85,7 +85,12 @@ def test_create_image_file_record(
     # Create project first.
     project_response = client.post(url="/projects/", json=image_project_payload)
     assert project_response.status_code == 201
-    project_id = project_response.json()["_id"]
+    project = project_response.json()
+    project_id = project["_id"]
+
+    # Check number of files and samples in project response.
+    assert project["number_of_files"] == 0
+    assert project["number_of_samples"] == 0
 
     # Create file record.
     file_response = client.post(url=f"/files/{project_id}/images/", files=list_image_file_payload)
@@ -99,6 +104,13 @@ def test_create_image_file_record(
     for i, file_data in enumerate(iterable=file_response_json["data"]):
         assert file_data["status"] == "Created"
         assert file_data["message"] == f"Image file '{list_image_file_payload[i][1][0]}' uploaded successfully."
+
+    # Get project again to check number of files and samples.
+    project_response = client.get(url=f"/projects/{project_id}/")
+    assert project_response.status_code == 200
+    project = project_response.json()
+    assert project["number_of_files"] == len(list_image_file_payload)
+    assert project["number_of_samples"] == 0
 
 
 def test_create_duplicate_file_record(
