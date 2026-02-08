@@ -5,8 +5,10 @@ Module with all endpoints related to sample operations.
 from fastapi import APIRouter, Depends, status
 from pymongo.asynchronous.database import AsyncDatabase
 
-from backend.api.v1.models.samples import ObjectDetectionSample
-from backend.api.v1.utils.samples import get_sample_by_id, get_samples
+from backend.api.v1.models.projects import Project
+from backend.api.v1.models.samples import ObjectDetectionSample, ObjectDetectionSample_Create
+from backend.api.v1.utils.projects import get_authenticated_project
+from backend.api.v1.utils.samples import create_sample, get_sample_by_id, get_samples
 from backend.database.configs import DatabaseConfig
 
 # Instantiate the router.
@@ -41,3 +43,24 @@ async def get_sample_endpoint(
             ObjectDetectionSample: The sample with the specified ID.
     """
     return await get_sample_by_id(sample_id=id, db=db)  # type: ignore
+
+
+@router.post(path="/{id}/", response_model=ObjectDetectionSample, status_code=status.HTTP_201_CREATED)
+async def create_sample_endpoint(
+    sample: ObjectDetectionSample_Create,
+    project: Project = Depends(dependency=get_authenticated_project),
+    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
+) -> ObjectDetectionSample:
+    """
+    Endpoint to create a new sample.
+
+    Args:
+            sample (ObjectDetectionSample_Create): The sample data to create.
+
+    Returns:
+            ObjectDetectionSample: The created sample.
+    """
+    # Get project ID.
+    project_id = project.id
+
+    return await create_sample(sample_data=sample, project_id=project_id, db=db)  # type: ignore
