@@ -28,7 +28,7 @@ class _CollectionConfig:
     """
 
     name: str
-    index_configs: list[_IndexConfig]
+    index_configs: list[_IndexConfig] | None = []
 
 
 class Collections(Enum):
@@ -48,6 +48,9 @@ class Collections(Enum):
             _IndexConfig(name="file_hash", is_indexed=True, is_unique=True),
             _IndexConfig(name="filename", is_indexed=True, is_unique=True),
         ],
+    )
+    SAMPLES = _CollectionConfig(
+        name="samples",
     )
 
 
