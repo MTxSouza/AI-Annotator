@@ -65,7 +65,25 @@ async def get_project_by_id(project_id: str | PyObjectId, db: AsyncDatabase) -> 
                 "as": "configs",
             }
         },
+        {
+            "$lookup": {
+                "from": Collections.FILES.value.name,
+                "localField": "_id",
+                "foreignField": "project_id_list",
+                "as": "number_of_files",
+            }
+        },
+        {
+            "$lookup": {
+                "from": Collections.SAMPLES.value.name,
+                "localField": "_id",
+                "foreignField": "project_id",
+                "as": "number_of_samples",
+            }
+        },
         {"$set": {"configs": {"$first": "$configs"}}},
+        {"$set": {"number_of_files": {"$size": "$number_of_files"}}},
+        {"$set": {"number_of_samples": {"$size": "$number_of_samples"}}},
     ]
     cursor = await collection.aggregate(pipeline)
     project_output = await cursor.to_list(length=1)
