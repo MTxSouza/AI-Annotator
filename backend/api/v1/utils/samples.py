@@ -104,6 +104,24 @@ async def get_create_sample_metadata(
     }
 
 
+async def _object_detection_sample_setup(created_sample: dict, project_id: str | PyObjectId, db: AsyncDatabase) -> None:
+    """
+    Setup extra configurations for an object detection sample.
+
+    Args:
+            created_sample (dict): The created sample.
+            project_id (str | PyObjectId): The ID of the associated project.
+            db (AsyncDatabase): The database instance.
+    """
+    # Get task config collection.
+    collection = db.get_collection(name=Collections.TASK_CONFIGS.value.name)
+
+    # Add new class name to project if it doesn't exist.
+    class_name = created_sample.get("class_name")
+    project_id_obj = PyObjectId(oid=project_id)
+    await collection.update_one({"project_id": project_id_obj}, {"$addToSet": {"class_name_list": class_name}})
+
+
 async def create_sample(
     sample_data: dict | ObjectDetectionSample_Create, project_id: str | PyObjectId, db: AsyncDatabase
 ) -> dict:
@@ -147,21 +165,3 @@ async def create_sample(
     created_sample = await collection.find_one({"_id": result.inserted_id})
 
     return created_sample  # type: ignore
-
-
-async def _object_detection_sample_setup(created_sample: dict, project_id: str | PyObjectId, db: AsyncDatabase) -> None:
-    """
-    Setup extra configurations for an object detection sample.
-
-    Args:
-            created_sample (dict): The created sample.
-            project_id (str | PyObjectId): The ID of the associated project.
-            db (AsyncDatabase): The database instance.
-    """
-    # Get task config collection.
-    collection = db.get_collection(name=Collections.TASK_CONFIGS.value.name)
-
-    # Add new class name to project if it doesn't exist.
-    class_name = created_sample.get("class_name")
-    project_id_obj = PyObjectId(oid=project_id)
-    await collection.update_one({"project_id": project_id_obj}, {"$addToSet": {"class_name_list": class_name}})
