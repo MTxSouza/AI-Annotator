@@ -2,10 +2,10 @@
 Main module with all schemas used in Samples collection.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from backend.database.enums import PyObjectId
-from backend.database.models import CommonRequestModel, CommonResponseModel
+from backend.database.models import CommonModel, CommonRequestModel, CommonResponseModel
 
 
 # Schemas.
@@ -18,7 +18,7 @@ class Sample_DB(CommonResponseModel):
     project_id: PyObjectId | str = Field(..., description="The ID of the project the sample belongs to.")
 
 
-class Sample(BaseModel):
+class Sample(CommonModel):
     """
     Sample model.
     """
