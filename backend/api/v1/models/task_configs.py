@@ -39,7 +39,7 @@ class __ObjectTaskConfig(__ImageTaskConfig):
     """
 
     # Fields.
-    class_names: list[str] = Field(default=[], description="The names of the object classes for the task.")
+    class_name_list: list[str] = Field(default=[], description="The names of the object classes for the task.")
 
 
 class ObjectDetectionTaskConfig(__ObjectTaskConfig):
