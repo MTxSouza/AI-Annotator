@@ -21,6 +21,7 @@ class CommitType(Enum):
     STYLE = ("style", "💄")
     REFACTOR = ("refactor", "♻️")
     TEST = ("test", "✅")
+    OPS = ("ops", "🚀")
     CHORE = ("chore", "🔧")
     REVERT = ("revert", "⏪")
 
