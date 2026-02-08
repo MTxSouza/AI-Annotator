@@ -68,10 +68,10 @@ async def create_sample(
     Returns:
             dict: The created sample with its ID.
     """
-    # Get sample, file and project collections.
+    # Get sample, file and task config collections.
     sample_collection = db.get_collection(name=Collections.SAMPLES.value.name)
     file_collection = db.get_collection(name=Collections.FILES.value.name)
-    project_collection = db.get_collection(name=Collections.PROJECTS.value.name)
+    task_config_collection = db.get_collection(name=Collections.TASK_CONFIGS.value.name)
 
     # Convert sample_data to dict.
     if isinstance(sample_data, ObjectDetectionSample_Create):
@@ -100,7 +100,9 @@ async def create_sample(
 
     # Add new class name to project if it doesn't exist.
     class_name = sample_data_dict.get("class_name")
-    await project_collection.update_one({"_id": project_id_obj}, {"$addToSet": {"class_name_list": class_name}})
+    await task_config_collection.update_one(
+        {"project_id": project_id_obj}, {"$addToSet": {"class_name_list": class_name}}
+    )
 
     # Retrieve the created sample.
     created_sample = await sample_collection.find_one({"_id": result.inserted_id})
