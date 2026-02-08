@@ -61,8 +61,8 @@ class DatabaseConfig:
     """
 
     # Attributes.
-    __client: AsyncMongoClient = None
-    __database_name: str = None
+    __client: AsyncMongoClient | None = None
+    __database_name: str | None = None
 
     # Class methods.
     @classmethod
@@ -98,7 +98,7 @@ class DatabaseConfig:
         cls._check_client_initialized()
 
         # Close the MongoDB client.
-        await cls.__client.close()
+        await cls.__client.close()  # type: ignore
         cls.__client = None
         cls.__database_name = None
 
@@ -125,7 +125,7 @@ class DatabaseConfig:
         cls._check_client_initialized()
 
         # Return the database connection.
-        return cls.__client.get_database(name=cls.__database_name)
+        return cls.__client.get_database(name=cls.__database_name)  # type: ignore
 
     @classmethod
     async def _drop_database(cls) -> None:
@@ -136,16 +136,16 @@ class DatabaseConfig:
         cls._check_client_initialized()
 
         # Drop the database.
-        await cls.__client.drop_database(name_or_database=cls.__database_name)
+        await cls.__client.drop_database(name_or_database=cls.__database_name)  # type: ignore
 
     # Properties.
     @property
-    def client(self) -> AsyncMongoClient:
+    def client(self) -> AsyncMongoClient | None:
         """
         Property to get the database client.
 
         Returns:
-            AsyncMongoClient: The database client.
+            AsyncMongoClient | None: The database client or None if the client is not initialized.
         """
         # Check if the client is initialized.
         self._check_client_initialized()
@@ -154,11 +154,11 @@ class DatabaseConfig:
         return self.__client
 
     @property
-    def database_name(self) -> str:
+    def database_name(self) -> str | None:
         """
         Property to get the database name.
 
         Returns:
-            str: The database name.
+            str | None: The database name or None if the client is not initialized.
         """
         return self.__database_name

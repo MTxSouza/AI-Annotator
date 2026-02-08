@@ -105,10 +105,10 @@ def main() -> None:
 
     # Get the corresponding emoji for the commit type.
     commit_type_emoji = CommitType[commit_type.upper()]
-    commit_type_emoji = commit_type_emoji.value[1]
+    commit_type_emoji_str = commit_type_emoji.value[1]
 
     # Format the commit message to match the project conventions.
-    formatted_commit_message = f"{commit_type_emoji} {commit_type}: {commit_description}"
+    formatted_commit_message = f"{commit_type_emoji_str} {commit_type}: {commit_description}"
 
     # Write the formatted commit message back to the file.
     Path(commit_msg_filepath).write_text(formatted_commit_message, encoding="utf-8")

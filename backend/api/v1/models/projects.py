@@ -6,8 +6,8 @@ from pydantic import BaseModel, Field, computed_field, model_validator
 
 from backend.api.v1.models.task_configs import ObjectDetectionTaskConfig, SemanticSegmentationTaskConfig
 from backend.api.v1.utils.auth import hash_password
+from backend.database.enums import Task
 from backend.database.models import CommonRequestModel, CommonResponseModel, CommonUpdateModel
-from backend.database.types import Task
 
 # Global Variables.
 __MIN_NAME_LENGTH__: int = 1
@@ -59,13 +59,13 @@ class Update(_DB, CommonUpdateModel):
     """
 
     # Fields.
-    name: str | None = Field(default=None, min_length=__MIN_NAME_LENGTH__, max_length=__MAX_NAME_LENGTH__)
+    name: str | None = Field(default=None, min_length=__MIN_NAME_LENGTH__, max_length=__MAX_NAME_LENGTH__)  # type: ignore
     password: str | None = Field(
         default=None, min_length=1, exclude=True, description="The password for the project if it should be private."
     )
 
     # To be excluded.
-    task: Task | None = Field(default=None, exclude=True)
+    task: Task | None = Field(default=None, exclude=True)  # type: ignore
 
     # Validators.
     @model_validator(mode="after")

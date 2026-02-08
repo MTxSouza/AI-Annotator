@@ -26,4 +26,4 @@ async def get_samples_endpoint(
     Returns:
             list: List of all samples.
     """
-    return await get_samples(limit=limit, offset=offset, db=db)
+    return await get_samples(limit=limit, offset=offset, db=db)  # type: ignore

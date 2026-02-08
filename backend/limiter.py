@@ -19,4 +19,4 @@ def setup_limiter(app: FastAPI) -> None:
         app (FastAPI): The FastAPI application instance.
     """
     app.state.limiter = limiter
-    app.add_exception_handler(status.HTTP_429_TOO_MANY_REQUESTS, _rate_limit_exceeded_handler)
+    app.add_exception_handler(status.HTTP_429_TOO_MANY_REQUESTS, _rate_limit_exceeded_handler)  # type: ignore

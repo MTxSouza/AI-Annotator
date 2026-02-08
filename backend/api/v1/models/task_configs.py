@@ -4,8 +4,8 @@ Module with all models related to all task configurations.
 
 from pydantic import Field
 
+from backend.database.enums import FileFormat, PyObjectId
 from backend.database.models import CommonResponseModel
-from backend.database.types import FileFormat, PyObjectId
 
 
 # Schemas.
@@ -15,7 +15,9 @@ class __TaskConfig(CommonResponseModel):
     """
 
     # Fields.
-    project_id: PyObjectId = Field(..., description="The ID of the project associated with this task configuration.")
+    project_id: PyObjectId | str = Field(
+        ..., description="The ID of the project associated with this task configuration."
+    )
     file_format: list[FileFormat] = Field(..., description="The file formats supported for the task.")
 
 
@@ -26,7 +28,7 @@ class __ImageTaskConfig(__TaskConfig):
     """
 
     # Fields.
-    file_format: list[FileFormat] | None = Field(
+    file_format: list[FileFormat] = Field(
         default=FileFormat.get_image_formats(), description="The image file formats supported for the task."
     )
 
@@ -37,7 +39,7 @@ class __ObjectTaskConfig(__ImageTaskConfig):
     """
 
     # Fields.
-    class_names: list[str] | None = Field(default=[], description="The names of the object classes for the task.")
+    class_names: list[str] = Field(default=[], description="The names of the object classes for the task.")
 
 
 class ObjectDetectionTaskConfig(__ObjectTaskConfig):
@@ -63,7 +65,7 @@ class __TextTaskConfig(__TaskConfig):
     """
 
     # Fields.
-    file_format: list[FileFormat] | None = Field(
+    file_format: list[FileFormat] = Field(
         default=FileFormat.get_text_formats(), description="The text file formats supported for the task."
     )
 
@@ -75,6 +77,6 @@ class __AudioTaskConfig(__TaskConfig):
     """
 
     # Fields.
-    file_format: list[FileFormat] | None = Field(
+    file_format: list[FileFormat] = Field(
         default=FileFormat.get_audio_formats(), description="The audio file formats supported for the task."
     )

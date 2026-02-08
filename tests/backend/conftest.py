@@ -66,7 +66,7 @@ def clear_database():
     Fixture to clear the database before each test.
     """
     # Clear the database before each test.
-    client = MongoClient(host=BackendSettings.database_uri, port=BackendSettings.database_port)
+    client: MongoClient = MongoClient(host=BackendSettings.database_uri, port=BackendSettings.database_port)
     client.drop_database(BackendSettings.database_name)
     yield
 

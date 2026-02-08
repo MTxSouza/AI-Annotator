@@ -5,7 +5,7 @@ Module with all utilities related to file operations.
 import hashlib
 import shutil
 import uuid
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from pathlib import Path
 
 from fastapi import UploadFile
@@ -15,7 +15,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.files import ImageFile_Create, TextFile_Create, UploadedFileResponse
 from backend.database.configs import Collections
-from backend.database.types import FileFormat, FileUploadStatus, PyObjectId
+from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId
 
 # Global variables.
 STATIC_FILE_DIRECTORY = "/app/storage"
@@ -93,7 +93,7 @@ def get_file_metadata(file: UploadFile) -> dict:
     """
     # Get file extension.
     file_size = file.size
-    file_extension = file.content_type.split(sep="/")[-1].lower()
+    file_extension = file.content_type.split(sep="/")[-1].lower()  # type: ignore
     return {"format": file_extension, "size_in_bytes": file_size}
 
 
@@ -339,7 +339,9 @@ async def process_image_record(
     """
     # Check project ID type.
     if isinstance(project_id, str):
-        project_id = PyObjectId(oid=project_id)
+        project_id_obj = PyObjectId(oid=project_id)
+    else:
+        project_id_obj = project_id
 
     # Check file format.
     if file_metadata["format"] not in FileFormat.get_image_formats():
@@ -357,7 +359,7 @@ async def process_image_record(
     # Create image file record in the database.
     collection = db.get_collection(name=Collections.FILES.value.name)
     image_file = ImageFile_Create(
-        project_id_list=[project_id],
+        project_id_list=[project_id_obj],
         file_hash=file_hash,
         filename=unique_filename,
         file_format=file_format,
@@ -394,7 +396,9 @@ async def process_text_record(
     """
     # Check project ID type.
     if isinstance(project_id, str):
-        project_id = PyObjectId(oid=project_id)
+        project_id_obj = PyObjectId(oid=project_id)
+    else:
+        project_id_obj = project_id
 
     # Check file format.
     if file_metadata["format"] not in FileFormat.get_text_formats():
@@ -412,7 +416,7 @@ async def process_text_record(
     # Create text file record in the database.
     collection = db.get_collection(name=Collections.FILES.value.name)
     text_file = TextFile_Create(
-        project_id_list=[project_id],
+        project_id_list=[project_id_obj],
         file_hash=file_hash,
         filename=unique_filename,
         file_format=file_format,
@@ -433,11 +437,11 @@ async def process_text_record(
 
 async def create_file_records(
     file_list: UploadFile | list[UploadFile],
-    file_processor: callable,
-    is_valid_file_format: callable,
-    sync_file_validator: callable,
-    sync_get_file_metadata: callable,
-    project_id: str,
+    file_processor: Callable,
+    is_valid_file_format: Callable,
+    sync_file_validator: Callable,
+    sync_get_file_metadata: Callable,
+    project_id: str | PyObjectId,
     db: AsyncDatabase,
 ) -> list[dict]:
     """
@@ -449,7 +453,7 @@ async def create_file_records(
             is_valid_file_format (callable): The function to validate the file format.
             sync_file_validator (callable): The synchronous function to validate the file.
             sync_get_file_metadata (callable): The synchronous function to get file metadata.
-            project_id (str): The project ID associated with the files.
+            project_id (str | PyObjectId): The project ID associated with the files.
             db (AsyncDatabase): The database instance.
 
     Returns:
@@ -518,14 +522,14 @@ async def create_file_records(
 
 
 async def create_image_file_records(
-    file_list: UploadFile | list[UploadFile], project_id: str, db: AsyncDatabase
+    file_list: UploadFile | list[UploadFile], project_id: str | PyObjectId, db: AsyncDatabase
 ) -> list[dict]:
     """
     Utility function to create image file records in the database.
 
     Args:
             file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to create records for.
-            project_id (str): The project ID associated with the files.
+            project_id (str | PyObjectId): The project ID associated with the files.
             db (AsyncDatabase): The database instance.
 
     Returns:
@@ -543,14 +547,14 @@ async def create_image_file_records(
 
 
 async def create_text_file_records(
-    file_list: UploadFile | list[UploadFile], project_id: str, db: AsyncDatabase
+    file_list: UploadFile | list[UploadFile], project_id: str | PyObjectId, db: AsyncDatabase
 ) -> list[dict]:
     """
     Utility function to create text file records in the database.
 
     Args:
             file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to create records for.
-            project_id (str): The project ID associated with the files.
+            project_id (str | PyObjectId): The project ID associated with the files.
             db (AsyncDatabase): The database instance.
 
     Returns:
@@ -567,17 +571,31 @@ async def create_text_file_records(
     )
 
 
-async def set_project_id_in_file_record(file_id: PyObjectId, project_id: PyObjectId, db: AsyncDatabase) -> None:
+async def set_project_id_in_file_record(
+    file_id: str | PyObjectId, project_id: str | PyObjectId, db: AsyncDatabase
+) -> None:
     """
     Utility function to set the project ID in the file record's project_id_list field.
 
     Args:
-            file_id (PyObjectId): The file ID to update.
-            project_id (PyObjectId): The project ID to add.
+            file_id (str | PyObjectId): The file ID to update.
+            project_id (str | PyObjectId): The project ID to add.
             db (AsyncDatabase): The database instance.
     """
     # Get files collection.
     collection = db.get_collection(name=Collections.FILES.value.name)
 
+    # Fix file ID type.
+    if isinstance(file_id, str):
+        file_id_obj = PyObjectId(oid=file_id)
+    else:
+        file_id_obj = file_id
+
+    # Fix project ID type.
+    if isinstance(project_id, str):
+        project_id_obj = PyObjectId(oid=project_id)
+    else:
+        project_id_obj = project_id
+
     # Update file record to add project ID in project_id_list field.
-    await collection.update_one(filter={"_id": file_id}, update={"$addToSet": {"project_id_list": project_id}})
+    await collection.update_one(filter={"_id": file_id_obj}, update={"$addToSet": {"project_id_list": project_id_obj}})

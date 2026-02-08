@@ -43,7 +43,7 @@ def setup_routers(app: FastAPI, api_version: str) -> None:
 
 
 # Classes.
-class BackendSettings(BaseSettings):
+class BackendSettingsModel(BaseSettings):
     """
     Class to handle backend settings.
     """
@@ -78,4 +78,4 @@ class BackendSettings(BaseSettings):
 
 
 # Instantiate the settings.
-BackendSettings = BackendSettings()
+BackendSettings = BackendSettingsModel()

@@ -30,8 +30,8 @@ router = APIRouter(
 # Endpoints.
 @router.get(path="/", name="Get Projects", response_model=list[ProjectSimple], status_code=status.HTTP_200_OK)
 async def get_projects_endpoint(
-    limit: int = Param(default=10, ge=1, le=100),
-    offset: int = Param(default=0, ge=0),
+    limit: int = Param(default=10, ge=1, le=100),  # type: ignore
+    offset: int = Param(default=0, ge=0),  # type: ignore
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> list[ProjectSimple]:
     """
@@ -40,7 +40,7 @@ async def get_projects_endpoint(
     Returns:
             list[ProjectSimple]: List of all projects.
     """
-    return await get_projects(limit=limit, offset=offset, db=db)
+    return await get_projects(limit=limit, offset=offset, db=db)  # type: ignore
 
 
 @router.get(path="/{id}", name="Get Project", response_model=Project, status_code=status.HTTP_200_OK)
@@ -78,7 +78,7 @@ async def create_project_endpoint(
     # Create the project.
     new_project = await create_project(db=db, project_data=project.model_dump())
 
-    return new_project
+    return new_project  # type: ignore
 
 
 @router.put(path="/{id}", name="Update Project", response_model=Project, status_code=status.HTTP_201_CREATED)
@@ -103,7 +103,7 @@ async def update_project_endpoint(
     # Update the project.
     updated_project = await update_project(db=db, project_id=id, project_data=update.model_dump(exclude_unset=True))
 
-    return updated_project
+    return updated_project  # type: ignore
 
 
 @router.delete(path="/{id}", name="Delete Project", status_code=status.HTTP_204_NO_CONTENT)

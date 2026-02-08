@@ -22,8 +22,8 @@ router = APIRouter(prefix="/files", tags=["Files"], dependencies=[Depends(depend
 # Endpoints.
 @router.get(path="/", response_model=list[ImageFile | TextFile | AudioFile], status_code=status.HTTP_200_OK)
 async def get_files_endpoint(
-    limit: int = Param(default=10, ge=1, le=100),
-    offset: int = Param(default=0, ge=0),
+    limit: int = Param(default=10, ge=1, le=100),  # type: ignore
+    offset: int = Param(default=0, ge=0),  # type: ignore
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> list[ImageFile | TextFile | AudioFile]:
     """
@@ -32,14 +32,14 @@ async def get_files_endpoint(
     Returns:
             list: List of all files.
     """
-    return await get_files(limit=limit, offset=offset, db=db)
+    return await get_files(limit=limit, offset=offset, db=db)  # type: ignore
 
 
 @router.post(path="/{id}/images/", response_model=UploadedFileListResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("10/minute")
 async def upload_image_file_endpoint(
     request: Request,
-    file_list: UploadFile | list[UploadFile] = File(...),
+    file_list: UploadFile | list[UploadFile] = File(...),  # type: ignore
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> UploadedFileListResponse:
@@ -57,14 +57,14 @@ async def upload_image_file_endpoint(
 
     # Process images.
     data = await create_image_file_records(file_list=file_list, project_id=project_id, db=db)
-    return UploadedFileListResponse(data=data)
+    return UploadedFileListResponse(data=data)  # type: ignore
 
 
 @router.post(path="/{id}/texts/", response_model=UploadedFileListResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("10/minute")
 async def upload_text_file_endpoint(
     request: Request,
-    file_list: UploadFile | list[UploadFile] = File(...),
+    file_list: UploadFile | list[UploadFile] = File(...),  # type: ignore
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> UploadedFileListResponse:
@@ -82,14 +82,14 @@ async def upload_text_file_endpoint(
 
     # Process texts.
     data = await create_text_file_records(file_list=file_list, project_id=project_id, db=db)
-    return UploadedFileListResponse(data=data)
+    return UploadedFileListResponse(data=data)  # type: ignore
 
 
 @router.post(path="/{id}/audios/", response_model=UploadedFileListResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("10/minute")
 async def upload_audio_file_endpoint(
     request: Request,
-    file_list: UploadFile | list[UploadFile] = File(...),
+    file_list: UploadFile | list[UploadFile] = File(...),  # type: ignore
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> UploadedFileListResponse:

@@ -2,6 +2,8 @@
 Module with all utilities related to project operations.
 """
 
+from collections.abc import Mapping, Sequence
+
 from fastapi import Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.params import Path
@@ -11,7 +13,7 @@ from backend.api.v1.models.projects import Project
 from backend.api.v1.utils.auth import decode_access_token, oauth2_scheme, throw_bearer_error
 from backend.api.v1.utils.task_configs import setup_task_config
 from backend.database.configs import Collections, DatabaseConfig
-from backend.database.types import PyObjectId
+from backend.database.enums import PyObjectId
 
 
 # Functions.
@@ -37,12 +39,12 @@ async def get_projects(limit: int, offset: int, db: AsyncDatabase) -> list[dict]
     return projects
 
 
-async def get_project_by_id(project_id: str, db: AsyncDatabase) -> dict | None:
+async def get_project_by_id(project_id: str | PyObjectId, db: AsyncDatabase) -> dict | None:
     """
     Utility function to get a project by its ID.
 
     Args:
-            project_id (str): The ID of the project.
+            project_id (str | PyObjectId): The ID of the project.
             db (AsyncDatabase): The database instance.
 
     Returns:
@@ -52,9 +54,9 @@ async def get_project_by_id(project_id: str, db: AsyncDatabase) -> dict | None:
     collection = db.get_collection(name=Collections.PROJECTS.value.name)
 
     # Query project by ID.
-    project_id = PyObjectId(oid=project_id)
-    pipeline = [
-        {"$match": {"_id": project_id}},
+    project_id_obj = PyObjectId(oid=project_id)
+    pipeline: Sequence[Mapping] = [
+        {"$match": {"_id": project_id_obj}},
         {
             "$lookup": {
                 "from": Collections.TASK_CONFIGS.value.name,
@@ -66,8 +68,8 @@ async def get_project_by_id(project_id: str, db: AsyncDatabase) -> dict | None:
         {"$set": {"configs": {"$first": "$configs"}}},
     ]
     cursor = await collection.aggregate(pipeline)
-    project = await cursor.to_list(length=1)
-    project = project.pop() if project else None
+    project_output = await cursor.to_list(length=1)
+    project = project_output.pop() if project_output else None
 
     return project
 
@@ -92,7 +94,7 @@ async def is_project_name_exists(project_name: str, db: AsyncDatabase) -> bool:
 
 
 async def get_authenticated_project(
-    id: str = Path(..., description="The ID of the project."),
+    id: str = Path(..., description="The ID of the project."),  # type: ignore
     token: str = Depends(dependency=oauth2_scheme),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> Project:
@@ -126,7 +128,7 @@ async def get_authenticated_project(
     decoded_token = decode_access_token(token=token)
 
     # Check token subject matches project ID.
-    if decoded_token.get("sub") != str(project["_id"]):
+    if decoded_token.get("sub") != str(project["_id"]):  # type: ignore
         throw_bearer_error(message="Token subject does not match project ID", status_code=status.HTTP_403_FORBIDDEN)
 
     return Project.model_validate(obj=project)
@@ -155,7 +157,7 @@ async def create_project(project_data: dict, db: AsyncDatabase) -> dict:
     # Retrieve the created project.
     created_project = await get_project_by_id(db=db, project_id=result.inserted_id)
 
-    return created_project
+    return created_project  # type: ignore
 
 
 async def update_project(project_id: str, project_data: dict, db: AsyncDatabase) -> dict:
@@ -174,13 +176,13 @@ async def update_project(project_id: str, project_data: dict, db: AsyncDatabase)
     collection = db.get_collection(name=Collections.PROJECTS.value.name)
 
     # Update the project.
-    project_id = PyObjectId(oid=project_id)
-    await collection.update_one({"_id": project_id}, {"$set": project_data})
+    project_id_obj = PyObjectId(oid=project_id)
+    await collection.update_one({"_id": project_id_obj}, {"$set": project_data})
 
     # Retrieve the updated project.
-    updated_project = await get_project_by_id(db=db, project_id=project_id)
+    updated_project = await get_project_by_id(db=db, project_id=project_id_obj)
 
-    return updated_project
+    return updated_project  # type: ignore
 
 
 async def delete_project(project_id: str, db: AsyncDatabase) -> None:
@@ -195,5 +197,5 @@ async def delete_project(project_id: str, db: AsyncDatabase) -> None:
     collection = db.get_collection(name=Collections.PROJECTS.value.name)
 
     # Delete the project.
-    project_id = PyObjectId(oid=project_id)
-    await collection.delete_one({"_id": project_id})
+    project_id_obj = PyObjectId(oid=project_id)
+    await collection.delete_one({"_id": project_id_obj})

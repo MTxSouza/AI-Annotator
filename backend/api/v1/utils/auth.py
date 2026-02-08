@@ -154,6 +154,7 @@ def decode_access_token(token: str) -> dict | None:
         throw_bearer_error(message="Token has expired", status_code=status.HTTP_401_UNAUTHORIZED)
     except JWTError:
         throw_bearer_error(message="Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
+    return None
 
 
 def throw_bearer_error(message: str, status_code: int) -> None:

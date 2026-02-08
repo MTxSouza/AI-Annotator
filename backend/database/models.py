@@ -4,7 +4,7 @@ Module with common database models inherited by all API models.
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from backend.database.types import PyDateTime, PyObjectId
+from backend.database.enums import PyDateTime, PyObjectId
 from backend.database.utils import get_current_datetime
 
 
@@ -46,7 +46,7 @@ class CommonUpdateModel(_TimestampModel):
     """
 
     # To be excluded.
-    created_at: PyDateTime | None = Field(default=None, exclude=True)
+    created_at: PyDateTime | None = Field(default=None, exclude=True)  # type: ignore
 
     # Config.
     model_config = ConfigDict(extra="forbid")
