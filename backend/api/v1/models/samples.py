@@ -45,6 +45,15 @@ class ObjectDetectionSample_DB(ObjectSample_DB):
     height: float = Field(..., ge=0.0, le=1.0, description="The height of the bounding box (normalized).")
 
 
+class ObjectDetectionSample_Create(ObjectDetectionSample_DB):
+    """
+    Object detection sample model for creating new samples.
+    """
+
+    # Fields.
+    file_id: PyObjectId | str = Field(..., description="The ID of the file associated with the sample.")
+
+
 class ObjectDetectionSample(ObjectDetectionSample_DB):
     """
     Object detection sample model for API responses.
