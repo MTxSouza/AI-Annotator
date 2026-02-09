@@ -85,3 +85,19 @@ class TextClassificationSample(ClassificationSample, TextSample):
     """
 
     pass
+
+
+class TextClassificationSample_Create(CommonRequestModel, TextClassificationSample):
+    """
+    Text classification sample model for creating new samples.
+    """
+
+    pass
+
+
+class TextClassificationSample_DB(Sample_DB, TextClassificationSample):
+    """
+    Text classification sample model in the database.
+    """
+
+    pass
