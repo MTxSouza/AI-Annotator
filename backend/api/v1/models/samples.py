@@ -27,17 +27,26 @@ class Sample(CommonModel):
     file_id: PyObjectId | str = Field(..., description="The ID of the file associated with the sample.")
 
 
-class ObjectSample(Sample):
+class TextSample(Sample):
     """
-    Object sample model.
+    Text sample model.
     """
 
     # Fields.
-    class_name: str = Field(..., description="The name of the class for the object sample.")
+    text: str | None = Field(default=None, description="The text content of the sample.")
+
+
+class ClassificationSample(Sample):
+    """
+    Classification sample model.
+    """
+
+    # Fields.
+    class_name: str = Field(..., description="The name of the class for the classification sample.")
 
 
 # - Object Detection.
-class ObjectDetectionSample(ObjectSample):
+class ObjectDetectionSample(ClassificationSample):
     """
     Object detection sample model for API responses.
     """
@@ -64,6 +73,15 @@ class ObjectDetectionSample_Create(CommonRequestModel, ObjectDetectionSample):
 class ObjectDetectionSample_DB(Sample_DB, ObjectDetectionSample):
     """
     Object detection sample model in the database.
+    """
+
+    pass
+
+
+# - Text Classification.
+class TextClassificationSample(ClassificationSample, TextSample):
+    """
+    Text classification sample model for API responses.
     """
 
     pass
