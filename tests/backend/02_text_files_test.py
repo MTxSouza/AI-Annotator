@@ -69,3 +69,39 @@ def test_create_text_file_record(
     project = project_response.json()
     assert project["number_of_files"] == len(list_text_file_payload)
     assert project["number_of_samples"] == 0
+
+
+def test_create_duplicate_text_file_record(
+    client: TestClient,
+    text_project_payload: dict,
+    list_text_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
+    reset_file_directory: None,  # Used to reset file directory
+):
+    """
+    Test to create a duplicate text file record.
+    """
+    # Create project first.
+    project_response = client.post(url="/projects/", json=text_project_payload)
+    assert project_response.status_code == 201
+    project = project_response.json()
+    project_id = project["_id"]
+
+    # Check number of files and samples in project response.
+    assert project["number_of_files"] == 0
+    assert project["number_of_samples"] == 0
+
+    # Create file record.
+    file_response = client.post(url=f"/files/{project_id}/", files=list_text_file_payload)
+    assert file_response.status_code == 201
+
+    # Attempt to create duplicate file record.
+    duplicate_file_response = client.post(url=f"/files/{project_id}/", files=list_text_file_payload)
+    assert duplicate_file_response.status_code == 201
+
+    # Check response.
+    duplicate_file_response_json = duplicate_file_response.json()
+    assert "data" in duplicate_file_response_json
+    assert len(duplicate_file_response_json["data"]) == len(list_text_file_payload)
+    for i, file_data in enumerate(iterable=duplicate_file_response_json["data"]):
+        assert file_data["status"] == "Skipped"
+        assert file_data["message"] == f"File '{list_text_file_payload[i][1][0]}' already exists."
