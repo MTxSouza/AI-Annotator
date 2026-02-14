@@ -2,89 +2,226 @@
 Module with all models related to all task configurations.
 """
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from backend.database.enums import FileFormat, PyObjectId
-from backend.database.models import CommonResponseModel
+from backend.database.models import CommonModel, CommonRequestModel, CommonResponseModel, CommonUpdateModel
 
 
 # Schemas.
-class __TaskConfig(CommonResponseModel):
+class _TaskConfig(CommonModel):
     """
     Main task configuration model.
     """
 
     # Fields.
-    project_id: PyObjectId | str = Field(
+    project_id: str | PyObjectId = Field(
         ..., description="The ID of the project associated with this task configuration."
     )
     file_format: list[FileFormat] = Field(..., description="The file formats supported for the task.")
 
 
-class __ClassTaskConfig(__TaskConfig):
+class _TaskConfigDB(CommonResponseModel, _TaskConfig):
     """
-    Class task configuration model.
-    """
-
-    # Fields.
-    class_name_list: list[str] = Field(default=[], description="The names of the classes for the task.")
-
-
-# - Images.
-class __ImageTaskConfig(__TaskConfig):
-    """
-    Image task configuration model.
-    """
-
-    # Fields.
-    file_format: list[FileFormat] = Field(
-        default=FileFormat.get_image_formats(), description="The image file formats supported for the task."
-    )
-
-
-class ObjectDetectionTaskConfig(__ImageTaskConfig, __ClassTaskConfig):
-    """
-    Object detection task configuration model.
+    Task configuration model for database representation.
     """
 
     pass
 
 
-class SemanticSegmentationTaskConfig(__ImageTaskConfig, __ClassTaskConfig):
+class _TaskConfigCreate(_TaskConfig, CommonRequestModel):
     """
-    Semantic segmentation task configuration model.
-    """
-
-    pass
-
-
-# - Texts.
-class __TextTaskConfig(__TaskConfig):
-    """
-    Text task configuration model.
-    """
-
-    # Fields.
-    file_format: list[FileFormat] = Field(
-        default=FileFormat.get_text_formats(), description="The text file formats supported for the task."
-    )
-
-
-class TextClassificationTaskConfig(__TextTaskConfig, __ClassTaskConfig):
-    """
-    Text classification task configuration model.
+    Task configuration model for creating a new task configuration.
     """
 
     pass
 
 
-# - Audios.
-class __AudioTaskConfig(__TaskConfig):
+class _TaskConfigUpdate(CommonUpdateModel):
     """
-    Audio task configuration model.
+    Task configuration model for updating an existing task configuration.
     """
 
-    # Fields.
+    pass
+
+
+# - Schemas for different task types.
+class _ClassTaskConfig(BaseModel):
+    """
+    Task configuration for class-related tasks.
+    """
+
+    class_name_list: list[str] = Field(default_factory=list, description="List of class names supported for the task.")
+
+
+class _ClassTaskConfigUpdate(_TaskConfigUpdate):
+    """
+    Task configuration for updating class-related tasks.
+    """
+
+    class_name_list: list[str] | None = Field(default=None, description="List of class names supported for the task.")
+
+
+# - Image Task Configs.
+class _ImageTaskConfig(_TaskConfig):
+    """
+    Task configuration for image-related tasks.
+    """
+
     file_format: list[FileFormat] = Field(
-        default=FileFormat.get_audio_formats(), description="The audio file formats supported for the task."
+        default_factory=FileFormat.get_image_formats,
+        description="The image file formats supported for the task.",
+        frozen=True,
     )
+
+
+class _VisualTaskConfig(_ImageTaskConfig):
+    """
+    Task configuration for visual-related tasks.
+    """
+
+    add_segmentation: bool = Field(
+        default=False, description="Whether to include segmentation masks in the task configuration."
+    )
+
+
+class _VisualTaskConfigUpdate(_TaskConfigUpdate):
+    """
+    Task configuration for updating visual-related tasks.
+    """
+
+    add_segmentation: bool | None = Field(
+        default=None, description="Whether to include segmentation masks in the task configuration."
+    )
+
+
+# * Image Classification Task Configs.
+class _ImageClassificationTaskConfig(_ImageTaskConfig, _ClassTaskConfig):
+    """
+    Task configuration for image classification tasks.
+    """
+
+    pass
+
+
+class ImageClassificationTaskConfig(_ImageClassificationTaskConfig, _TaskConfigDB):
+    """
+    Task configuration for image classification tasks, including database representation.
+    """
+
+    pass
+
+
+class ImageClassificationTaskConfigCreate(_TaskConfigCreate, _ImageClassificationTaskConfig):
+    """
+    Task configuration for creating image classification tasks.
+    """
+
+    pass
+
+
+class ImageClassificationTaskConfigUpdate(_ClassTaskConfigUpdate):
+    """
+    Task configuration for updating image classification tasks.
+    """
+
+    pass
+
+
+# * Object Detection Task Configs.
+class _ObjectDetectionTaskConfig(_ClassTaskConfig, _VisualTaskConfig):
+    """
+    Task configuration for object detection tasks.
+    """
+
+    pass
+
+
+class ObjectDetectionTaskConfig(_ObjectDetectionTaskConfig, _TaskConfigDB):
+    """
+    Task configuration for object detection tasks, including database representation.
+    """
+
+    pass
+
+
+class ObjectDetectionTaskConfigCreate(_TaskConfigCreate, _ObjectDetectionTaskConfig):
+    """
+    Task configuration for creating object detection tasks.
+    """
+
+    pass
+
+
+class ObjectDetectionTaskConfigUpdate(_ClassTaskConfigUpdate, _VisualTaskConfigUpdate):
+    """
+    Task configuration for updating object detection tasks.
+    """
+
+    pass
+
+
+# * Image Caption Task Configs.
+class _ImageCaptionTaskConfig(_ImageTaskConfig):
+    """
+    Task configuration for image caption tasks.
+    """
+
+    pass
+
+
+class ImageCaptionTaskConfig(_ImageCaptionTaskConfig, _TaskConfigDB):
+    """
+    Task configuration for image caption tasks, including database representation.
+    """
+
+    pass
+
+
+class ImageCaptionTaskConfigCreate(_TaskConfigCreate, _ImageCaptionTaskConfig):
+    """
+    Task configuration for creating image caption tasks.
+    """
+
+    pass
+
+
+class ImageCaptionTaskConfigUpdate(_TaskConfigUpdate):
+    """
+    Task configuration for updating image caption tasks.
+    """
+
+    pass
+
+
+# * Object Caption Task Configs.
+class _ObjectCaptionTaskConfig(_ImageTaskConfig):
+    """
+    Task configuration for object caption tasks.
+    """
+
+    pass
+
+
+class ObjectCaptionTaskConfig(_ObjectCaptionTaskConfig, _TaskConfigDB):
+    """
+    Task configuration for object caption tasks, including database representation.
+    """
+
+    pass
+
+
+class ObjectCaptionTaskConfigCreate(_TaskConfigCreate, _ObjectCaptionTaskConfig):
+    """
+    Task configuration for creating object caption tasks.
+    """
+
+    pass
+
+
+class ObjectCaptionTaskConfigUpdate(_VisualTaskConfigUpdate):
+    """
+    Task configuration for updating object caption tasks.
+    """
+
+    pass
