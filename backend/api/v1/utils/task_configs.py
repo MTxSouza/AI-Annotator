@@ -2,7 +2,12 @@
 Module with all utilities related to task configuration operations.
 """
 
-from backend.api.v1.models.task_configs import ObjectDetectionTaskConfig, TextClassificationTaskConfig
+from backend.api.v1.models.task_configs import (
+    ImageCaptionTaskConfig,
+    ImageClassificationTaskConfig,
+    ObjectCaptionTaskConfig,
+    ObjectDetectionTaskConfig,
+)
 from backend.database.enums import PyObjectId, Task
 
 
@@ -73,6 +78,8 @@ def get_task_config_model_schema(task: str) -> type | None:
     """
     task_config_model_map = {
         Task.OBJECT_DETECTION.value: ObjectDetectionTaskConfig,
-        Task.TEXT_CLASSIFICATION.value: TextClassificationTaskConfig,
+        Task.IMAGE_CLASSIFICATION.value: ImageClassificationTaskConfig,
+        Task.IMAGE_CAPTION.value: ImageCaptionTaskConfig,
+        Task.OBJECT_CAPTION.value: ObjectCaptionTaskConfig,
     }
     return task_config_model_map.get(task)

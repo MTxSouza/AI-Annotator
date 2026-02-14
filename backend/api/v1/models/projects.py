@@ -4,7 +4,12 @@ Main module with all schemas used in Projects collection.
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-from backend.api.v1.models.task_configs import ObjectDetectionTaskConfig, SemanticSegmentationTaskConfig
+from backend.api.v1.models.task_configs import (
+    ImageCaptionTaskConfig,
+    ImageClassificationTaskConfig,
+    ObjectCaptionTaskConfig,
+    ObjectDetectionTaskConfig,
+)
 from backend.api.v1.utils.auth import hash_password
 from backend.database.enums import Task
 from backend.database.models import CommonRequestModel, CommonResponseModel, CommonUpdateModel
@@ -13,7 +18,9 @@ from backend.database.models import CommonRequestModel, CommonResponseModel, Com
 __MIN_NAME_LENGTH__: int = 1
 __MAX_NAME_LENGTH__: int = 64
 __MAX_DESCRIPTION_LENGTH__: int = 500
-__PROJECT_CONFIGS__ = ObjectDetectionTaskConfig | SemanticSegmentationTaskConfig
+__PROJECT_CONFIGS__ = (
+    ObjectDetectionTaskConfig | ImageCaptionTaskConfig | ObjectCaptionTaskConfig | ImageClassificationTaskConfig
+)
 
 
 # Schemas.
