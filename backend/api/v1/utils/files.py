@@ -16,7 +16,8 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.files import ImageFile_Create, TextFile_Create, UploadedFileResponse
 from backend.database.configs import Collections
-from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId, Task
+from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId
+from backend.database.utils import get_task_file
 
 # Global variables.
 STATIC_FILE_DIRECTORY = "/app/storage"
@@ -466,7 +467,7 @@ async def create_file_records(
     task_name: str = task.get("task")  # type: ignore
 
     # Get task-file utility mapping.
-    file_type = Task.get_task_file(task=task_name)
+    file_type = get_task_file(task=task_name)
     if not file_type:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported task: {task_name}.")
 
