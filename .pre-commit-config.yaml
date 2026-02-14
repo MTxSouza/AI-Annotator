@@ -39,4 +39,5 @@ repos:
         entry: bash ai-annotator.sh -t
         language: system
         always_run: true
+        verbose: true
         stages: [pre-push]
