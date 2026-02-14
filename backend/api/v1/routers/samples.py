@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, status
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import Project
-from backend.api.v1.models.samples import ObjectDetectionSample_Create, ObjectDetectionSample_DB
+from backend.api.v1.models.samples import ObjectDetectionSample, ObjectDetectionSampleCreate
 from backend.api.v1.utils.projects import get_authenticated_project
 from backend.api.v1.utils.samples import create_sample, get_sample_by_id, get_samples
 from backend.database.configs import DatabaseConfig
@@ -16,12 +16,12 @@ router = APIRouter(prefix="/samples", tags=["Samples"], dependencies=[Depends(de
 
 
 # Endpoints.
-@router.get(path="/", response_model=list[ObjectDetectionSample_DB], status_code=status.HTTP_200_OK)
+@router.get(path="/", response_model=list[ObjectDetectionSample], status_code=status.HTTP_200_OK)
 async def get_samples_endpoint(
     limit: int = 10,
     offset: int = 0,
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
-) -> list[ObjectDetectionSample_DB]:
+) -> list[ObjectDetectionSample]:
     """
     Endpoint to get all samples.
 
@@ -31,26 +31,26 @@ async def get_samples_endpoint(
     return await get_samples(limit=limit, offset=offset, db=db)  # type: ignore
 
 
-@router.get(path="/{id}", response_model=ObjectDetectionSample_DB, status_code=status.HTTP_200_OK)
+@router.get(path="/{id}", response_model=ObjectDetectionSample, status_code=status.HTTP_200_OK)
 async def get_sample_endpoint(
     id: str,
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
-) -> ObjectDetectionSample_DB:
+) -> ObjectDetectionSample:
     """
     Endpoint to get a sample by ID.
 
     Returns:
-            ObjectDetectionSample_DB: The sample with the specified ID.
+            ObjectDetectionSample: The sample with the specified ID.
     """
     return await get_sample_by_id(sample_id=id, db=db)  # type: ignore
 
 
-@router.post(path="/{id}/", response_model=ObjectDetectionSample_DB, status_code=status.HTTP_201_CREATED)
+@router.post(path="/{id}/", response_model=ObjectDetectionSample, status_code=status.HTTP_201_CREATED)
 async def create_sample_endpoint(
-    sample: ObjectDetectionSample_Create,
+    sample: ObjectDetectionSampleCreate,
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
-) -> ObjectDetectionSample_DB:
+) -> ObjectDetectionSample:
     """
     Endpoint to create a new sample.
 
@@ -58,7 +58,7 @@ async def create_sample_endpoint(
             sample (ObjectDetectionSample_Create): The sample data to create.
 
     Returns:
-            ObjectDetectionSample_DB: The created sample.
+            ObjectDetectionSample: The created sample.
     """
     # Get project ID.
     project_id = project.id
