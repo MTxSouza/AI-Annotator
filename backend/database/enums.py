@@ -57,6 +57,30 @@ class Task(StrEnum):
     AUDIO_CLASSIFICATION = "Audio Classification"
     AUDIO_CAPTION = "Audio Caption"
 
+    # Class methods.
+    @classmethod
+    def get_task_file(cls, task: str) -> str | None:
+        """
+        Get the associated file type for a given task.
+
+        Args:
+            task (str): The task to get the file type for.
+
+        Returns:
+            str | None: The associated file type for the task, or None if not found.
+        """
+        task_file_map = {
+            cls.OBJECT_DETECTION.value: "image",
+            cls.IMAGE_CLASSIFICATION.value: "image",
+            cls.IMAGE_CAPTION.value: "image",
+            cls.OBJECT_CAPTION.value: "image",
+            cls.TEXT_CLASSIFICATION.value: "text",
+            cls.TEXT_TAGGING.value: "text",
+            cls.AUDIO_CLASSIFICATION.value: "audio",
+            cls.AUDIO_CAPTION.value: "audio",
+        }
+        return task_file_map.get(task)
+
 
 class FileFormat(StrEnum):
     """
