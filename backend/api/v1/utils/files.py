@@ -466,13 +466,7 @@ async def create_file_records(
     task_name: str = task.get("task")  # type: ignore
 
     # Get task-file utility mapping.
-    file_type_map = {
-        # Images.
-        Task.OBJECT_DETECTION.value: "image",
-        # Texts.
-        Task.TEXT_CLASSIFICATION.value: "text",
-    }
-    file_type = file_type_map.get(task_name)
+    file_type = Task.get_task_file(task=task_name)
     if not file_type:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported task: {task_name}.")
 
