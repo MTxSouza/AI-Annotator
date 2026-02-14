@@ -225,3 +225,82 @@ class ObjectCaptionTaskConfigUpdate(_VisualTaskConfigUpdate):
     """
 
     pass
+
+
+# - Text Task Configs.
+class _TextTaskConfig(_TaskConfig):
+    """
+    Task configuration for text-related tasks.
+    """
+
+    file_format: list[FileFormat] = Field(
+        default_factory=FileFormat.get_text_formats,
+        description="The text file formats supported for the task.",
+        frozen=True,
+    )
+
+
+# * Text Classification Task Configs.
+class _TextClassificationTaskConfig(_TextTaskConfig, _ClassTaskConfig):
+    """
+    Task configuration for text classification tasks.
+    """
+
+    pass
+
+
+class TextClassificationTaskConfig(_TextClassificationTaskConfig, _TaskConfigDB):
+    """
+    Task configuration for text classification tasks, including database representation.
+    """
+
+    pass
+
+
+class TextClassificationTaskConfigCreate(_TaskConfigCreate, _TextClassificationTaskConfig):
+    """
+    Task configuration for creating text classification tasks.
+    """
+
+    pass
+
+
+class TextClassificationTaskConfigUpdate(_ClassTaskConfigUpdate):
+    """
+    Task configuration for updating text classification tasks.
+    """
+
+    pass
+
+
+# - Text Tagging Task Configs.
+class _TextTaggingTaskConfig(_TextTaskConfig):
+    """
+    Task configuration for text tagging tasks.
+    """
+
+    pass
+
+
+class TextTaggingTaskConfig(_TextTaggingTaskConfig, _TaskConfigDB):
+    """
+    Task configuration for text tagging tasks, including database representation.
+    """
+
+    pass
+
+
+class TextTaggingTaskConfigCreate(_TaskConfigCreate, _TextTaggingTaskConfig):
+    """
+    Task configuration for creating text tagging tasks.
+    """
+
+    pass
+
+
+class TextTaggingTaskConfigUpdate(_TaskConfigUpdate):
+    """
+    Task configuration for updating text tagging tasks.
+    """
+
+    pass
