@@ -2,12 +2,8 @@
 Module with all utilities related to task configuration operations.
 """
 
-from backend.api.v1.models.task_configs import (
-    ObjectDetectionTaskConfig,
-    SemanticSegmentationTaskConfig,
-    TextClassificationTaskConfig,
-)
 from backend.database.enums import PyObjectId, Task
+from backend.database.utils import get_task_config_model_schema
 
 
 # Functions.
@@ -22,15 +18,6 @@ def setup_task_config(project_id: str, task: Task) -> dict:
     Returns:
             dict: The task configuration template.
     """
-    # Task configuration mapping.
-    task_config_mapping = {
-        # Images.
-        Task.OBJECT_DETECTION.value: ObjectDetectionTaskConfig,
-        Task.SEMANTIC_SEGMENTATION.value: SemanticSegmentationTaskConfig,
-        # Texts.
-        Task.TEXT_CLASSIFICATION.value: TextClassificationTaskConfig,
-    }
-
     # Fix task enum if needed.
     if isinstance(task, Task):
         task_str = task.value
@@ -38,7 +25,7 @@ def setup_task_config(project_id: str, task: Task) -> dict:
         task_str = task
 
     # Get the task configuration class based on the task type.
-    task_config_class = task_config_mapping.get(task_str)
+    task_config_class = get_task_config_model_schema(task=task_str)
 
     if not task_config_class:
         raise ValueError(f"Unsupported task type: {task_str}")
