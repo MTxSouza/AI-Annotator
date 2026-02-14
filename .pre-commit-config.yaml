@@ -31,3 +31,12 @@ repos:
         entry: python3 scripts/check_commit_message.py
         language: python
         stages: [commit-msg]
+  # Test application.
+  - repo: local
+    hooks:
+      - id: application-tests-coverage
+        name: Run Application Tests with Coverage
+        entry: bash ai-annotator.sh -t
+        language: system
+        always_run: true
+        stages: [push]
