@@ -45,11 +45,17 @@ class Task(StrEnum):
 
     # Image.
     OBJECT_DETECTION = "Object Detection"
-    SEMANTIC_SEGMENTATION = "Semantic Segmentation"
+    IMAGE_CLASSIFICATION = "Image Classification"
+    IMAGE_CAPTION = "Image Caption"
+    OBJECT_CAPTION = "Object Caption"
 
     # Text.
     TEXT_CLASSIFICATION = "Text Classification"
-    SENTENCE_TAGGING = "Sentence Tagging"
+    TEXT_TAGGING = "Text Tagging"
+
+    # Audio.
+    AUDIO_CLASSIFICATION = "Audio Classification"
+    AUDIO_CAPTION = "Audio Caption"
 
 
 class FileFormat(StrEnum):
