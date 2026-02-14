@@ -9,6 +9,8 @@ from backend.api.v1.models.task_configs import (
     ImageClassificationTaskConfig,
     ObjectCaptionTaskConfig,
     ObjectDetectionTaskConfig,
+    TextClassificationTaskConfig,
+    TextTaggingTaskConfig,
 )
 from backend.api.v1.utils.auth import hash_password
 from backend.database.enums import Task
@@ -19,7 +21,12 @@ __MIN_NAME_LENGTH__: int = 1
 __MAX_NAME_LENGTH__: int = 64
 __MAX_DESCRIPTION_LENGTH__: int = 500
 __PROJECT_CONFIGS__ = (
-    ObjectDetectionTaskConfig | ImageCaptionTaskConfig | ObjectCaptionTaskConfig | ImageClassificationTaskConfig
+    ObjectDetectionTaskConfig
+    | ImageCaptionTaskConfig
+    | ObjectCaptionTaskConfig
+    | ImageClassificationTaskConfig
+    | TextClassificationTaskConfig
+    | TextTaggingTaskConfig
 )
 
 

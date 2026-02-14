@@ -7,6 +7,8 @@ from backend.api.v1.models.task_configs import (
     ImageClassificationTaskConfig,
     ObjectCaptionTaskConfig,
     ObjectDetectionTaskConfig,
+    TextClassificationTaskConfig,
+    TextTaggingTaskConfig,
 )
 from backend.database.enums import PyObjectId, Task
 
@@ -77,9 +79,13 @@ def get_task_config_model_schema(task: str) -> type | None:
             type | None: The associated task configuration model schema for the task, or None if not found.
     """
     task_config_model_map = {
+        # Image Tasks.
         Task.OBJECT_DETECTION.value: ObjectDetectionTaskConfig,
         Task.IMAGE_CLASSIFICATION.value: ImageClassificationTaskConfig,
         Task.IMAGE_CAPTION.value: ImageCaptionTaskConfig,
         Task.OBJECT_CAPTION.value: ObjectCaptionTaskConfig,
+        # Text Tasks.
+        Task.TEXT_CLASSIFICATION.value: TextClassificationTaskConfig,
+        Task.TEXT_TAGGING.value: TextTaggingTaskConfig,
     }
     return task_config_model_map.get(task)
