@@ -15,9 +15,9 @@ from PIL import Image, UnidentifiedImageError
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.files import ImageFile_Create, TextFile_Create, UploadedFileResponse
+from backend.api.v1.utils.task_configs import get_task_file
 from backend.database.configs import Collections
 from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId
-from backend.database.utils import get_task_file
 
 # Global variables.
 STATIC_FILE_DIRECTORY = "/app/storage"
