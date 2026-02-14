@@ -13,6 +13,18 @@ load_env_file() {
     fi
 }
 
+setup_development_dependencies() {
+    echo "🔧 Setting up development dependencies..."
+    echo ""
+    echo "Setup pre-commit hooks..."
+    pre-commit install
+    pre-commit install --hook-type commit-msg
+    pre-commit install --hook-type pre-push
+    echo ""
+    echo "✅ Development environment is ready!"
+    exit 0
+}
+
 build_application() {
     echo "🔧 Building AI-Annotator application..."
     docker compose --profile app build -q
@@ -67,6 +79,7 @@ if [ "$ARG0" = "--help" ] || [ "$ARG0" = "-h" ]; then
     echo "  --stop, -s   Runs the docker compose command to stop the AI-Annotator application."
     echo "  --clean, -c   Runs the docker compose command to stop and remove all containers, networks, images, and volumes."
     echo ""
+    echo "  --dev, -d   Sets up the development environment by installing dependencies and pre-commit hooks. Only for development purposes."
     echo "  --test, -t   Runs the backend tests using pytest. Only for development purposes."
     exit 0
 fi
@@ -161,6 +174,25 @@ elif [ "$ARG0" = "--clean" ] || [ "$ARG0" = "-c" ]; then
 
     # Clean application.
     clean_application
+
+elif [ "$ARG0" = "--dev" ] || [ "$ARG0" = "-d" ]; then
+
+    # Check --help option.
+    if [ "$ARG1" = "--help" ] || [ "$ARG1" = "-h" ]; then
+        echo "Usage: ai-annotator.sh --dev [--help|-h]"
+        echo ""
+        echo "This command sets up the development environment for the AI-Annotator application."
+        echo ""
+        echo "Options:"
+        echo "  --help, -h    Show this help message and exit."
+        echo ""
+        echo "This command installs the development dependencies and sets up pre-commit hooks."
+        echo "It is intended for development purposes only."
+        exit 0
+    fi
+
+    # Setup development environment.
+    setup_development_dependencies
 
 elif [ "$ARG0" = "--test" ] || [ "$ARG0" = "-t" ]; then
 
