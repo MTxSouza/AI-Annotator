@@ -59,7 +59,7 @@ def test_create_text_file_record(
     """
     # Create project first.
     project_response = client.post(url="/projects/", json=text_project_payload)
-    assert project_response.status_code == 201
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
 
@@ -69,7 +69,7 @@ def test_create_text_file_record(
 
     # Create file record.
     file_response = client.post(url=f"/files/{project_id}/", files=list_text_file_payload)
-    assert file_response.status_code == 201
+    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
 
     # Check response.
     file_response_json = file_response.json()
@@ -82,7 +82,7 @@ def test_create_text_file_record(
 
     # Get project again to check number of files and samples.
     project_response = client.get(url=f"/projects/{project_id}/")
-    assert project_response.status_code == 200
+    assert project_response.status_code == 200, f"Failed to get project: {project_response.text}"
     project = project_response.json()
     assert project["number_of_files"] == len(list_text_file_payload)
     assert project["number_of_samples"] == 0
@@ -99,7 +99,7 @@ def test_create_duplicate_text_file_record(
     """
     # Create project first.
     project_response = client.post(url="/projects/", json=text_project_payload)
-    assert project_response.status_code == 201
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
 
@@ -109,11 +109,13 @@ def test_create_duplicate_text_file_record(
 
     # Create file record.
     file_response = client.post(url=f"/files/{project_id}/", files=list_text_file_payload)
-    assert file_response.status_code == 201
+    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
 
     # Attempt to create duplicate file record.
     duplicate_file_response = client.post(url=f"/files/{project_id}/", files=list_text_file_payload)
-    assert duplicate_file_response.status_code == 201
+    assert duplicate_file_response.status_code == 201, (
+        f"Failed to create duplicate file: {duplicate_file_response.text}"
+    )
 
     # Check response.
     duplicate_file_response_json = duplicate_file_response.json()
@@ -135,13 +137,13 @@ def test_create_corrupt_text_file_record(
     """
     # Create project first.
     project_response = client.post(url="/projects/", json=text_project_payload)
-    assert project_response.status_code == 201
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
 
     # Create file record.
     file_response = client.post(url=f"/files/{project_id}/", files=corrupt_text_file_payload)
-    assert file_response.status_code == 201
+    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
 
     # Check response.
     file_response_json = file_response.json()

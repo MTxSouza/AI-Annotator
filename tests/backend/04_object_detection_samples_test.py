@@ -75,13 +75,13 @@ def test_create_object_detection_sample(
     """
     # Create project first.
     project_response = client.post(url="/projects/", json=image_project_payload)
-    assert project_response.status_code == 201
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
 
     # Create file record.
     file_response = client.post(url=f"/files/{project_id}/", files=image_file_payload)
-    assert file_response.status_code == 201
+    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
     file_list = file_response.json()["data"]
     assert len(file_list) == 1
     file_id = file_list.pop()["file_id"]
@@ -89,11 +89,12 @@ def test_create_object_detection_sample(
     # Set sample payload.
     sample_list, sample_class_name_list = list_object_detection_sample_payload
     for sample in sample_list:
+        sample["project_id"] = project_id
         sample["file_id"] = file_id
 
         # Create sample.
         sample_response = client.post(url=f"/samples/{project_id}/", json=sample)
-        assert sample_response.status_code == 201
+        assert sample_response.status_code == 201, f"Failed to create sample: {sample_response.text}"
         sample_data = sample_response.json()
 
         # Check response.
@@ -107,7 +108,7 @@ def test_create_object_detection_sample(
 
     # Get project again to check extra informations.
     project_response = client.get(url=f"/projects/{project_id}/")
-    assert project_response.status_code == 200
+    assert project_response.status_code == 200, f"Failed to get project: {project_response.text}"
     project = project_response.json()
     assert project["number_of_files"] == 1
     assert project["number_of_samples"] == len(sample_list)

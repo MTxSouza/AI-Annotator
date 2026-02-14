@@ -24,7 +24,7 @@ def test_create_project(client: TestClient, project_payload: dict):
     response = client.post(url="/projects/", json=project_payload)
 
     # Assert the response status code.
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -49,7 +49,7 @@ def test_create_project_with_password(client: TestClient, project_payload: dict)
     response = client.post(url="/projects/", json=project_payload)
 
     # Assert the response status code.
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -65,13 +65,13 @@ def test_create_project_duplicate_name(client: TestClient, project_payload: dict
     """
     # Create the first project.
     response = client.post(url="/projects/", json=project_payload)
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
 
     # Attempt to create a second project with the same name.
     response = client.post(url="/projects/", json=project_payload)
 
     # Assert the response status code for conflict.
-    assert response.status_code == 409
+    assert response.status_code == 409, f"Failed to get expected conflict response: {response.text}"
 
 
 def test_get_non_private_project(client: TestClient, project_payload: dict):
@@ -80,14 +80,14 @@ def test_get_non_private_project(client: TestClient, project_payload: dict):
     """
     # Create a non-private project.
     response = client.post(url="/projects/", json=project_payload)
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
     project_id = response.json()["_id"]
 
     # Retrieve the project.
     response = client.get(url=f"/projects/{project_id}")
 
     # Assert the response status code.
-    assert response.status_code == 200
+    assert response.status_code == 200, f"Failed to get project: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -104,14 +104,14 @@ def test_get_private_project(client: TestClient, project_payload: dict):
 
     # Create a private project.
     response = client.post(url="/projects/", json=project_payload)
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
     project_id = response.json()["_id"]
 
     # Retrieve the project.
     response = client.get(url=f"/projects/{project_id}")
 
     # Assert the response status code.
-    assert response.status_code == 401
+    assert response.status_code == 401, f"Failed to get expected unauthorized response: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -123,14 +123,14 @@ def test_get_private_project(client: TestClient, project_payload: dict):
     )
 
     # Assert the authentication response status code.
-    assert auth_response.status_code == 201
+    assert auth_response.status_code == 201, f"Failed to authenticate: {auth_response.text}"
     access_token = auth_response.json()["access_token"]
 
     # Retrieve the project with the access token.
     response = client.get(url=f"/projects/{project_id}", headers={"Authorization": f"Bearer {access_token}"})
 
     # Assert the response status code.
-    assert response.status_code == 200
+    assert response.status_code == 200, f"Failed to get project with access token: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -144,7 +144,7 @@ def test_update_project_name(client: TestClient, project_payload: dict):
     """
     # Create a project.
     response = client.post(url="/projects/", json=project_payload)
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
     project_id = response.json()["_id"]
 
     # Update the project's name.
@@ -153,7 +153,7 @@ def test_update_project_name(client: TestClient, project_payload: dict):
     response = client.put(url=f"/projects/{project_id}", json=update_payload)
 
     # Assert the response status code.
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to update project name: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -170,7 +170,7 @@ def test_update_private_project_name(client: TestClient, project_payload: dict):
 
     # Create a project.
     response = client.post(url="/projects/", json=project_payload)
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
     project_id = response.json()["_id"]
 
     # Update the project's name.
@@ -179,7 +179,7 @@ def test_update_private_project_name(client: TestClient, project_payload: dict):
     response = client.put(url=f"/projects/{project_id}", json=update_payload)
 
     # Assert the response status code.
-    assert response.status_code == 401
+    assert response.status_code == 401, f"Failed to get expected unauthorized response: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -191,7 +191,7 @@ def test_update_private_project_name(client: TestClient, project_payload: dict):
     )
 
     # Assert the authentication response status code.
-    assert auth_response.status_code == 201
+    assert auth_response.status_code == 201, f"Failed to authenticate: {auth_response.text}"
     access_token = auth_response.json()["access_token"]
 
     # Update the project's name with the access token.
@@ -200,7 +200,7 @@ def test_update_private_project_name(client: TestClient, project_payload: dict):
     )
 
     # Assert the response status code.
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to update project name: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -214,12 +214,12 @@ def test_update_project_password(client: TestClient, project_payload: dict):
     """
     # Create a project.
     response = client.post(url="/projects/", json=project_payload)
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
     project_id = response.json()["_id"]
 
     # Get the project to ensure it is non-private.
     response = client.get(url=f"/projects/{project_id}")
-    assert response.status_code == 200
+    assert response.status_code == 200, f"Failed to get project: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -231,11 +231,11 @@ def test_update_project_password(client: TestClient, project_payload: dict):
     response = client.put(url=f"/projects/{project_id}", json=update_payload)
 
     # Assert the response status code.
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to update project password: {response.text}"
 
     # Get the project to ensure it is now private.
     response = client.get(url=f"/projects/{project_id}")
-    assert response.status_code == 401
+    assert response.status_code == 401, f"Failed to get expected unauthorized response: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -243,12 +243,12 @@ def test_update_project_password(client: TestClient, project_payload: dict):
 
     # Authenticate to get access token.
     auth_response = client.post(url="/auth/token", data={"username": project_id, "password": new_password})
-    assert auth_response.status_code == 201
+    assert auth_response.status_code == 201, f"Failed to authenticate: {auth_response.text}"
     access_token = auth_response.json()["access_token"]
 
     # Retrieve the project with the access token.
     response = client.get(url=f"/projects/{project_id}", headers={"Authorization": f"Bearer {access_token}"})
-    assert response.status_code == 200
+    assert response.status_code == 200, f"Failed to get project after updating password: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -266,14 +266,14 @@ def test_update_private_project_to_non_private(client: TestClient, project_paylo
 
     # Create a private project.
     response = client.post(url="/projects/", json=project_payload)
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
     project_id = response.json()["_id"]
 
     # Authenticate to get access token.
     auth_response = client.post(
         url="/auth/token", data={"username": project_id, "password": project_payload["password"]}
     )
-    assert auth_response.status_code == 201
+    assert auth_response.status_code == 201, f"Failed to authenticate: {auth_response.text}"
     access_token = auth_response.json()["access_token"]
 
     # Update the project's password to None (make it non-private).
@@ -283,11 +283,11 @@ def test_update_private_project_to_non_private(client: TestClient, project_paylo
     )
 
     # Assert the response status code.
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to update project to non-private: {response.text}"
 
     # Get the project to ensure it is now non-private.
     response = client.get(url=f"/projects/{project_id}")
-    assert response.status_code == 200
+    assert response.status_code == 200, f"Failed to get project after updating to non-private: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -302,20 +302,20 @@ def test_delete_project(client: TestClient, project_payload: dict):
     """
     # Create a project.
     response = client.post(url="/projects/", json=project_payload)
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
     project_id = response.json()["_id"]
 
     # Delete the project.
     response = client.delete(url=f"/projects/{project_id}")
 
     # Assert the response status code.
-    assert response.status_code == 204
+    assert response.status_code == 204, f"Failed to delete project: {response.text}"
 
     # Attempt to retrieve the deleted project.
     response = client.get(url=f"/projects/{project_id}")
 
     # Assert the response status code for not found.
-    assert response.status_code == 404
+    assert response.status_code == 404, f"Failed to get expected not found response: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -331,14 +331,14 @@ def test_delete_private_project(client: TestClient, project_payload: dict):
 
     # Create a private project.
     response = client.post(url="/projects/", json=project_payload)
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
     project_id = response.json()["_id"]
 
     # Attempt to delete the project without authentication.
     response = client.delete(url=f"/projects/{project_id}")
 
     # Assert the response status code.
-    assert response.status_code == 401
+    assert response.status_code == 401, f"Failed to get expected unauthorized response: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -348,20 +348,20 @@ def test_delete_private_project(client: TestClient, project_payload: dict):
     auth_response = client.post(
         url="/auth/token", data={"username": project_id, "password": project_payload["password"]}
     )
-    assert auth_response.status_code == 201
+    assert auth_response.status_code == 201, f"Failed to authenticate: {auth_response.text}"
     access_token = auth_response.json()["access_token"]
 
     # Delete the project with the access token.
     response = client.delete(url=f"/projects/{project_id}", headers={"Authorization": f"Bearer {access_token}"})
 
     # Assert the response status code.
-    assert response.status_code == 204
+    assert response.status_code == 204, f"Failed to delete project: {response.text}"
 
     # Attempt to retrieve the deleted project.
     response = client.get(url=f"/projects/{project_id}")
 
     # Assert the response status code for not found.
-    assert response.status_code == 404
+    assert response.status_code == 404, f"Failed to get expected not found response: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -377,27 +377,27 @@ def test_get_private_project_with_token_of_another_project(client: TestClient, p
 
     # Create the first private project.
     response = client.post(url="/projects/", json=project_payload)
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to create first project: {response.text}"
     project_id_1 = response.json()["_id"]
 
     # Create the second private project.
     project_payload["name"] = "Second Test Project"
     response = client.post(url="/projects/", json=project_payload)
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Failed to create second project: {response.text}"
     project_id_2 = response.json()["_id"]
 
     # Authenticate to get access token for the first project.
     auth_response_1 = client.post(
         url="/auth/token", data={"username": project_id_1, "password": project_payload["password"]}
     )
-    assert auth_response_1.status_code == 201
+    assert auth_response_1.status_code == 201, f"Failed to authenticate for the first project: {auth_response_1.text}"
     access_token_1 = auth_response_1.json()["access_token"]
 
     # Attempt to retrieve the second private project with the first project's access token.
     response = client.get(url=f"/projects/{project_id_2}", headers={"Authorization": f"Bearer {access_token_1}"})
 
     # Assert the response status code.
-    assert response.status_code == 403
+    assert response.status_code == 403, f"Failed to get expected forbidden response: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
