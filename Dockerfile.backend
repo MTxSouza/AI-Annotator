@@ -17,6 +17,8 @@ FROM base AS testing
 # Install test dependencies.
 COPY ./requirements-dev.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
+# Copy test configuration.
+COPY ./pyproject.toml .
 # Copy test code.
 COPY ./scripts ./scripts
 COPY ./tests ./tests

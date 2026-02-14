@@ -9,7 +9,6 @@ storage/
 .ruff_cache/
 .mypy_cache/
 LICENSE
-*.toml
 *.sh
 *.yml
 *.yaml
