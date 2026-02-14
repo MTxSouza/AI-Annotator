@@ -6,7 +6,7 @@ from fastapi import status
 from fastapi.exceptions import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 
-from backend.api.v1.models.samples import ObjectDetectionSample_Create
+from backend.api.v1.models.samples import ObjectDetectionSampleCreate
 from backend.database.configs import Collections
 from backend.database.enums import PyObjectId, Task
 
@@ -55,13 +55,13 @@ async def get_sample_by_id(sample_id: str, db: AsyncDatabase) -> dict | None:
 
 
 async def get_create_sample_metadata(
-    sample_data: dict | ObjectDetectionSample_Create, project_id: str | PyObjectId, db: AsyncDatabase
+    sample_data: dict | ObjectDetectionSampleCreate, project_id: str | PyObjectId, db: AsyncDatabase
 ) -> dict:
     """
     Get the metadata for creating a sample.
 
     Args:
-            sample_data (dict | ObjectDetectionSample_Create): The data for the new sample.
+            sample_data (dict | ObjectDetectionSampleCreate): The data for the new sample.
             project_id (str | PyObjectId): The ID of the associated project.
             db (AsyncDatabase): The database instance.
 
@@ -123,13 +123,13 @@ async def _object_detection_sample_setup(created_sample: dict, project_id: str |
 
 
 async def create_sample(
-    sample_data: dict | ObjectDetectionSample_Create, project_id: str | PyObjectId, db: AsyncDatabase
+    sample_data: dict | ObjectDetectionSampleCreate, project_id: str | PyObjectId, db: AsyncDatabase
 ) -> dict:
     """
     Create a new sample in the database.
 
     Args:
-            sample_data (dict | ObjectDetectionSample_Create): The data for the new sample.
+            sample_data (dict | ObjectDetectionSampleCreate): The data for the new sample.
             project_id (str | PyObjectId): The ID of the associated project.
             db (AsyncDatabase): The database instance.
 
