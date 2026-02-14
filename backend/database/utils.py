@@ -4,6 +4,7 @@ Module with basic functions to be used in database operations.
 
 from datetime import UTC, datetime
 
+from backend.api.v1.models.task_configs import ObjectDetectionTaskConfig, TextClassificationTaskConfig
 from backend.database.enums import Task
 
 
@@ -39,3 +40,20 @@ def get_task_file(task: str) -> str | None:
         Task.AUDIO_CAPTION.value: "audio",
     }
     return task_file_map.get(task)
+
+
+def get_task_config_model_schema(task: str) -> type | None:
+    """
+    Get the associated task configuration model schema for a given task.
+
+    Args:
+            task (str): The task to get the configuration model schema for.
+
+    Returns:
+            type | None: The associated task configuration model schema for the task, or None if not found.
+    """
+    task_config_model_map = {
+        Task.OBJECT_DETECTION.value: ObjectDetectionTaskConfig,
+        Task.TEXT_CLASSIFICATION.value: TextClassificationTaskConfig,
+    }
+    return task_config_model_map.get(task)
