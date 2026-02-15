@@ -268,16 +268,23 @@ async def delete_sample(sample_id: str | PyObjectId, project_id: str | PyObjectI
     await collection.delete_one({"_id": sample_id_obj})
 
 
-async def delete_sample_by_file_id(file_id: str | PyObjectId, db: AsyncDatabase) -> None:
+async def delete_samples_by_file_id(file_id: str | PyObjectId | list[str | PyObjectId], db: AsyncDatabase) -> None:
     """
     Delete samples associated with a file ID.
 
     Args:
-            file_id (str | PyObjectId): The ID of the file whose associated samples should be deleted.
+            file_id (str | PyObjectId | list[str | PyObjectId]): The ID(s) of the file(s) whose associated samples
+            should be deleted.
             db (AsyncDatabase): The database instance.
     """
     # Get sample collection.
     collection = db.get_collection(name=Collections.SAMPLES.value.name)
+
+    # Check if file_id is a list.
+    if isinstance(file_id, list):
+        file_id_obj_list = [PyObjectId(oid=fid) for fid in file_id]
+        await collection.delete_many({"file_id": {"$in": file_id_obj_list}})
+        return
 
     # Delete samples with the specified file ID.
     file_id_obj = PyObjectId(oid=file_id)
