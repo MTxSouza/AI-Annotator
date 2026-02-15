@@ -11,38 +11,6 @@ from PIL import Image
 
 # Mocks.
 @pytest.fixture
-def list_image_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
-    """
-    Fixture to provide a list of image file payloads.
-    """
-    # Create images.
-    IMAGE_SIZE_LIST = [
-        (200, 200),
-        (300, 150),
-        (400, 400),
-        (500, 250),
-        (600, 300),
-        (1280, 720),
-        (1920, 1080),
-        (3840, 2160),
-    ]
-    image_file_list = []
-    for image_size in IMAGE_SIZE_LIST:
-        # Create empty image.
-        image = Image.new("RGB", image_size, color=(255, 0, 0))
-
-        # Store image in bytes buffer.
-        buffer = io.BytesIO()
-        image.save(buffer, format="PNG")
-        buffer.seek(0)
-
-        # Append to list.
-        image_file_list.append(("file_list", (f"test_image_{image_size[0]}x{image_size[1]}.png", buffer, "image/png")))
-
-    return image_file_list
-
-
-@pytest.fixture
 def corrupt_image_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
     """
     Fixture to provide a corrupt image file payload.

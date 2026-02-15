@@ -2,12 +2,14 @@
 Main module that setup main configurations for backend tests.
 """
 
+import io
 import shutil
 from contextlib import asynccontextmanager
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from PIL import Image
 from pymongo import MongoClient
 
 from backend.api.v1.utils.files import STATIC_FILE_DIRECTORY
@@ -95,3 +97,56 @@ def reset_file_directory():
     """
     # Reset the static file directory.
     shutil.rmtree(STATIC_FILE_DIRECTORY, ignore_errors=True)
+
+
+@pytest.fixture
+def list_image_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
+    """
+    Fixture to provide a list of image file payloads.
+    """
+    # Create images.
+    IMAGE_SIZE_LIST = [
+        (200, 200),
+        (300, 150),
+        (400, 400),
+        (500, 250),
+        (600, 300),
+        (1280, 720),
+        (1920, 1080),
+        (3840, 2160),
+    ]
+    image_file_list = []
+    for image_size in IMAGE_SIZE_LIST:
+        # Create empty image.
+        image = Image.new("RGB", image_size, color=(255, 0, 0))
+
+        # Store image in bytes buffer.
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        # Append to list.
+        image_file_list.append(("file_list", (f"test_image_{image_size[0]}x{image_size[1]}.png", buffer, "image/png")))
+
+    return image_file_list
+
+
+@pytest.fixture
+def list_text_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
+    """
+    Fixture to provide a list of text file payloads.
+    """
+    # Create text files.
+    text_file_list = []
+    for i in range(5):
+        # Create text content.
+        text_content = f"This is test file number {i + 1}."
+
+        # Store text in bytes buffer.
+        buffer = io.BytesIO(initial_bytes=text_content.encode("utf-8"))
+        buffer.seek(0)
+
+        # Append to list.
+        text_file_list.append(("file_list", (f"test_file_{i + 1}.txt", buffer, "text/plain")))
+
+    return text_file_list
