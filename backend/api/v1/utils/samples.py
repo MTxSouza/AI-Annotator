@@ -192,7 +192,7 @@ async def update_sample(
 
     # Convert sample_data to dict.
     if not isinstance(sample_data, dict):
-        sample_data_dict = sample_data.model_dump()
+        sample_data_dict = sample_data.model_dump(exclude_unset=True, exclude_none=True)
     else:
         sample_data_dict = sample_data
 
