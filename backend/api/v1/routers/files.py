@@ -39,7 +39,7 @@ async def get_files_endpoint(
     # Get project ID.
     project_id = project.id
 
-    return await get_files(limit=limit, offset=offset, db=db, query={"project_id": project_id})  # type: ignore
+    return await get_files(limit=limit, offset=offset, db=db, query={"project_id_list": project_id})  # type: ignore
 
 
 @router.post(path="/", response_model=UploadedFileListResponse, status_code=status.HTTP_201_CREATED)
