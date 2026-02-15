@@ -162,15 +162,12 @@ async def _object_detection_sample_setup(created_sample: dict, project_id: str |
     await collection.update_one({"project_id": project_id_obj}, {"$addToSet": {"class_name_list": class_name}})
 
 
-async def create_sample(
-    sample_data: dict | ObjectDetectionSampleCreate, project_id: str | PyObjectId, db: AsyncDatabase
-) -> dict:
+async def create_sample(sample_data: dict | ObjectDetectionSampleCreate, db: AsyncDatabase) -> dict:
     """
     Create a new sample in the database.
 
     Args:
             sample_data (dict | ObjectDetectionSampleCreate): The data for the new sample.
-            project_id (str | PyObjectId): The ID of the associated project.
             db (AsyncDatabase): The database instance.
 
     Returns:
@@ -186,7 +183,8 @@ async def create_sample(
         sample_data_dict = sample_data
 
     # Get sample metadata.
-    metadata = await get_create_sample_metadata(sample_data=sample_data, project_id=project_id, db=db)
+    project_id = sample_data_dict.get("project_id")
+    metadata = await get_create_sample_metadata(sample_data=sample_data, project_id=project_id, db=db)  # type: ignore
 
     # Check project task.
     task_map = {Task.OBJECT_DETECTION.value: _object_detection_sample_setup}
@@ -196,10 +194,8 @@ async def create_sample(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported task: {task}.")
 
     # Create sample document.
-    project_id_obj = PyObjectId(oid=project_id)
-    sample_data_dict["project_id"] = project_id_obj
     result = await collection.insert_one(sample_data_dict)
-    await sample_setup(created_sample=sample_data_dict, project_id=project_id, db=db)
+    await sample_setup(created_sample=sample_data_dict, project_id=project_id, db=db)  # type: ignore
 
     # Retrieve the created sample.
     created_sample = await collection.find_one({"_id": result.inserted_id})
