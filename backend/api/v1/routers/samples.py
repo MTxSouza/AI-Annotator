@@ -6,9 +6,13 @@ from fastapi import APIRouter, Depends, status
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import Project
-from backend.api.v1.models.samples import ObjectDetectionSample, ObjectDetectionSampleCreate
+from backend.api.v1.models.samples import (
+    ObjectDetectionSample,
+    ObjectDetectionSampleCreate,
+    ObjectDetectionSampleUpdate,
+)
 from backend.api.v1.utils.projects import get_authenticated_project
-from backend.api.v1.utils.samples import create_sample, get_sample_by_id, get_samples
+from backend.api.v1.utils.samples import create_sample, get_sample_by_id, get_samples, update_sample
 from backend.database.configs import DatabaseConfig
 
 # Instantiate the router.
@@ -55,7 +59,7 @@ async def create_sample_endpoint(
     Endpoint to create a new sample.
 
     Args:
-            sample (ObjectDetectionSample_Create): The sample data to create.
+            sample (ObjectDetectionSampleCreate): The sample data to create.
 
     Returns:
             ObjectDetectionSample: The created sample.
@@ -64,3 +68,26 @@ async def create_sample_endpoint(
     project_id = project.id
 
     return await create_sample(sample_data=sample, project_id=project_id, db=db)  # type: ignore
+
+
+@router.put(path="/{id}/", response_model=ObjectDetectionSample, status_code=status.HTTP_201_CREATED)
+async def update_sample_endpoint(
+    id: str,
+    sample: ObjectDetectionSampleUpdate,
+    project: Project = Depends(dependency=get_authenticated_project),
+    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
+) -> ObjectDetectionSample:
+    """
+    Endpoint to update a sample.
+
+    Args:
+            id (str): The ID of the sample to update.
+            sample (ObjectDetectionSampleUpdate): The sample data to update.
+
+    Returns:
+            ObjectDetectionSample: The updated sample.
+    """
+    # Get project ID.
+    project_id = project.id
+
+    return await update_sample(sample_id=id, sample_data=sample, project_id=project_id, db=db)  # type: ignore
