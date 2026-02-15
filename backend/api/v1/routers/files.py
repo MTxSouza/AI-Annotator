@@ -9,7 +9,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.files import AudioFile, ImageFile, TextFile, UploadedFileListResponse
 from backend.api.v1.models.projects import Project
-from backend.api.v1.utils.files import create_file_records, delete_file_record, get_files
+from backend.api.v1.utils.files import create_file_records, delete_file_records, get_files
 from backend.api.v1.utils.projects import get_authenticated_project
 from backend.database.configs import DatabaseConfig
 from backend.limiter import limiter
@@ -84,4 +84,4 @@ async def delete_file_endpoint(
     project_id = project.id
 
     # Delete file record.
-    await delete_file_record(file_id=file_id, project_id=project_id, db=db)
+    await delete_file_records(file_id=file_id, project_id=project_id, db=db)
