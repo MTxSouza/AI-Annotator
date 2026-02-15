@@ -13,7 +13,7 @@ from backend.database.enums import PyObjectId, Task
 
 
 # Functions.
-async def get_samples(limit: int, offset: int, db: AsyncDatabase) -> list[dict]:
+async def get_samples(limit: int, offset: int, db: AsyncDatabase, query: dict | None = None) -> list[dict]:
     """
     Get all samples.
 
@@ -21,6 +21,7 @@ async def get_samples(limit: int, offset: int, db: AsyncDatabase) -> list[dict]:
             limit (int): The maximum number of samples to return.
             offset (int): The number of samples to skip before starting to collect the result set.
             db (AsyncDatabase): The database instance.
+            query (dict | None): The query to filter samples. (Default: None)
 
     Returns:
             list: List of all samples.
@@ -28,8 +29,12 @@ async def get_samples(limit: int, offset: int, db: AsyncDatabase) -> list[dict]:
     # Get samples collection.
     collection = db.get_collection(name=Collections.SAMPLES.value.name)
 
+    # Setup query.
+    if query is None:
+        query = {}
+
     # Query samples.
-    cursor = collection.find().skip(skip=offset).limit(limit=limit)
+    cursor = collection.find(query).skip(skip=offset).limit(limit=limit)
     samples = await cursor.to_list()
 
     return samples

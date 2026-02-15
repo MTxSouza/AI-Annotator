@@ -115,7 +115,7 @@ def save_upload_file_to_disk(file: UploadFile, unique_filename: str) -> None:
         shutil.copyfileobj(fsrc=file.file, fdst=file_buffer)
 
 
-async def get_files(limit: int, offset: int, db: AsyncDatabase) -> list[dict]:
+async def get_files(limit: int, offset: int, db: AsyncDatabase, query: dict | None = None) -> list[dict]:
     """
     Utility function to get all files from the database.
 
@@ -123,6 +123,7 @@ async def get_files(limit: int, offset: int, db: AsyncDatabase) -> list[dict]:
             limit (int): The maximum number of files to retrieve.
             offset (int): The number of files to skip.
             db (AsyncDatabase): The database instance.
+            query (dict): The query to filter files. (Default: None)
 
     Returns:
             list[dict]: List of all files.
@@ -130,8 +131,12 @@ async def get_files(limit: int, offset: int, db: AsyncDatabase) -> list[dict]:
     # Get files collection.
     collection = db.get_collection(name=Collections.FILES.value.name)
 
+    # Setup query.
+    if query is None:
+        query = {}
+
     # Query files.
-    cursor = collection.find().skip(offset).limit(limit)
+    cursor = collection.find(query).skip(offset).limit(limit)
     files = await cursor.to_list()
 
     return files
