@@ -43,13 +43,13 @@ async def get_projects_endpoint(
     return await get_projects(limit=limit, offset=offset, db=db)  # type: ignore
 
 
-@router.get(path="/{id}", name="Get Project", response_model=Project, status_code=status.HTTP_200_OK)
+@router.get(path="/{project_id}", name="Get Project", response_model=Project, status_code=status.HTTP_200_OK)
 async def get_project_endpoint(project: Project = Depends(dependency=get_authenticated_project)) -> Project:
     """
     Endpoint to get a project by its ID.
 
     Args:
-            id (str): The ID of the project.
+            project_id (str): The ID of the project.
 
     Returns:
             ProjectDetail: The project with the given ID.
@@ -81,7 +81,7 @@ async def create_project_endpoint(
     return new_project  # type: ignore
 
 
-@router.put(path="/{id}", name="Update Project", response_model=Project, status_code=status.HTTP_201_CREATED)
+@router.put(path="/{project_id}", name="Update Project", response_model=Project, status_code=status.HTTP_201_CREATED)
 async def update_project_endpoint(
     update: Update,
     project: Project = Depends(dependency=get_authenticated_project),
@@ -91,22 +91,24 @@ async def update_project_endpoint(
     Endpoint to update an existing project.
 
     Args:
-            id (str): The ID of the project to update.
+            project_id (str): The ID of the project to update.
             update (ProjectUpdate): The updated project data.
 
     Returns:
             Project: The updated project.
     """
     # Get project ID.
-    id = str(project.id)
+    project_id = str(project.id)
 
     # Update the project.
-    updated_project = await update_project(db=db, project_id=id, project_data=update.model_dump(exclude_unset=True))
+    updated_project = await update_project(
+        db=db, project_id=project_id, project_data=update.model_dump(exclude_unset=True)
+    )
 
     return updated_project  # type: ignore
 
 
-@router.delete(path="/{id}", name="Delete Project", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(path="/{project_id}", name="Delete Project", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project_endpoint(
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
@@ -115,14 +117,14 @@ async def delete_project_endpoint(
     Endpoint to delete a project by its ID.
 
     Args:
-            id (str): The ID of the project to delete.
+            project_id (str): The ID of the project to delete.
     """
     # Get project ID.
-    id = str(project.id)
+    project_id = str(project.id)
 
     # Check if the project exists.
-    if await get_project_by_id(db=db, project_id=id) is None:
+    if await get_project_by_id(db=db, project_id=project_id) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
     # Delete the project.
-    await delete_project(db=db, project_id=id)
+    await delete_project(db=db, project_id=project_id)
