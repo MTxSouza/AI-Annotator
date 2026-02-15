@@ -57,7 +57,7 @@ class _ClassTaskConfigUpdate(_TaskConfigUpdate):
     Task configuration for updating class-related tasks.
     """
 
-    class_name_list: list[str] | None = Field(default=None, description="List of class names supported for the task.")
+    pass
 
 
 # - Image Task Configs.
@@ -78,9 +78,7 @@ class _VisualTaskConfig(_ImageTaskConfig):
     Task configuration for visual-related tasks.
     """
 
-    add_segmentation: bool = Field(
-        default=False, description="Whether to include segmentation masks in the task configuration."
-    )
+    pass
 
 
 class _VisualTaskConfigUpdate(_TaskConfigUpdate):
@@ -88,9 +86,7 @@ class _VisualTaskConfigUpdate(_TaskConfigUpdate):
     Task configuration for updating visual-related tasks.
     """
 
-    add_segmentation: bool | None = Field(
-        default=None, description="Whether to include segmentation masks in the task configuration."
-    )
+    pass
 
 
 # * Image Classification Task Configs.
