@@ -14,8 +14,8 @@ class _Sample(CommonModel):
     Schema for a sample.
     """
 
-    project_id: str | PyObjectId = Field(..., description="ID of the project associated with the sample.")
-    file_id: str | PyObjectId = Field(..., description="ID of the file associated with the sample.")
+    project_id: PyObjectId = Field(..., description="ID of the project associated with the sample.")
+    file_id: PyObjectId = Field(..., description="ID of the file associated with the sample.")
 
 
 class _SampleDB(CommonResponseModel, _Sample):
@@ -39,8 +39,8 @@ class _SampleUpdate(_Sample):
     Schema for updating a sample.
     """
 
-    project_id: str | PyObjectId | None = Field(default=None, exclude=True)  # type: ignore
-    file_id: str | PyObjectId | None = Field(default=None, exclude=True)  # type: ignore
+    project_id: PyObjectId | None = Field(default=None, exclude=True)  # type: ignore
+    file_id: PyObjectId | None = Field(default=None, exclude=True)  # type: ignore
 
 
 # - Schemas for different sample types.
