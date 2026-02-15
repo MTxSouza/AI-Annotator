@@ -65,6 +65,7 @@ def test_create_text_file_record(
     project = project_response.json()
     assert project["number_of_files"] == len(list_text_file_payload)
     assert project["number_of_samples"] == 0
+    assert not project["details"]["class_name_list"]
 
 
 def test_create_duplicate_text_file_record(
