@@ -15,6 +15,7 @@ from PIL import Image, UnidentifiedImageError
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.files import ImageFile_Create, TextFile_Create, UploadedFileResponse
+from backend.api.v1.utils.samples import delete_sample_by_file_id
 from backend.api.v1.utils.task_configs import get_task_file
 from backend.database.configs import Collections
 from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId
@@ -26,6 +27,33 @@ FILE_FORMAT_CHUNK_SIZE = 512  # 512 Bytes
 
 
 # Functions.
+async def check_if_file_belongs_to_project(
+    file_id: str | PyObjectId, project_id: str | PyObjectId, db: AsyncDatabase
+) -> None:
+    """
+    Check if a file belongs to a project.
+
+    Args:
+            file_id (str | PyObjectId): The ID of the file.
+            project_id (str | PyObjectId): The ID of the project.
+            db (AsyncDatabase): The database instance.
+    """
+    # Query file by ID.
+    file = await get_file_by_id(file_id=file_id, db=db)  # type: ignore
+    if not file:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"File with ID {file_id} does not exist.")
+    file_project_id_list = file.get("project_id_list", [])
+    file_project_id_list = [PyObjectId(oid=pid) for pid in file_project_id_list]  # type: ignore
+
+    # Check if file belongs to the specified project.
+    project_id_obj = PyObjectId(oid=project_id)
+    if project_id_obj not in file_project_id_list:  # type: ignore
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"File with ID {file_id} does not belong to project with ID {project_id}.",
+        )
+
+
 def generate_unique_filename(file_format: FileFormat) -> str:
     """
     Utility function to generate a unique filename.
@@ -140,6 +168,26 @@ async def get_files(limit: int, offset: int, db: AsyncDatabase, query: dict | No
     files = await cursor.to_list()
 
     return files
+
+
+async def get_file_by_id(file_id: str | PyObjectId, db: AsyncDatabase) -> dict | None:
+    """
+    Utility function to get a file from the database by its ID.
+
+    Args:
+            file_id (str | PyObjectId): The ID of the file to retrieve.
+            db (AsyncDatabase): The database instance.
+
+    Returns:
+            dict | None: The file document if found, None otherwise.
+    """
+    # Get files collection.
+    collection = db.get_collection(name=Collections.FILES.value.name)
+
+    # Query file by its ID.
+    file_id_obj = PyObjectId(oid=file_id)
+    file_document = await collection.find_one({"_id": file_id_obj})
+    return file_document
 
 
 async def get_file_by_it_hash(file_hash: str, db: AsyncDatabase) -> dict | None:
@@ -585,3 +633,35 @@ async def set_project_id_in_file_record(
 
     # Update file record to add project ID in project_id_list field.
     await collection.update_one(filter={"_id": file_id_obj}, update={"$addToSet": {"project_id_list": project_id_obj}})
+
+
+async def delete_file_record(file_id: str | PyObjectId, project_id: str | PyObjectId, db: AsyncDatabase) -> None:
+    """
+    Utility function to delete a file record from a project.
+
+    Args:
+            file_id (str | PyObjectId): The file ID to delete.
+            project_id (str | PyObjectId): The project ID to remove the file from.
+            db (AsyncDatabase): The database instance.
+    """
+    # Get file collection.
+    collection = db.get_collection(name=Collections.FILES.value.name)
+
+    # Check if file exists.
+    sample = await get_file_by_id(file_id=file_id, db=db)
+    if not sample:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"File with ID {file_id} does not exist.")
+
+    # Check if file belongs to the project.
+    await check_if_file_belongs_to_project(file_id=file_id, project_id=project_id, db=db)
+
+    # Delete associated samples.
+    await delete_sample_by_file_id(file_id=file_id, db=db)
+
+    # Delete the file from database.
+    file_id_obj = PyObjectId(oid=file_id)
+    await collection.delete_one({"_id": file_id_obj})
+
+    # Delete the file from disk.
+    file_path = Path(STATIC_FILE_DIRECTORY, sample["filename"])  # type: ignore
+    file_path.unlink(missing_ok=True)
