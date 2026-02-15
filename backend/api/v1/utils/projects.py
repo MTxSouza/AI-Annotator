@@ -82,6 +82,11 @@ async def get_project_by_id(project_id: str | PyObjectId, db: AsyncDatabase) -> 
     project_output = await cursor.to_list(length=1)
     project = project_output.pop() if project_output else None
 
+    # Setup task detail document.
+    if project:
+        task_detail_data = await setup_task_detail(task=project["task"], project_id=project_id, db=db)
+        project["details"] = task_detail_data
+
     return project
 
 
@@ -159,11 +164,7 @@ async def create_project(project_data: dict, db: AsyncDatabase) -> dict:
     # Get projects collection.
     collection = db.get_collection(name=Collections.PROJECTS.value.name)
 
-    # Setup task detail document.
-    task_detail_data = setup_task_detail(task=project_data["task"])
-
     # Insert new project.
-    project_data["details"] = task_detail_data
     result = await collection.insert_one(project_data)
 
     # Retrieve the created project.
