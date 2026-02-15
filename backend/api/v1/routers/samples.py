@@ -96,7 +96,10 @@ async def update_sample_endpoint(
     Returns:
             ObjectDetectionSample: The updated sample.
     """
-    return await update_sample(sample_id=sample_id, sample_data=sample, db=db)  # type: ignore
+    # Get project ID.
+    project_id = project.id
+
+    return await update_sample(sample_id=sample_id, project_id=project_id, sample_data=sample, db=db)  # type: ignore
 
 
 @router.delete(path="/{sample_id}", status_code=status.HTTP_204_NO_CONTENT)
