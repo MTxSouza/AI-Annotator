@@ -13,6 +13,37 @@ from backend.database.enums import PyObjectId, Task
 
 
 # Functions.
+async def _check_if_sample_belongs_to_project(
+    sample_id: str | PyObjectId, project_id: str | PyObjectId, db: AsyncDatabase
+) -> None:
+    """
+    Check if a sample belongs to a project.
+
+    Args:
+            sample_id (str | PyObjectId): The ID of the sample.
+            project_id (str | PyObjectId): The ID of the project.
+            db (AsyncDatabase): The database instance.
+    """
+    # Get sample collection.
+    collection = db.get_collection(name=Collections.SAMPLES.value.name)
+
+    # Query sample by ID.
+    sample_id_obj = PyObjectId(oid=sample_id)
+    sample = await collection.find_one({"_id": sample_id_obj})
+
+    if not sample:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Sample with ID {sample_id} does not exist.")
+    sample_project_id = PyObjectId(oid=sample.get("project_id"))
+
+    # Check if sample belongs to the specified project.
+    project_id_obj = PyObjectId(oid=project_id)
+    if sample_project_id != project_id_obj:  # type: ignore
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Sample with ID {sample_id} does not belong to project with ID {project_id}.",
+        )
+
+
 async def get_samples(limit: int, offset: int, db: AsyncDatabase, query: dict | None = None) -> list[dict]:
     """
     Get all samples.
@@ -175,13 +206,17 @@ async def create_sample(
 
 
 async def update_sample(
-    sample_id: str | PyObjectId, sample_data: dict | ObjectDetectionSampleUpdate, db: AsyncDatabase
+    sample_id: str | PyObjectId,
+    project_id: str | PyObjectId,
+    sample_data: dict | ObjectDetectionSampleUpdate,
+    db: AsyncDatabase,
 ) -> dict:
     """
     Update an existing sample in the database.
 
     Args:
             sample_id (str | PyObjectId): The ID of the sample to update.
+            project_id (str | PyObjectId): The ID of the associated project.
             sample_data (dict | ObjectDetectionSampleUpdate): The updated data for the sample.
             db (AsyncDatabase): The database instance.
 
@@ -194,6 +229,9 @@ async def update_sample(
     # Check if sample exists.
     if not await get_sample_by_id(sample_id=sample_id, db=db):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Sample with ID {sample_id} does not exist.")
+
+    # Check if sample belongs to the specified project.
+    await _check_if_sample_belongs_to_project(sample_id=sample_id, project_id=project_id, db=db)
 
     # Convert sample_data to dict.
     if not isinstance(sample_data, dict):
@@ -227,13 +265,7 @@ async def delete_sample(sample_id: str | PyObjectId, project_id: str | PyObjectI
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Sample with ID {sample_id} does not exist.")
 
     # Check if sample belongs to the specified project.
-    sample = await get_sample_by_id(sample_id=sample_id, db=db)
-    project_id_obj = PyObjectId(oid=project_id)
-    if sample.get("project_id") != project_id_obj:  # type: ignore
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Sample with ID {sample_id} does not belong to project with ID {project_id}.",
-        )
+    await _check_if_sample_belongs_to_project(sample_id=sample_id, project_id=project_id, db=db)
 
     # Delete the sample.
     sample_id_obj = PyObjectId(oid=sample_id)
