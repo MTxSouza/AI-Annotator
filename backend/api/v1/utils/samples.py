@@ -4,9 +4,10 @@ Module with all utilities related to sample operations.
 
 from fastapi import status
 from fastapi.exceptions import HTTPException
+from pymongo.asynchronous.collection import ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
 
-from backend.api.v1.models.samples import ObjectDetectionSampleCreate
+from backend.api.v1.models.samples import ObjectDetectionSampleCreate, ObjectDetectionSampleUpdate
 from backend.database.configs import Collections
 from backend.database.enums import PyObjectId, Task
 
@@ -34,12 +35,12 @@ async def get_samples(limit: int, offset: int, db: AsyncDatabase) -> list[dict]:
     return samples
 
 
-async def get_sample_by_id(sample_id: str, db: AsyncDatabase) -> dict | None:
+async def get_sample_by_id(sample_id: str | PyObjectId, db: AsyncDatabase) -> dict | None:
     """
     Get a sample by its ID.
 
     Args:
-            sample_id (str): The ID of the sample to retrieve.
+            sample_id (str | PyObjectId): The ID of the sample to retrieve.
             db (AsyncDatabase): The database instance.
 
     Returns:
@@ -49,7 +50,8 @@ async def get_sample_by_id(sample_id: str, db: AsyncDatabase) -> dict | None:
     collection = db.get_collection(name=Collections.SAMPLES.value.name)
 
     # Query sample by ID.
-    sample = await collection.find_one({"_id": sample_id})
+    sample_id_obj = PyObjectId(oid=sample_id)
+    sample = await collection.find_one({"_id": sample_id_obj})
 
     return sample
 
@@ -165,3 +167,39 @@ async def create_sample(
     created_sample = await collection.find_one({"_id": result.inserted_id})
 
     return created_sample  # type: ignore
+
+
+async def update_sample(
+    sample_id: str | PyObjectId, sample_data: dict | ObjectDetectionSampleUpdate, db: AsyncDatabase
+) -> dict:
+    """
+    Update an existing sample in the database.
+
+    Args:
+            sample_id (str | PyObjectId): The ID of the sample to update.
+            sample_data (dict | ObjectDetectionSampleUpdate): The updated data for the sample.
+            db (AsyncDatabase): The database instance.
+
+    Returns:
+            dict: The updated sample.
+    """
+    # Get sample collection.
+    collection = db.get_collection(name=Collections.SAMPLES.value.name)
+
+    # Check if sample exists.
+    if not await get_sample_by_id(sample_id=sample_id, db=db):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Sample with ID {sample_id} does not exist.")
+
+    # Convert sample_data to dict.
+    if not isinstance(sample_data, dict):
+        sample_data_dict = sample_data.model_dump()
+    else:
+        sample_data_dict = sample_data
+
+    # Update sample document.
+    sample_id_obj = PyObjectId(oid=sample_id)
+    updated_sample = await collection.find_one_and_update(
+        {"_id": sample_id_obj}, {"$set": sample_data_dict}, return_document=ReturnDocument.AFTER
+    )
+
+    return updated_sample  # type: ignore
