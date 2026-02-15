@@ -112,7 +112,7 @@ async def is_project_name_exists(project_name: str, db: AsyncDatabase) -> bool:
 
 
 async def get_authenticated_project(
-    id: str = Path(..., description="The ID of the project."),  # type: ignore
+    project_id: str = Path(..., description="The ID of the project."),  # type: ignore
     token: str = Depends(dependency=oauth2_scheme),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> Project:
@@ -120,7 +120,7 @@ async def get_authenticated_project(
     Utility function to get an authenticated project by its ID.
 
     Args:
-            id (str): The ID of the project.
+            project_id (str): The ID of the project.
             token (str): The access token.
             db (AsyncDatabase): The database instance.
 
@@ -128,7 +128,7 @@ async def get_authenticated_project(
             Project: The authenticated project.
     """
     # Get project.
-    project = await get_project_by_id(db=db, project_id=id)
+    project = await get_project_by_id(db=db, project_id=project_id)
     if project is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
