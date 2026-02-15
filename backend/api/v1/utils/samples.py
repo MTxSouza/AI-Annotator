@@ -208,3 +208,23 @@ async def update_sample(
     )
 
     return updated_sample  # type: ignore
+
+
+async def delete_sample(sample_id: str | PyObjectId, db: AsyncDatabase) -> None:
+    """
+    Delete a sample from the database.
+
+    Args:
+            sample_id (str | PyObjectId): The ID of the sample to delete.
+            db (AsyncDatabase): The database instance.
+    """
+    # Get sample collection.
+    collection = db.get_collection(name=Collections.SAMPLES.value.name)
+
+    # Check if sample exists.
+    if not await get_sample_by_id(sample_id=sample_id, db=db):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Sample with ID {sample_id} does not exist.")
+
+    # Delete the sample.
+    sample_id_obj = PyObjectId(oid=sample_id)
+    await collection.delete_one({"_id": sample_id_obj})
