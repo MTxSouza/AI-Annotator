@@ -70,9 +70,9 @@ async def create_sample_endpoint(
     return await create_sample(sample_data=sample, project_id=project_id, db=db)  # type: ignore
 
 
-@router.put(path="/{id}/", response_model=ObjectDetectionSample, status_code=status.HTTP_201_CREATED)
+@router.put(path="/{id}/{sample_id}", response_model=ObjectDetectionSample, status_code=status.HTTP_201_CREATED)
 async def update_sample_endpoint(
-    id: str,
+    sample_id: str,
     sample: ObjectDetectionSampleUpdate,
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
@@ -81,7 +81,8 @@ async def update_sample_endpoint(
     Endpoint to update a sample.
 
     Args:
-            id (str): The ID of the sample to update.
+            id (str): The ID of the project that contains the sample to update.
+            sample_id (str): The ID of the sample to update.
             sample (ObjectDetectionSampleUpdate): The sample data to update.
 
     Returns:
@@ -90,4 +91,4 @@ async def update_sample_endpoint(
     # Get project ID.
     project_id = project.id
 
-    return await update_sample(sample_id=id, sample_data=sample, project_id=project_id, db=db)  # type: ignore
+    return await update_sample(sample_id=sample_id, sample_data=sample, project_id=project_id, db=db)  # type: ignore
