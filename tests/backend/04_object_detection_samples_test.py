@@ -145,3 +145,54 @@ def test_create_object_detection_sample_with_nonexistent_file(
             f"Failed to not create sample with non-existent file: {sample_response.text}"
         )
         assert sample_response.json()["detail"] == f"File with ID {sample['file_id']} does not exist."
+
+
+def test_update_object_detection_sample(
+    client: TestClient,
+    image_project_payload: dict,
+    image_file_payload: list[tuple[str, tuple[str, bytes, str]]],
+    list_object_detection_sample_payload: tuple[list[dict], list[str]],
+    reset_file_directory: None,  # Used to reset file directory
+) -> None:
+    """
+    Test to update an object detection sample.
+    """
+    # Create project first.
+    project_response = client.post(url="/projects/", json=image_project_payload)
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
+    project = project_response.json()
+    project_id = project["_id"]
+
+    # Create file record.
+    file_response = client.post(url=f"/files/{project_id}/", files=image_file_payload)
+    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
+    file_list = file_response.json()["data"]
+    assert len(file_list) == 1
+    file_id = file_list.pop()["file_id"]
+
+    # Set sample payload.
+    sample_list, _ = list_object_detection_sample_payload
+    for sample in sample_list:
+        sample["project_id"] = project_id
+        sample["file_id"] = file_id
+
+        # Create sample.
+        sample_response = client.post(url=f"/samples/{project_id}/", json=sample)
+        assert sample_response.status_code == 201, f"Failed to create sample: {sample_response.text}"
+        created_sample_data = sample_response.json()
+
+        # Update the created sample with new coordinates.
+        updated_sample_data = {"cx": random.uniform(0.0, 1.0), "cy": random.uniform(0.0, 1.0)}
+
+        # Update the sample.
+        update_response = client.put(
+            url=f"/samples/{project_id}/{created_sample_data['_id']}", json=updated_sample_data
+        )
+        assert update_response.status_code == 201, f"Failed to update sample: {update_response.text}"
+        updated_sample_data_returned = update_response.json()
+
+        # Check response.
+        assert updated_sample_data_returned["cx"] == updated_sample_data["cx"]
+        assert updated_sample_data_returned["cy"] == updated_sample_data["cy"]
+        assert updated_sample_data_returned["width"] == created_sample_data["width"]
+        assert updated_sample_data_returned["height"] == created_sample_data["height"]
