@@ -88,7 +88,4 @@ async def update_sample_endpoint(
     Returns:
             ObjectDetectionSample: The updated sample.
     """
-    # Get project ID.
-    project_id = project.id
-
-    return await update_sample(sample_id=sample_id, sample_data=sample, project_id=project_id, db=db)  # type: ignore
+    return await update_sample(sample_id=sample_id, sample_data=sample, db=db)  # type: ignore
