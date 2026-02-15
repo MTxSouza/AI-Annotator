@@ -12,7 +12,7 @@ from backend.api.v1.models.samples import (
     ObjectDetectionSampleUpdate,
 )
 from backend.api.v1.utils.projects import get_authenticated_project
-from backend.api.v1.utils.samples import create_sample, get_sample_by_id, get_samples, update_sample
+from backend.api.v1.utils.samples import create_sample, delete_sample, get_sample_by_id, get_samples, update_sample
 from backend.database.configs import DatabaseConfig
 
 # Instantiate the router.
@@ -97,3 +97,21 @@ async def update_sample_endpoint(
             ObjectDetectionSample: The updated sample.
     """
     return await update_sample(sample_id=sample_id, sample_data=sample, db=db)  # type: ignore
+
+
+@router.delete(path="/{sample_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_sample_endpoint(
+    sample_id: str,
+    project: Project = Depends(dependency=get_authenticated_project),
+    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
+) -> None:
+    """
+    Endpoint to delete a sample by ID.
+
+    Args:
+            sample_id (str): The ID of the sample to delete.
+    """
+    # Get project ID.
+    project_id = project.id
+
+    await delete_sample(sample_id=sample_id, project_id=project_id, db=db)
