@@ -659,13 +659,13 @@ async def unset_project_id_in_file_records(project_id: str | PyObjectId, db: Asy
 
 
 async def delete_file_records(
-    file_id: str | PyObjectId | list[str | PyObjectId], project_id: str | PyObjectId, db: AsyncDatabase
+    file_id: str | PyObjectId | list[str] | list[PyObjectId], project_id: str | PyObjectId, db: AsyncDatabase
 ) -> None:
     """
     Utility function to delete file records from a project.
 
     Args:
-            file_id (str | PyObjectId | list[str | PyObjectId]): The file ID(s) to delete.
+            file_id (str | PyObjectId | list[str] | list[PyObjectId]): The file ID(s) to delete.
             project_id (str | PyObjectId): The project ID to remove the file from.
             db (AsyncDatabase): The database instance.
     """
