@@ -15,9 +15,7 @@ class _TaskConfig(CommonModel):
     """
 
     # Fields.
-    project_id: str | PyObjectId = Field(
-        ..., description="The ID of the project associated with this task configuration."
-    )
+    project_id: PyObjectId = Field(..., description="The ID of the project associated with this task configuration.")
     file_format: list[FileFormat] = Field(..., description="The file formats supported for the task.")
 
 

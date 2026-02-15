@@ -15,7 +15,7 @@ class __File(CommonResponseModel):
     """
 
     # Fields.
-    project_id_list: list[PyObjectId | str] = Field(..., description="List of project IDs associated with this file.")
+    project_id_list: list[PyObjectId] = Field(..., description="List of project IDs associated with this file.")
     file_hash: str = Field(..., description="The hash of the file content.")
     filename: str = Field(..., description="The name of the file.")
     file_format: FileFormat = Field(..., description="The format of the file.")
@@ -193,7 +193,7 @@ class UploadedFileResponse(CommonModel):
     Response model for uploaded file.
     """
 
-    file_id: str | PyObjectId | None = Field(default=None, description="The ID of the uploaded file.")
+    file_id: PyObjectId | None = Field(default=None, description="The ID of the uploaded file.")
     status: FileUploadStatus = Field(..., description="Status of the uploaded file.")
     message: str = Field(..., description="Message for the uploaded file.")
     size_in_bytes: int | None = Field(default=0, description="The size of the uploaded file in bytes.")
