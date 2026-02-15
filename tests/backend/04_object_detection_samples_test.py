@@ -81,7 +81,7 @@ def test_create_object_detection_sample(
     project_id = project["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/files/{project_id}/", files=image_file_payload)
+    file_response = client.post(url=f"/projects/{project_id}/files/", files=image_file_payload)
     assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
     file_list = file_response.json()["data"]
     assert len(file_list) == 1
@@ -94,7 +94,7 @@ def test_create_object_detection_sample(
         sample["file_id"] = file_id
 
         # Create sample.
-        sample_response = client.post(url=f"/samples/{project_id}/", json=sample)
+        sample_response = client.post(url=f"/projects/{project_id}/samples/", json=sample)
         assert sample_response.status_code == 201, f"Failed to create sample: {sample_response.text}"
         sample_data = sample_response.json()
 
@@ -140,7 +140,7 @@ def test_create_object_detection_sample_with_nonexistent_file(
         sample["file_id"] = str(bson.ObjectId())  # Set non-existent file ID.
 
         # Create sample.
-        sample_response = client.post(url=f"/samples/{project_id}/", json=sample)
+        sample_response = client.post(url=f"/projects/{project_id}/samples/", json=sample)
         assert sample_response.status_code == 404, (
             f"Failed to not create sample with non-existent file: {sample_response.text}"
         )
@@ -164,7 +164,7 @@ def test_update_object_detection_sample(
     project_id = project["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/files/{project_id}/", files=image_file_payload)
+    file_response = client.post(url=f"/projects/{project_id}/files/", files=image_file_payload)
     assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
     file_list = file_response.json()["data"]
     assert len(file_list) == 1
@@ -177,16 +177,17 @@ def test_update_object_detection_sample(
         sample["file_id"] = file_id
 
         # Create sample.
-        sample_response = client.post(url=f"/samples/{project_id}/", json=sample)
+        sample_response = client.post(url=f"/projects/{project_id}/samples/", json=sample)
         assert sample_response.status_code == 201, f"Failed to create sample: {sample_response.text}"
         created_sample_data = sample_response.json()
+        created_sample_id = created_sample_data["_id"]
 
         # Update the created sample with new coordinates.
         updated_sample_data = {"cx": random.uniform(0.0, 1.0), "cy": random.uniform(0.0, 1.0)}
 
         # Update the sample.
         update_response = client.put(
-            url=f"/samples/{project_id}/{created_sample_data['_id']}", json=updated_sample_data
+            url=f"/projects/{project_id}/samples/{created_sample_id}", json=updated_sample_data
         )
         assert update_response.status_code == 201, f"Failed to update sample: {update_response.text}"
         updated_sample_data_returned = update_response.json()

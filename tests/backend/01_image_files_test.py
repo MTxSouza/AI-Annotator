@@ -93,7 +93,7 @@ def test_create_image_file_record(
     assert project["number_of_samples"] == 0
 
     # Create file record.
-    file_response = client.post(url=f"/files/{project_id}/", files=list_image_file_payload)
+    file_response = client.post(url=f"/projects/{project_id}/files/", files=list_image_file_payload)
     assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
 
     # Check response.
@@ -128,11 +128,11 @@ def test_create_duplicate_file_record(
     project_id = project_response.json()["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/files/{project_id}/", files=list_image_file_payload)
+    file_response = client.post(url=f"/projects/{project_id}/files/", files=list_image_file_payload)
     assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
 
     # Attempt to create duplicate file record.
-    duplicate_file_response = client.post(url=f"/files/{project_id}/", files=list_image_file_payload)
+    duplicate_file_response = client.post(url=f"/projects/{project_id}/files/", files=list_image_file_payload)
     assert duplicate_file_response.status_code == 201, (
         f"Failed to create duplicate file: {duplicate_file_response.text}"
     )
@@ -161,7 +161,7 @@ def test_create_corrupt_image_file_record(
     project_id = project_response.json()["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/files/{project_id}/", files=corrupt_image_file_payload)
+    file_response = client.post(url=f"/projects/{project_id}/files/", files=corrupt_image_file_payload)
     assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
 
     # Check response.
@@ -188,7 +188,7 @@ def test_create_invalid_file_format_record(
     project_id = project_response.json()["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/files/{project_id}/", files=invalid_file_format_payload)
+    file_response = client.post(url=f"/projects/{project_id}/files/", files=invalid_file_format_payload)
     assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
 
     # Check response.
