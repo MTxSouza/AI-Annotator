@@ -11,6 +11,8 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import Project
 from backend.api.v1.utils.auth import decode_access_token, oauth2_scheme, throw_bearer_error
+from backend.api.v1.utils.files import unset_project_id_in_file_records
+from backend.api.v1.utils.samples import delete_samples_by_project_id
 from backend.api.v1.utils.task_configs import setup_task_config
 from backend.database.configs import Collections, DatabaseConfig
 from backend.database.enums import PyObjectId
@@ -213,6 +215,12 @@ async def delete_project(project_id: str, db: AsyncDatabase) -> None:
     """
     # Get projects collection.
     collection = db.get_collection(name=Collections.PROJECTS.value.name)
+
+    # Delete samples associated with the project.
+    await delete_samples_by_project_id(project_id=project_id, db=db)
+
+    # Delete project ID from associated files.
+    await unset_project_id_in_file_records(project_id=project_id, db=db)
 
     # Delete the project.
     project_id_obj = PyObjectId(oid=project_id)
