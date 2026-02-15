@@ -83,13 +83,13 @@ async def get_create_sample_metadata(
     file_id_obj = PyObjectId(oid=file_id)
     file = await file_collection.find_one({"_id": file_id_obj})
     if not file:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"File with ID {file_id} does not exist.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"File with ID {file_id} does not exist.")
 
     # Check if file belongs to the specified project.
     project_id_obj = PyObjectId(oid=project_id)
     if project_id_obj not in file.get("project_id_list", []):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=f"File with ID {file_id} does not belong to project with ID {project_id}.",
         )
 
