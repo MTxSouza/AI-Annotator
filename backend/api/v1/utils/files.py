@@ -635,6 +635,43 @@ async def set_project_id_in_file_record(
     await collection.update_one(filter={"_id": file_id_obj}, update={"$addToSet": {"project_id_list": project_id_obj}})
 
 
+async def unset_project_id_in_file_record(
+    file_id: str | PyObjectId, project_id: str | PyObjectId, db: AsyncDatabase
+) -> None:
+    """
+    Utility function to unset the project ID from the file record's project_id_list field.
+
+    Args:
+            file_id (str | PyObjectId): The file ID to update.
+            project_id (str | PyObjectId): The project ID to remove.
+            db (AsyncDatabase): The database instance.
+    """
+    # Get files collection.
+    collection = db.get_collection(name=Collections.FILES.value.name)
+
+    # Fix file ID type.
+    if isinstance(file_id, str):
+        file_id_obj = PyObjectId(oid=file_id)
+    else:
+        file_id_obj = file_id
+
+    # Fix project ID type.
+    if isinstance(project_id, str):
+        project_id_obj = PyObjectId(oid=project_id)
+    else:
+        project_id_obj = project_id
+
+    # Update file record to remove project ID from project_id_list field.
+    await collection.update_one(filter={"_id": file_id_obj}, update={"$pull": {"project_id_list": project_id_obj}})
+
+    # Check if there are no more project IDs in the project_id_list field.
+    file_record = await collection.find_one({"_id": file_id_obj})
+    project_id_list = file_record.get("project_id_list", [])  # type: ignore
+    if not project_id_list:
+        # Delete the file record.
+        await delete_file_record(file_id=file_id_obj, project_id=project_id_obj, db=db)
+
+
 async def delete_file_record(file_id: str | PyObjectId, project_id: str | PyObjectId, db: AsyncDatabase) -> None:
     """
     Utility function to delete a file record from a project.
