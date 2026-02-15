@@ -5,7 +5,7 @@ Main module with all schemas used in Samples collection.
 from pydantic import Field
 
 from backend.database.enums import PyObjectId
-from backend.database.models import CommonModel, CommonRequestModel, CommonResponseModel, CommonUpdateModel
+from backend.database.models import CommonModel, CommonRequestModel, CommonResponseModel
 
 
 # Schemas.
@@ -34,12 +34,13 @@ class _SampleCreate(_Sample, CommonRequestModel):
     pass
 
 
-class _SampleUpdate(CommonUpdateModel):
+class _SampleUpdate(_Sample):
     """
     Schema for updating a sample.
     """
 
-    pass
+    project_id: str | PyObjectId | None = Field(default=None, exclude=True)  # type: ignore
+    file_id: str | PyObjectId | None = Field(default=None, exclude=True)  # type: ignore
 
 
 # - Schemas for different sample types.
@@ -123,7 +124,7 @@ class ImageClassificationSampleCreate(_SampleCreate, _ImageClassificationSample)
     pass
 
 
-class ImageClassificationSampleUpdate(_ClassSampleUpdate, _ImageClassificationSample):
+class ImageClassificationSampleUpdate(_ClassSampleUpdate):
     """
     Schema for updating an image classification sample.
     """
@@ -156,7 +157,7 @@ class ObjectDetectionSampleCreate(_SampleCreate, _ObjectDetectionSample):
     pass
 
 
-class ObjectDetectionSampleUpdate(_ObjectDetectionSample, _VisualLocationSampleUpdate):
+class ObjectDetectionSampleUpdate(_ClassSampleUpdate, _VisualLocationSampleUpdate):
     """
     Schema for updating an object detection sample.
     """
@@ -189,7 +190,7 @@ class ImageCaptionSampleCreate(_SampleCreate, _ImageCaptionSample):
     pass
 
 
-class ImageCaptionSampleUpdate(_ImageCaptionSample, _TextSampleUpdate):
+class ImageCaptionSampleUpdate(_TextSampleUpdate):
     """
     Schema for updating an image caption sample.
     """
@@ -222,7 +223,7 @@ class ObjectCaptionSampleCreate(_SampleCreate, _ObjectCaptionSample):
     pass
 
 
-class ObjectCaptionSampleUpdate(_ObjectCaptionSample, _VisualLocationSampleUpdate, _TextSampleUpdate):
+class ObjectCaptionSampleUpdate(_TextSampleUpdate, _VisualLocationSampleUpdate):
     """
     Schema for updating an object caption sample.
     """
