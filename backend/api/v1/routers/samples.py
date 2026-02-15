@@ -72,10 +72,7 @@ async def create_sample_endpoint(
     Returns:
             ObjectDetectionSample: The created sample.
     """
-    # Get project ID.
-    project_id = project.id
-
-    return await create_sample(sample_data=sample, project_id=project_id, db=db)  # type: ignore
+    return await create_sample(sample_data=sample, db=db)  # type: ignore
 
 
 @router.put(path="/{sample_id}", response_model=ObjectDetectionSample, status_code=status.HTTP_201_CREATED)
