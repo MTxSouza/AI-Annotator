@@ -16,6 +16,7 @@ load_env_file() {
 setup_development_dependencies() {
     echo "🔧 Setting up development dependencies..."
     echo ""
+    pip install -r requirements-dev.txt
     echo "Setup pre-commit hooks..."
     pre-commit install
     pre-commit install --hook-type commit-msg
