@@ -462,12 +462,22 @@ def test_delete_project_and_ensure_files_and_samples_deleted(
         f"Expected {len(list_image_file_payload)} files, got {len(files_data_list)}"
     )
 
+    # Check project_id_list field.
+    assert all(project_id in file_data["project_id_list"] for file_data in files_data_list), (
+        "Expected all files to have the correct project_id_list"
+    )
+
     # Get associated files for the second project to ensure they exist.
     response = client.get(url=f"/projects/{second_project_id}/files/")
     assert response.status_code == 200, f"Failed to get files for the second project: {response.text}"
     files_data_list = response.json()
     assert len(files_data_list) == len(list_image_file_payload), (
         f"Expected {len(list_image_file_payload)} files, got {len(files_data_list)}"
+    )
+
+    # Check project_id_list field.
+    assert all(second_project_id in file_data["project_id_list"] for file_data in files_data_list), (
+        "Expected all files to have the correct project_id_list"
     )
 
     # Delete the first project.
@@ -485,3 +495,9 @@ def test_delete_project_and_ensure_files_and_samples_deleted(
     assert len(files_data_list) == len(list_image_file_payload), (
         f"Expected {len(list_image_file_payload)} files, got {len(files_data_list)}"
     )
+
+    # Check project_id_list field to ensure the deleted project's ID is removed.
+    assert all(
+        second_project_id in file_data["project_id_list"] and project_id not in file_data["project_id_list"]
+        for file_data in files_data_list
+    ), "Expected all files to have the deleted project ID removed from project_id_list"
