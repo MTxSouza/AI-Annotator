@@ -39,9 +39,6 @@ class Collections(Enum):
     PROJECTS = _CollectionConfig(
         name="projects", index_configs=[_IndexConfig(name="name", is_indexed=True, is_unique=True)]
     )
-    TASK_CONFIGS = _CollectionConfig(
-        name="task_configs", index_configs=[_IndexConfig(name="project_id", is_unique=True)]
-    )
     FILES = _CollectionConfig(
         name="files",
         index_configs=[

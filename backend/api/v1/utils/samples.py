@@ -9,7 +9,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.samples import ObjectDetectionSampleCreate, ObjectDetectionSampleUpdate
 from backend.database.configs import Collections
-from backend.database.enums import PyObjectId, Task
+from backend.database.enums import PyObjectId
 
 
 # Functions.
@@ -144,24 +144,6 @@ async def get_create_sample_metadata(
     }
 
 
-async def _object_detection_sample_setup(created_sample: dict, project_id: str | PyObjectId, db: AsyncDatabase) -> None:
-    """
-    Setup extra configurations for an object detection sample.
-
-    Args:
-            created_sample (dict): The created sample.
-            project_id (str | PyObjectId): The ID of the associated project.
-            db (AsyncDatabase): The database instance.
-    """
-    # Get task config collection.
-    collection = db.get_collection(name=Collections.TASK_CONFIGS.value.name)
-
-    # Add new class name to project if it doesn't exist.
-    class_name = created_sample.get("class_name")
-    project_id_obj = PyObjectId(oid=project_id)
-    await collection.update_one({"project_id": project_id_obj}, {"$addToSet": {"class_name_list": class_name}})
-
-
 async def create_sample(sample_data: dict | ObjectDetectionSampleCreate, db: AsyncDatabase) -> dict:
     """
     Create a new sample in the database.
@@ -173,8 +155,9 @@ async def create_sample(sample_data: dict | ObjectDetectionSampleCreate, db: Asy
     Returns:
             dict: The created sample with its ID.
     """
-    # Get sample collection.
-    collection = db.get_collection(name=Collections.SAMPLES.value.name)
+    # Get sample and file collection.
+    sample_collection = db.get_collection(name=Collections.SAMPLES.value.name)
+    file_collection = db.get_collection(name=Collections.FILES.value.name)
 
     # Convert sample_data to dict.
     if not isinstance(sample_data, dict):
@@ -182,23 +165,27 @@ async def create_sample(sample_data: dict | ObjectDetectionSampleCreate, db: Asy
     else:
         sample_data_dict = sample_data
 
-    # Get sample metadata.
-    project_id = sample_data_dict.get("project_id")
-    metadata = await get_create_sample_metadata(sample_data=sample_data, project_id=project_id, db=db)  # type: ignore
+    # Check if associated file exists and get its metadata.
+    file_id = sample_data_dict.get("file_id")
+    file_id_obj = PyObjectId(oid=file_id)
+    file = await file_collection.find_one({"_id": file_id_obj})
+    if not file:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"File with ID {file_id} does not exist.")
 
-    # Check project task.
-    task_map = {Task.OBJECT_DETECTION.value: _object_detection_sample_setup}
-    task: str = metadata.get("task")  # type: ignore
-    sample_setup = task_map.get(task)
-    if not sample_setup:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported task: {task}.")
+    # Check if file belongs to the specified project.
+    project_id = sample_data_dict.get("project_id")
+    project_id_obj = PyObjectId(oid=project_id)
+    if project_id_obj not in file.get("project_id_list", []):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"File with ID {file_id} does not belong to project with ID {project_id}.",
+        )
 
     # Create sample document.
-    result = await collection.insert_one(sample_data_dict)
-    await sample_setup(created_sample=sample_data_dict, project_id=project_id, db=db)  # type: ignore
+    result = await sample_collection.insert_one(sample_data_dict)
 
     # Retrieve the created sample.
-    created_sample = await collection.find_one({"_id": result.inserted_id})
+    created_sample = await sample_collection.find_one({"_id": result.inserted_id})
 
     return created_sample  # type: ignore
 

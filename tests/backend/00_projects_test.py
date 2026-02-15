@@ -36,8 +36,7 @@ def test_create_project(client: TestClient, project_payload: dict):
     assert response_data["is_private"] is False
     assert "password" not in response_data
     assert "hashed_password" not in response_data
-    assert "configs" in response_data
-    assert response_data["configs"]["project_id"] == response_data["_id"]
+    assert "details" in response_data
 
 
 def test_create_project_with_password(client: TestClient, project_payload: dict):

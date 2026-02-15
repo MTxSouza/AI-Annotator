@@ -13,7 +13,7 @@ from backend.api.v1.models.projects import Project
 from backend.api.v1.utils.auth import decode_access_token, oauth2_scheme, throw_bearer_error
 from backend.api.v1.utils.files import unset_project_id_in_file_records
 from backend.api.v1.utils.samples import delete_samples_by_project_id
-from backend.api.v1.utils.task_configs import setup_task_config
+from backend.api.v1.utils.task_details import setup_task_detail
 from backend.database.configs import Collections, DatabaseConfig
 from backend.database.enums import PyObjectId
 
@@ -61,14 +61,6 @@ async def get_project_by_id(project_id: str | PyObjectId, db: AsyncDatabase) -> 
         {"$match": {"_id": project_id_obj}},
         {
             "$lookup": {
-                "from": Collections.TASK_CONFIGS.value.name,
-                "localField": "_id",
-                "foreignField": "project_id",
-                "as": "configs",
-            }
-        },
-        {
-            "$lookup": {
                 "from": Collections.FILES.value.name,
                 "localField": "_id",
                 "foreignField": "project_id_list",
@@ -83,7 +75,6 @@ async def get_project_by_id(project_id: str | PyObjectId, db: AsyncDatabase) -> 
                 "as": "number_of_samples",
             }
         },
-        {"$set": {"configs": {"$first": "$configs"}}},
         {"$set": {"number_of_files": {"$size": "$number_of_files"}}},
         {"$set": {"number_of_samples": {"$size": "$number_of_samples"}}},
     ]
@@ -165,14 +156,15 @@ async def create_project(project_data: dict, db: AsyncDatabase) -> dict:
     Returns:
             dict: The created project.
     """
-    # Get project and task config collections.
-    project_collection = db.get_collection(name=Collections.PROJECTS.value.name)
-    task_config_collection = db.get_collection(name=Collections.TASK_CONFIGS.value.name)
+    # Get projects collection.
+    collection = db.get_collection(name=Collections.PROJECTS.value.name)
+
+    # Setup task detail document.
+    task_detail_data = setup_task_detail(task=project_data["task"])
 
     # Insert new project.
-    result = await project_collection.insert_one(project_data)
-    task_config_data = setup_task_config(project_id=result.inserted_id, task=project_data["task"])
-    await task_config_collection.insert_one(task_config_data)
+    project_data["details"] = task_detail_data
+    result = await collection.insert_one(project_data)
 
     # Retrieve the created project.
     created_project = await get_project_by_id(db=db, project_id=result.inserted_id)

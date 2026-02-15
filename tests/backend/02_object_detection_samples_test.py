@@ -114,9 +114,6 @@ def test_create_object_detection_sample(
     assert project["number_of_files"] == 1
     assert project["number_of_samples"] == len(sample_list)
 
-    project_config = project["configs"]
-    assert set(project_config["class_name_list"]) == set(sample_class_name_list)
-
 
 def test_create_object_detection_sample_with_nonexistent_file(
     client: TestClient,

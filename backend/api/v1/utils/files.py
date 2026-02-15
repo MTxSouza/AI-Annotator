@@ -16,7 +16,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.files import ImageFile_Create, TextFile_Create, UploadedFileResponse
 from backend.api.v1.utils.samples import delete_samples_by_file_id
-from backend.api.v1.utils.task_configs import get_task_file
+from backend.api.v1.utils.task_details import get_task_file
 from backend.database.configs import Collections
 from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId
 
