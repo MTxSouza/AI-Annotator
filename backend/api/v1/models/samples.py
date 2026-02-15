@@ -49,10 +49,10 @@ class _VisualLocationSample(_Sample):
     Schema for a visual location sample.
     """
 
-    cx: float = Field(..., description="X-coordinate of the center of the bounding box.")
-    cy: float = Field(..., description="Y-coordinate of the center of the bounding box.")
-    width: float = Field(..., description="Width of the bounding box.")
-    height: float = Field(..., description="Height of the bounding box.")
+    cx: float = Field(..., ge=0.0, le=1.0, description="X-coordinate of the center of the bounding box.")
+    cy: float = Field(..., ge=0.0, le=1.0, description="Y-coordinate of the center of the bounding box.")
+    width: float = Field(..., ge=0.0, le=1.0, description="Width of the bounding box.")
+    height: float = Field(..., ge=0.0, le=1.0, description="Height of the bounding box.")
 
 
 class _VisualLocationSampleUpdate(_SampleUpdate):
@@ -60,10 +60,10 @@ class _VisualLocationSampleUpdate(_SampleUpdate):
     Schema for updating a visual location sample.
     """
 
-    cx: float | None = Field(default=None)
-    cy: float | None = Field(default=None)
-    width: float | None = Field(default=None)
-    height: float | None = Field(default=None)
+    cx: float | None = Field(ge=0.0, le=1.0, default=None)
+    cy: float | None = Field(ge=0.0, le=1.0, default=None)
+    width: float | None = Field(ge=0.0, le=1.0, default=None)
+    height: float | None = Field(ge=0.0, le=1.0, default=None)
 
 
 class _ClassSample(_Sample):
