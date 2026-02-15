@@ -16,7 +16,11 @@ from backend.api.v1.utils.samples import create_sample, get_sample_by_id, get_sa
 from backend.database.configs import DatabaseConfig
 
 # Instantiate the router.
-router = APIRouter(prefix="/samples", tags=["Samples"], dependencies=[Depends(dependency=DatabaseConfig.get_database)])
+router = APIRouter(
+    prefix="/projects/{project_id}/samples",
+    tags=["Samples"],
+    dependencies=[Depends(dependency=DatabaseConfig.get_database), Depends(dependency=get_authenticated_project)],
+)
 
 
 # Endpoints.
@@ -24,20 +28,24 @@ router = APIRouter(prefix="/samples", tags=["Samples"], dependencies=[Depends(de
 async def get_samples_endpoint(
     limit: int = 10,
     offset: int = 0,
+    project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> list[ObjectDetectionSample]:
     """
-    Endpoint to get all samples.
+    Endpoint to get all samples of a project.
 
     Returns:
             list: List of all samples.
     """
-    return await get_samples(limit=limit, offset=offset, db=db)  # type: ignore
+    # Get project ID.
+    project_id = project.id
+
+    return await get_samples(limit=limit, offset=offset, db=db, query={"project_id": project_id})  # type: ignore
 
 
-@router.get(path="/{id}", response_model=ObjectDetectionSample, status_code=status.HTTP_200_OK)
+@router.get(path="/{sample_id}", response_model=ObjectDetectionSample, status_code=status.HTTP_200_OK)
 async def get_sample_endpoint(
-    id: str,
+    sample_id: str,
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> ObjectDetectionSample:
     """
@@ -46,10 +54,10 @@ async def get_sample_endpoint(
     Returns:
             ObjectDetectionSample: The sample with the specified ID.
     """
-    return await get_sample_by_id(sample_id=id, db=db)  # type: ignore
+    return await get_sample_by_id(sample_id=sample_id, db=db)  # type: ignore
 
 
-@router.post(path="/{id}/", response_model=ObjectDetectionSample, status_code=status.HTTP_201_CREATED)
+@router.post(path="/", response_model=ObjectDetectionSample, status_code=status.HTTP_201_CREATED)
 async def create_sample_endpoint(
     sample: ObjectDetectionSampleCreate,
     project: Project = Depends(dependency=get_authenticated_project),
@@ -70,7 +78,7 @@ async def create_sample_endpoint(
     return await create_sample(sample_data=sample, project_id=project_id, db=db)  # type: ignore
 
 
-@router.put(path="/{id}/{sample_id}", response_model=ObjectDetectionSample, status_code=status.HTTP_201_CREATED)
+@router.put(path="/{sample_id}", response_model=ObjectDetectionSample, status_code=status.HTTP_201_CREATED)
 async def update_sample_endpoint(
     sample_id: str,
     sample: ObjectDetectionSampleUpdate,

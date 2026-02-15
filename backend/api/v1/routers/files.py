@@ -15,7 +15,11 @@ from backend.database.configs import DatabaseConfig
 from backend.limiter import limiter
 
 # Instantiate the router.
-router = APIRouter(prefix="/files", tags=["Files"], dependencies=[Depends(dependency=DatabaseConfig.get_database)])
+router = APIRouter(
+    prefix="/projects/{project_id}/files",
+    tags=["Files"],
+    dependencies=[Depends(dependency=DatabaseConfig.get_database), Depends(dependency=get_authenticated_project)],
+)
 
 
 # Endpoints.
@@ -23,18 +27,22 @@ router = APIRouter(prefix="/files", tags=["Files"], dependencies=[Depends(depend
 async def get_files_endpoint(
     limit: int = Param(default=10, ge=1, le=100),  # type: ignore
     offset: int = Param(default=0, ge=0),  # type: ignore
+    project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> list[ImageFile | TextFile | AudioFile]:
     """
-    Endpoint to get all files.
+    Endpoint to get all files of a project.
 
     Returns:
             list: List of all files.
     """
-    return await get_files(limit=limit, offset=offset, db=db)  # type: ignore
+    # Get project ID.
+    project_id = project.id
+
+    return await get_files(limit=limit, offset=offset, db=db, query={"project_id": project_id})  # type: ignore
 
 
-@router.post(path="/{id}/", response_model=UploadedFileListResponse, status_code=status.HTTP_201_CREATED)
+@router.post(path="/", response_model=UploadedFileListResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("10/minute")
 async def upload_file_endpoint(
     request: Request,
