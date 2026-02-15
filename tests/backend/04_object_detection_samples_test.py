@@ -5,6 +5,7 @@ Module used to test object detection sample-related endpoints.
 import io
 import random
 
+import bson
 import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
@@ -115,3 +116,32 @@ def test_create_object_detection_sample(
 
     project_config = project["configs"]
     assert set(project_config["class_name_list"]) == set(sample_class_name_list)
+
+
+def test_create_object_detection_sample_with_nonexistent_file(
+    client: TestClient,
+    image_project_payload: dict,
+    list_object_detection_sample_payload: tuple[list[dict], list[str]],
+    reset_file_directory: None,  # Used to reset file directory
+) -> None:
+    """
+    Test to create an object detection sample with a non-existent file.
+    """
+    # Create project first.
+    project_response = client.post(url="/projects/", json=image_project_payload)
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
+    project = project_response.json()
+    project_id = project["_id"]
+
+    # Set sample payload.
+    sample_list, _ = list_object_detection_sample_payload
+    for sample in sample_list:
+        sample["project_id"] = project_id
+        sample["file_id"] = str(bson.ObjectId())  # Set non-existent file ID.
+
+        # Create sample.
+        sample_response = client.post(url=f"/samples/{project_id}/", json=sample)
+        assert sample_response.status_code == 404, (
+            f"Failed to not create sample with non-existent file: {sample_response.text}"
+        )
+        assert sample_response.json()["detail"] == f"File with ID {sample['file_id']} does not exist."
