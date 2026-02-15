@@ -22,7 +22,7 @@ def validate_py_object_id(v: Any) -> ObjectId:
 PyObjectId = Annotated[
     ObjectId,
     BeforeValidator(func=validate_py_object_id),
-    PlainSerializer(func=lambda oid: str(oid), return_type=str),
+    PlainSerializer(func=lambda oid: str(oid), return_type=str, when_used="json"),
     WithJsonSchema(json_schema={"type": "string"}),
 ]
 PyDateTime = Annotated[datetime, PlainSerializer(func=lambda dt: dt.isoformat())]
