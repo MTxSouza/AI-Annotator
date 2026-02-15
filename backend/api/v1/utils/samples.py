@@ -13,7 +13,7 @@ from backend.database.enums import PyObjectId, Task
 
 
 # Functions.
-async def _check_if_sample_belongs_to_project(
+async def check_if_sample_belongs_to_project(
     sample_id: str | PyObjectId, project_id: str | PyObjectId, db: AsyncDatabase
 ) -> None:
     """
@@ -231,7 +231,7 @@ async def update_sample(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Sample with ID {sample_id} does not exist.")
 
     # Check if sample belongs to the specified project.
-    await _check_if_sample_belongs_to_project(sample_id=sample_id, project_id=project_id, db=db)
+    await check_if_sample_belongs_to_project(sample_id=sample_id, project_id=project_id, db=db)
 
     # Convert sample_data to dict.
     if not isinstance(sample_data, dict):
@@ -265,7 +265,7 @@ async def delete_sample(sample_id: str | PyObjectId, project_id: str | PyObjectI
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Sample with ID {sample_id} does not exist.")
 
     # Check if sample belongs to the specified project.
-    await _check_if_sample_belongs_to_project(sample_id=sample_id, project_id=project_id, db=db)
+    await check_if_sample_belongs_to_project(sample_id=sample_id, project_id=project_id, db=db)
 
     # Delete the sample.
     sample_id_obj = PyObjectId(oid=sample_id)
