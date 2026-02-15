@@ -210,12 +210,13 @@ async def update_sample(
     return updated_sample  # type: ignore
 
 
-async def delete_sample(sample_id: str | PyObjectId, db: AsyncDatabase) -> None:
+async def delete_sample(sample_id: str | PyObjectId, project_id: str | PyObjectId, db: AsyncDatabase) -> None:
     """
     Delete a sample from the database.
 
     Args:
             sample_id (str | PyObjectId): The ID of the sample to delete.
+            project_id (str | PyObjectId): The ID of the associated project.
             db (AsyncDatabase): The database instance.
     """
     # Get sample collection.
@@ -224,6 +225,15 @@ async def delete_sample(sample_id: str | PyObjectId, db: AsyncDatabase) -> None:
     # Check if sample exists.
     if not await get_sample_by_id(sample_id=sample_id, db=db):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Sample with ID {sample_id} does not exist.")
+
+    # Check if sample belongs to the specified project.
+    sample = await get_sample_by_id(sample_id=sample_id, db=db)
+    project_id_obj = PyObjectId(oid=project_id)
+    if sample.get("project_id") != project_id_obj:  # type: ignore
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Sample with ID {sample_id} does not belong to project with ID {project_id}.",
+        )
 
     # Delete the sample.
     sample_id_obj = PyObjectId(oid=sample_id)
