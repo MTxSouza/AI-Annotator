@@ -2,10 +2,10 @@
 Module with all models related to all task details.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from backend.database.enums import FileFormat
-from backend.database.models import CommonModel, CommonRequestModel, CommonResponseModel
+from backend.database.models import CommonModel
 
 
 # Schemas.
@@ -18,24 +18,8 @@ class _TaskDetail(CommonModel):
     file_format: list[FileFormat] = Field(..., description="The file formats supported for the task.")
 
 
-class _TaskDetailDB(CommonResponseModel, _TaskDetail):
-    """
-    Task configuration model for database representation.
-    """
-
-    pass
-
-
-class _TaskDetailCreate(_TaskDetail, CommonRequestModel):
-    """
-    Task configuration model for creating a new task configuration.
-    """
-
-    pass
-
-
 # - Schemas for different task types.
-class _ClassTaskDetail(BaseModel):
+class _ClassTaskDetail(_TaskDetail):
     """
     Task configuration for class-related tasks.
     """
@@ -65,7 +49,7 @@ class _VisualTaskDetail(_ImageTaskDetail):
 
 
 # * Image Classification Task Configs.
-class _ImageClassificationTaskDetail(_ImageTaskDetail, _ClassTaskDetail):
+class ImageClassificationTaskDetail(_ImageTaskDetail, _ClassTaskDetail):
     """
     Task configuration for image classification tasks.
     """
@@ -73,24 +57,8 @@ class _ImageClassificationTaskDetail(_ImageTaskDetail, _ClassTaskDetail):
     pass
 
 
-class ImageClassificationTaskDetail(_ImageClassificationTaskDetail, _TaskDetailDB):
-    """
-    Task configuration for image classification tasks, including database representation.
-    """
-
-    pass
-
-
-class ImageClassificationTaskDetailCreate(_TaskDetailCreate, _ImageClassificationTaskDetail):
-    """
-    Task configuration for creating image classification tasks.
-    """
-
-    pass
-
-
 # * Object Detection Task Configs.
-class _ObjectDetectionTaskDetail(_ClassTaskDetail, _VisualTaskDetail):
+class ObjectDetectionTaskDetail(_VisualTaskDetail, _ClassTaskDetail):
     """
     Task configuration for object detection tasks.
     """
@@ -98,24 +66,8 @@ class _ObjectDetectionTaskDetail(_ClassTaskDetail, _VisualTaskDetail):
     pass
 
 
-class ObjectDetectionTaskDetail(_ObjectDetectionTaskDetail, _TaskDetailDB):
-    """
-    Task configuration for object detection tasks, including database representation.
-    """
-
-    pass
-
-
-class ObjectDetectionTaskDetailCreate(_TaskDetailCreate, _ObjectDetectionTaskDetail):
-    """
-    Task configuration for creating object detection tasks.
-    """
-
-    pass
-
-
 # * Image Caption Task Configs.
-class _ImageCaptionTaskDetail(_ImageTaskDetail):
+class ImageCaptionTaskDetail(_ImageTaskDetail):
     """
     Task configuration for image caption tasks.
     """
@@ -123,42 +75,10 @@ class _ImageCaptionTaskDetail(_ImageTaskDetail):
     pass
 
 
-class ImageCaptionTaskDetail(_ImageCaptionTaskDetail, _TaskDetailDB):
-    """
-    Task configuration for image caption tasks, including database representation.
-    """
-
-    pass
-
-
-class ImageCaptionTaskDetailCreate(_TaskDetailCreate, _ImageCaptionTaskDetail):
-    """
-    Task configuration for creating image caption tasks.
-    """
-
-    pass
-
-
 # * Object Caption Task Configs.
-class _ObjectCaptionTaskDetail(_ImageTaskDetail):
+class ObjectCaptionTaskDetail(_ImageTaskDetail):
     """
     Task configuration for object caption tasks.
-    """
-
-    pass
-
-
-class ObjectCaptionTaskDetail(_ObjectCaptionTaskDetail, _TaskDetailDB):
-    """
-    Task configuration for object caption tasks, including database representation.
-    """
-
-    pass
-
-
-class ObjectCaptionTaskDetailCreate(_TaskDetailCreate, _ObjectCaptionTaskDetail):
-    """
-    Task configuration for creating object caption tasks.
     """
 
     pass
@@ -178,7 +98,7 @@ class _TextTaskDetail(_TaskDetail):
 
 
 # * Text Classification Task Configs.
-class _TextClassificationTaskDetail(_TextTaskDetail, _ClassTaskDetail):
+class TextClassificationTaskDetail(_TextTaskDetail, _ClassTaskDetail):
     """
     Task configuration for text classification tasks.
     """
@@ -186,42 +106,10 @@ class _TextClassificationTaskDetail(_TextTaskDetail, _ClassTaskDetail):
     pass
 
 
-class TextClassificationTaskDetail(_TextClassificationTaskDetail, _TaskDetailDB):
-    """
-    Task configuration for text classification tasks, including database representation.
-    """
-
-    pass
-
-
-class TextClassificationTaskDetailCreate(_TaskDetailCreate, _TextClassificationTaskDetail):
-    """
-    Task configuration for creating text classification tasks.
-    """
-
-    pass
-
-
 # - Text Tagging Task Configs.
-class _TextTaggingTaskDetail(_TextTaskDetail):
+class TextTaggingTaskDetail(_TextTaskDetail):
     """
     Task configuration for text tagging tasks.
-    """
-
-    pass
-
-
-class TextTaggingTaskDetail(_TextTaggingTaskDetail, _TaskDetailDB):
-    """
-    Task configuration for text tagging tasks, including database representation.
-    """
-
-    pass
-
-
-class TextTaggingTaskDetailCreate(_TaskDetailCreate, _TextTaggingTaskDetail):
-    """
-    Task configuration for creating text tagging tasks.
     """
 
     pass
