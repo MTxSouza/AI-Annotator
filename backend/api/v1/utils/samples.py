@@ -71,7 +71,7 @@ async def get_samples(limit: int, offset: int, db: AsyncDatabase, query: dict | 
     return samples
 
 
-async def get_sample_by_id(sample_id: str | PyObjectId, db: AsyncDatabase) -> dict | None:
+async def get_sample_by_id(sample_id: str | PyObjectId, db: AsyncDatabase) -> dict:
     """
     Get a sample by its ID.
 
@@ -80,7 +80,7 @@ async def get_sample_by_id(sample_id: str | PyObjectId, db: AsyncDatabase) -> di
             db (AsyncDatabase): The database instance.
 
     Returns:
-            dict | None: The sample with the specified ID or None if not found.
+            dict: The sample with the specified ID or None if not found.
     """
     # Get samples collection.
     collection = db.get_collection(name=Collections.SAMPLES.value.name)
@@ -88,6 +88,8 @@ async def get_sample_by_id(sample_id: str | PyObjectId, db: AsyncDatabase) -> di
     # Query sample by ID.
     sample_id_obj = PyObjectId(oid=sample_id)
     sample = await collection.find_one({"_id": sample_id_obj})
+    if not sample:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Sample with ID {sample_id} does not exist.")
 
     return sample
 
@@ -227,8 +229,7 @@ async def update_sample(
     collection = db.get_collection(name=Collections.SAMPLES.value.name)
 
     # Check if sample exists.
-    if not await get_sample_by_id(sample_id=sample_id, db=db):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Sample with ID {sample_id} does not exist.")
+    await get_sample_by_id(sample_id=sample_id, db=db)
 
     # Check if sample belongs to the specified project.
     await check_if_sample_belongs_to_project(sample_id=sample_id, project_id=project_id, db=db)
@@ -261,8 +262,7 @@ async def delete_sample(sample_id: str | PyObjectId, project_id: str | PyObjectI
     collection = db.get_collection(name=Collections.SAMPLES.value.name)
 
     # Check if sample exists.
-    if not await get_sample_by_id(sample_id=sample_id, db=db):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Sample with ID {sample_id} does not exist.")
+    await get_sample_by_id(sample_id=sample_id, db=db)
 
     # Check if sample belongs to the specified project.
     await check_if_sample_belongs_to_project(sample_id=sample_id, project_id=project_id, db=db)
