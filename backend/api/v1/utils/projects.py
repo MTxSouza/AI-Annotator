@@ -2,8 +2,6 @@
 Module with all utilities related to project operations.
 """
 
-from collections.abc import Mapping, Sequence
-
 from fastapi import Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.params import Path
@@ -57,30 +55,7 @@ async def get_project_by_id(project_id: str | PyObjectId, db: AsyncDatabase) -> 
 
     # Query project by ID.
     project_id_obj = PyObjectId(oid=project_id)
-    pipeline: Sequence[Mapping] = [
-        {"$match": {"_id": project_id_obj}},
-        {
-            "$lookup": {
-                "from": Collections.FILES.value.name,
-                "localField": "_id",
-                "foreignField": "project_id_list",
-                "as": "number_of_files",
-            }
-        },
-        {
-            "$lookup": {
-                "from": Collections.SAMPLES.value.name,
-                "localField": "_id",
-                "foreignField": "project_id",
-                "as": "number_of_samples",
-            }
-        },
-        {"$set": {"number_of_files": {"$size": "$number_of_files"}}},
-        {"$set": {"number_of_samples": {"$size": "$number_of_samples"}}},
-    ]
-    cursor = await collection.aggregate(pipeline)
-    project_output = await cursor.to_list(length=1)
-    project = project_output.pop() if project_output else None
+    project = await collection.find_one(filter={"_id": project_id_obj})
 
     # Setup task detail document.
     if project:

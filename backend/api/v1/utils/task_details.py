@@ -97,6 +97,29 @@ async def setup_task_detail_model_schema(task: str, project_id: str | PyObjectId
     return task_detail_model_schema_dict
 
 
+async def _get_number_of_files_and_samples(project_id: str | PyObjectId, db: AsyncDatabase) -> dict:
+    """
+    Get the number of files and samples for a given project.
+
+    Args:
+            project_id (str | PyObjectId): The ID of the project to get the number of files and samples for.
+            db (AsyncDatabase): The database instance.
+
+    Returns:
+            dict: A dictionary containing the number of files and samples for the project.
+    """
+    # Get files and samples collection.
+    files_collection = db.get_collection(name=Collections.FILES.value.name)
+    samples_collection = db.get_collection(name=Collections.SAMPLES.value.name)
+
+    # Get number of files and samples for the project.
+    project_id_obj = PyObjectId(oid=project_id)
+    number_of_files = await files_collection.count_documents(filter={"project_id_list": project_id_obj})
+    number_of_samples = await samples_collection.count_documents(filter={"project_id": project_id_obj})
+
+    return {"number_of_files": number_of_files, "number_of_samples": number_of_samples}
+
+
 async def _get_class_task_detail_information(project_id: str | PyObjectId, db: AsyncDatabase) -> dict:
     """
     Get class-related task detail information for a given project.
@@ -172,11 +195,16 @@ async def _setup_object_detection_task_detail_model_schema(
     Returns:
             ObjectDetectionTaskDetail: The setup object detection task detail model schema.
     """
+    # Get total number of files and samples for the project.
+    number_of_files_and_samples = await _get_number_of_files_and_samples(project_id=project_id, db=db)
+
     # Get all unique class names in samples for the project.
     class_task_detail_information = await _get_class_task_detail_information(project_id=project_id, db=db)
 
     # Create task detail model schema with class names and histogram.
     task_detail_model_schema = ObjectDetectionTaskDetail(
+        number_of_files=number_of_files_and_samples["number_of_files"],
+        number_of_samples=number_of_files_and_samples["number_of_samples"],
         class_name_list=class_task_detail_information["class_name_list"],
         class_name_histogram=class_task_detail_information["class_name_histogram"],
     )
@@ -197,6 +225,9 @@ async def _setup_text_classification_task_detail_model_schema(
     Returns:
             TextClassificationTaskDetail: The setup text classification task detail model schema.
     """
+    # Get total number of files and samples for the project.
+    number_of_files_and_samples = await _get_number_of_files_and_samples(project_id=project_id, db=db)
+
     # Get text-related task detail information for the project.
     text_task_detail_information = await _get_text_task_detail_information(project_id=project_id, db=db)
 
@@ -205,6 +236,8 @@ async def _setup_text_classification_task_detail_model_schema(
 
     # Create task detail model schema with class names and histogram.
     task_detail_model_schema = TextClassificationTaskDetail(
+        number_of_files=number_of_files_and_samples["number_of_files"],
+        number_of_samples=number_of_files_and_samples["number_of_samples"],
         class_name_list=class_task_detail_information["class_name_list"],
         class_name_histogram=class_task_detail_information["class_name_histogram"],
         total_number_of_lines=text_task_detail_information["total_number_of_lines"],
