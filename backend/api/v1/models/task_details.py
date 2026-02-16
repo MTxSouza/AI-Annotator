@@ -98,6 +98,11 @@ class _TextTaskDetail(_TaskDetail):
         description="The text file formats supported for the task.",
         frozen=True,
     )
+    total_number_of_lines: int = Field(..., description="The total number of lines in the samples for the task.")
+    total_number_of_words: int = Field(..., description="The total number of words in the samples for the task.")
+    total_number_of_characters: int = Field(
+        ..., description="The total number of characters in the samples for the task."
+    )
 
 
 # * Text Classification Task Configs.
