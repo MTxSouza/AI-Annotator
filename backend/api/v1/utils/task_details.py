@@ -126,6 +126,39 @@ async def _get_class_task_detail_information(project_id: str | PyObjectId, db: A
     return {"class_name_list": class_name_list, "class_name_histogram": class_name_histogram}
 
 
+async def _get_text_task_detail_information(project_id: str | PyObjectId, db: AsyncDatabase) -> dict:
+    """
+    Get text-related task detail information for a given project.
+
+    Args:
+            project_id (str | PyObjectId): The ID of the project to get the class names for.
+            db (AsyncDatabase): The database instance.
+
+    Returns:
+            dict: A dictionary containing total number of lines, words, and characters in text samples for the project.
+    """
+    # Get sample collection.
+    collection = db.get_collection(name=Collections.SAMPLES.value.name)
+
+    # Get total number of lines, words, and characters in text samples for the project.
+    project_id_obj = PyObjectId(oid=project_id)
+    total_number_of_lines = 0
+    total_number_of_words = 0
+    total_number_of_characters = 0
+    async with collection.find(filter={"project_id": project_id_obj, "text": {"$ne": None}}) as cursor:
+        async for sample in cursor:
+            text_content = sample.get("text", "")
+            total_number_of_lines += text_content.count("\n") + 1
+            total_number_of_words += len(text_content.split())
+            total_number_of_characters += len(text_content)
+
+    return {
+        "total_number_of_lines": total_number_of_lines,
+        "total_number_of_words": total_number_of_words,
+        "total_number_of_characters": total_number_of_characters,
+    }
+
+
 async def _setup_object_detection_task_detail_model_schema(
     project_id: str | PyObjectId, db: AsyncDatabase
 ) -> ObjectDetectionTaskDetail:
@@ -164,6 +197,9 @@ async def _setup_text_classification_task_detail_model_schema(
     Returns:
             TextClassificationTaskDetail: The setup text classification task detail model schema.
     """
+    # Get text-related task detail information for the project.
+    text_task_detail_information = await _get_text_task_detail_information(project_id=project_id, db=db)
+
     # Get all unique class names in samples for the project.
     class_task_detail_information = await _get_class_task_detail_information(project_id=project_id, db=db)
 
@@ -171,6 +207,9 @@ async def _setup_text_classification_task_detail_model_schema(
     task_detail_model_schema = TextClassificationTaskDetail(
         class_name_list=class_task_detail_information["class_name_list"],
         class_name_histogram=class_task_detail_information["class_name_histogram"],
+        total_number_of_lines=text_task_detail_information["total_number_of_lines"],
+        total_number_of_words=text_task_detail_information["total_number_of_words"],
+        total_number_of_characters=text_task_detail_information["total_number_of_characters"],
     )
 
     return task_detail_model_schema
