@@ -111,8 +111,9 @@ def test_create_object_detection_sample(
     project_response = client.get(url=f"/projects/{project_id}/")
     assert project_response.status_code == 200, f"Failed to get project: {project_response.text}"
     project = project_response.json()
-    assert project["number_of_files"] == 1
-    assert project["number_of_samples"] == len(sample_list)
+    project_details = project.get("details", {})
+    assert project_details["number_of_files"] == 1
+    assert project_details["number_of_samples"] == len(sample_list)
 
 
 def test_create_object_detection_sample_with_nonexistent_file(
