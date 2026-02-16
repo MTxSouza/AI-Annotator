@@ -117,6 +117,4 @@ class Project(ProjectSimple):
     """
 
     # Additional Fields.
-    number_of_files: int = Field(default=0, description="The number of files in the project.")
-    number_of_samples: int = Field(default=0, description="The number of samples in the project.")
     details: __PROJECT_DETAILS__ = Field(..., description="The task details for the project.")

@@ -15,6 +15,8 @@ class _TaskDetail(CommonModel):
     """
 
     # Fields.
+    number_of_files: int = Field(default=0, description="The number of files in the project.")
+    number_of_samples: int = Field(default=0, description="The number of samples in the project.")
     file_format: list[FileFormat] = Field(..., description="The file formats supported for the task.")
 
 
@@ -98,10 +100,10 @@ class _TextTaskDetail(_TaskDetail):
         description="The text file formats supported for the task.",
         frozen=True,
     )
-    total_number_of_lines: int = Field(..., description="The total number of lines in the samples for the task.")
-    total_number_of_words: int = Field(..., description="The total number of words in the samples for the task.")
+    total_number_of_lines: int = Field(default=0, description="The total number of lines in the samples for the task.")
+    total_number_of_words: int = Field(default=0, description="The total number of words in the samples for the task.")
     total_number_of_characters: int = Field(
-        ..., description="The total number of characters in the samples for the task."
+        default=0, description="The total number of characters in the samples for the task."
     )
 
 
