@@ -25,6 +25,9 @@ class _ClassTaskDetail(_TaskDetail):
     """
 
     class_name_list: list[str] = Field(default_factory=list, description="List of class names supported for the task.")
+    class_name_histogram: dict[str, int] = Field(
+        default_factory=dict, description="Histogram of class names in the samples for the task."
+    )
 
 
 # - Image Task Configs.
@@ -107,7 +110,7 @@ class TextClassificationTaskDetail(_TextTaskDetail, _ClassTaskDetail):
 
 
 # - Text Tagging Task Configs.
-class TextTaggingTaskDetail(_TextTaskDetail):
+class TextTaggingTaskDetail(_TextTaskDetail, _ClassTaskDetail):
     """
     Task configuration for text tagging tasks.
     """
