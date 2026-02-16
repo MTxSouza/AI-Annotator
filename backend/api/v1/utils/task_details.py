@@ -97,16 +97,16 @@ async def setup_task_detail_model_schema(task: str, project_id: str | PyObjectId
     return task_detail_model_schema_dict
 
 
-async def _get_class_name_list_in_samples(project_id: str | PyObjectId, db: AsyncDatabase) -> list[str]:
+async def _get_class_task_detail_information(project_id: str | PyObjectId, db: AsyncDatabase) -> dict:
     """
-    Utility function to get all unique class names in samples for a given project.
+    Get class-related task detail information for a given project.
 
     Args:
             project_id (str | PyObjectId): The ID of the project to get the class names for.
             db (AsyncDatabase): The database instance.
 
     Returns:
-            list[str]: A list of all unique class names in samples for the project.
+            dict: A dictionary containing class names and their counts in samples for the project.
     """
     # Get sample collection.
     collection = db.get_collection(name=Collections.SAMPLES.value.name)
@@ -117,7 +117,13 @@ async def _get_class_name_list_in_samples(project_id: str | PyObjectId, db: Asyn
         key="class_name", filter={"project_id": project_id_obj, "class_name": {"$ne": None}}
     )
 
-    return class_name_list
+    # Get class name histogram.
+    class_name_histogram = {}
+    for class_name in class_name_list:
+        count = await collection.count_documents(filter={"project_id": project_id_obj, "class_name": class_name})
+        class_name_histogram[class_name] = count
+
+    return {"class_name_list": class_name_list, "class_name_histogram": class_name_histogram}
 
 
 async def _setup_object_detection_task_detail_model_schema(
@@ -134,10 +140,13 @@ async def _setup_object_detection_task_detail_model_schema(
             ObjectDetectionTaskDetail: The setup object detection task detail model schema.
     """
     # Get all unique class names in samples for the project.
-    class_name_list = await _get_class_name_list_in_samples(project_id=project_id, db=db)
+    class_task_detail_information = await _get_class_task_detail_information(project_id=project_id, db=db)
 
-    # Create task detail model schema with class names.
-    task_detail_model_schema = ObjectDetectionTaskDetail(class_name_list=class_name_list)
+    # Create task detail model schema with class names and histogram.
+    task_detail_model_schema = ObjectDetectionTaskDetail(
+        class_name_list=class_task_detail_information["class_name_list"],
+        class_name_histogram=class_task_detail_information["class_name_histogram"],
+    )
 
     return task_detail_model_schema
 
@@ -156,9 +165,12 @@ async def _setup_text_classification_task_detail_model_schema(
             TextClassificationTaskDetail: The setup text classification task detail model schema.
     """
     # Get all unique class names in samples for the project.
-    class_name_list = await _get_class_name_list_in_samples(project_id=project_id, db=db)
+    class_task_detail_information = await _get_class_task_detail_information(project_id=project_id, db=db)
 
-    # Create task detail model schema with class names.
-    task_detail_model_schema = TextClassificationTaskDetail(class_name_list=class_name_list)
+    # Create task detail model schema with class names and histogram.
+    task_detail_model_schema = TextClassificationTaskDetail(
+        class_name_list=class_task_detail_information["class_name_list"],
+        class_name_histogram=class_task_detail_information["class_name_histogram"],
+    )
 
     return task_detail_model_schema
