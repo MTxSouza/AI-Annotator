@@ -43,7 +43,7 @@ async def get_files_endpoint(
     return await get_files(limit=limit, offset=offset, db=db, query={"project_id_list": project_id})  # type: ignore
 
 
-@router.get(path="/{file_id}/data", response_model=Response, status_code=status.HTTP_200_OK)
+@router.get(path="/{file_id}/data", response_class=Response, status_code=status.HTTP_200_OK)
 async def get_file_data_endpoint(
     file_id: str,
     project: Project = Depends(dependency=get_authenticated_project),
