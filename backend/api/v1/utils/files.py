@@ -211,28 +211,17 @@ async def get_file_by_it_hash(file_hash: str, db: AsyncDatabase) -> dict | None:
     return file_document
 
 
-async def _load_file_content(
-    file_id: str | PyObjectId, project_id: str | PyObjectId, db: AsyncDatabase
-) -> tuple[bytes, str]:
+def _load_file_content(filename: str, file_id: str | PyObjectId) -> bytes:
     """
     Utility function to load the content of a file from disk.
 
     Args:
+            filename (str): The filename of the file to load.
             file_id (str | PyObjectId): The ID of the file to load.
-            project_id (str | PyObjectId): The ID of the project the file belongs to.
-            db (AsyncDatabase): The database instance.
 
     Returns:
-            tuple[bytes, str]: The content of the file and its format.
+            bytes: The content of the file.
     """
-    # Check if file belongs to the project.
-    await check_if_file_belongs_to_project(file_id=file_id, project_id=project_id, db=db)
-
-    # Get file document.
-    file_document = await get_file_by_id(file_id=file_id, db=db)
-    filename = file_document["filename"]
-    file_format = file_document["file_format"]
-
     # Load file content from disk.
     file_path = Path(BackendSettings.static_file_directory, filename)
     if not file_path.exists():
@@ -242,7 +231,7 @@ async def _load_file_content(
     with file_path.open(mode="rb") as file_buffer:
         content = file_buffer.read()
 
-    return content, file_format
+    return content
 
 
 async def load_file_content_by_id(
@@ -259,10 +248,13 @@ async def load_file_content_by_id(
     Returns:
             Response: The response containing the file content and metadata.
     """
-    # Load file content and format.
-    content, file_format = await run_in_threadpool(  # type: ignore
-        func=_load_file_content, file_id=file_id, project_id=project_id, db=db
-    )
+    # Check if file belongs to the project.
+    await check_if_file_belongs_to_project(file_id=file_id, project_id=project_id, db=db)
+
+    # Get file document.
+    file_document = await get_file_by_id(file_id=file_id, db=db)
+    filename = file_document["filename"]
+    file_format = file_document["file_format"]
 
     # Set media type based on file format.
     media_type_map = {
@@ -273,6 +265,9 @@ async def load_file_content_by_id(
     media_type = media_type_map.get(file_format)  # type: ignore
     if not media_type:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported file format: {file_format}.")  # type: ignore
+
+    # Load file content and format.
+    content = await run_in_threadpool(func=_load_file_content, filename=filename, file_id=file_id)
 
     # Create response.
     return Response(content=content, media_type=media_type)  # type: ignore
