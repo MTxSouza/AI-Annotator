@@ -68,6 +68,8 @@ class BackendSettingsModel(BaseSettings):
     password_hash_algorithm: str = "sha256"
     password_hash_iterations: int = 100000
 
+    static_file_directory: str = "/app/storage"
+
     # Properties.
     @property
     def api_root_path(self) -> str:
