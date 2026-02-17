@@ -727,7 +727,7 @@ async def delete_file_records(
     # Update all file records to remove the project ID from their project_id_list field.
     project_id_obj = PyObjectId(oid=project_id)
     await collection.update_many(
-        filter={"project_id_list": {"$in": [project_id_obj]}}, update={"$pull": {"project_id_list": project_id_obj}}
+        filter={"_id": {"$in": file_id_obj_list}}, update={"$pull": {"project_id_list": project_id_obj}}
     )
 
     # Get all files that no longer belong to any project and delete them from the database and disk.
