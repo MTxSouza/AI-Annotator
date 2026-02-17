@@ -73,6 +73,26 @@ def generate_unique_filename(file_format: FileFormat) -> str:
     return unique_filename
 
 
+def load_text_file_content(filename: str, file_format: FileFormat) -> str:
+    """
+    Utility function to load the content of a text file.
+
+    Args:
+            filename (str): The name of the text file to load.
+            file_format (FileFormat): The format of the file.
+
+    Returns:
+            str: The content of the text file.
+    """
+    # Add file extension.
+    file_extension = file_format.value.lower()
+    filename = f"{filename}.{file_extension}"
+
+    # Load file content.
+    with Path(STATIC_FILE_DIRECTORY, filename).open(mode="r") as file_buffer:
+        return file_buffer.read()
+
+
 def load_upload_file_in_chunks(file: UploadFile) -> Generator[bytes, None, None]:
     """
     Generator to load an upload file in chunks.
