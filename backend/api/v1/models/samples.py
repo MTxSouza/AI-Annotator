@@ -233,7 +233,7 @@ class ObjectCaptionSampleUpdate(_TextSampleUpdate, _VisualLocationSampleUpdate):
 
 # Text Task Samples.
 # * Text Classification Sample.
-class _TextClassificationSample(_ClassSample):
+class _TextClassificationSample(_TextSample, _ClassSample):
     """
     Schema for a text classification sample.
     """
@@ -257,7 +257,7 @@ class TextClassificationSampleCreate(_SampleCreate, _TextClassificationSample):
     pass
 
 
-class TextClassificationSampleUpdate(_ClassSampleUpdate):
+class TextClassificationSampleUpdate(_ClassSampleUpdate, _TextSampleUpdate):
     """
     Schema for updating a text classification sample.
     """
