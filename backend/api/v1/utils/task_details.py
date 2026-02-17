@@ -51,11 +51,11 @@ def get_valid_number_of_samples_per_file(task: str) -> int | None:
         Task.OBJECT_DETECTION.value: -1,
         Task.IMAGE_CLASSIFICATION.value: 1,
         Task.IMAGE_CAPTION.value: -1,
-        Task.OBJECT_CAPTION.value: 1,
-        Task.TEXT_CLASSIFICATION.value: -1,
+        Task.OBJECT_CAPTION.value: -1,
+        Task.TEXT_CLASSIFICATION.value: 1,
         Task.TEXT_TAGGING.value: -1,
-        Task.AUDIO_CLASSIFICATION.value: -1,
-        Task.AUDIO_CAPTION.value: -1,
+        Task.AUDIO_CLASSIFICATION.value: 1,
+        Task.AUDIO_CAPTION.value: 1,
     }
     return task_samples_per_file_map.get(task)
 
