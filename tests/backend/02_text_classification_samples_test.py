@@ -87,6 +87,50 @@ def test_create_text_classification_sample(
         assert sample_response_json["text"] == file_content_list[i]
 
 
+def test_create_more_than_one_text_classification_sample_per_file(
+    client: TestClient,
+    text_project_payload: dict,
+    list_text_classification_sample_payload: tuple[list[tuple[str, tuple[str, bytes, str]]], list[str]],
+    reset_file_directory: None,  # Used to reset file directory
+):
+    """
+    Test to create more than one text classification sample for a file.
+    """
+    # Unpack payload.
+    text_file_payload, sample_class_list = list_text_classification_sample_payload
+
+    # Create project first.
+    project_response = client.post(url="/projects/", json=text_project_payload)
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
+    project = project_response.json()
+    project_id = project["_id"]
+
+    # Create file record.
+    single_text_file_payload = [text_file_payload[0]]
+    file_response = client.post(url=f"/projects/{project_id}/files/", files=single_text_file_payload)
+    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
+    file_response_json = file_response.json()
+    assert "data" in file_response_json
+    assert len(file_response_json["data"]) == 1
+    file_id = file_response_json["data"][0]["file_id"]
+
+    # Set sample payload.
+    sample_payload = {"project_id": project_id, "file_id": file_id, "class_name": sample_class_list[0]}
+    sample_response = client.post(url=f"/projects/{project_id}/samples/", json=sample_payload)
+    assert sample_response.status_code == 201, f"Failed to create first sample: {sample_response.text}"
+
+    # Set second sample payload with same file ID.
+    second_sample_payload = {"project_id": project_id, "file_id": file_id, "class_name": sample_class_list[1]}
+    second_sample_response = client.post(url=f"/projects/{project_id}/samples/", json=second_sample_payload)
+    assert second_sample_response.status_code == 400, (
+        f"Failed to not create second sample with same file ID: {second_sample_response.text}"
+    )
+    assert (
+        second_sample_response.json()["detail"]
+        == f"Number of samples for file with ID {file_id} for the task Text Classification cannot exceed 1."
+    )
+
+
 def test_create_text_classification_sample_with_nonexistent_file(
     client: TestClient,
     text_project_payload: dict,
