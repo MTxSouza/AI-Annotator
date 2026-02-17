@@ -350,7 +350,7 @@ def test_delete_object_detection_sample_with_wrong_project_id(
         created_sample_data = sample_response.json()
         created_sample_id = created_sample_data["_id"]
 
-        # Delete the created sample with wrong authentication (no authentication).
+        # Delete the created sample with wrong project ID.
         delete_response = client.delete(url=f"/projects/{second_project_id}/samples/{created_sample_id}")
         assert delete_response.status_code == 404, (
             f"Failed to not delete sample with wrong project ID: {delete_response.text}"
