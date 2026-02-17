@@ -15,6 +15,7 @@ from backend.api.v1.models.samples import (
     TextClassificationSampleUpdate,
 )
 from backend.api.v1.utils.common import _load_file_content
+from backend.api.v1.utils.task_details import get_valid_number_of_samples_per_file
 from backend.database.configs import Collections
 from backend.database.enums import FileFormat, PyObjectId
 
@@ -133,6 +134,10 @@ async def get_create_sample_metadata(
     if not file:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"File with ID {file_id} does not exist.")
 
+    # Get file format and name.
+    file_format = file.get("file_format")
+    filename = file.get("filename")
+
     # Check if file belongs to the specified project.
     project_id_obj = PyObjectId(oid=project_id)
     if project_id_obj not in file.get("project_id_list", []):
@@ -149,6 +154,8 @@ async def get_create_sample_metadata(
         "project_id": project_id_obj,
         "file_id": file_id_obj,
         "task": task,
+        "file_format": file_format,
+        "filename": filename,
     }
 
 
@@ -163,42 +170,48 @@ async def create_sample(sample_data: _SAMPLE_CREATE_, db: AsyncDatabase) -> dict
     Returns:
             dict: The created sample with its ID.
     """
-    # Get sample and file collection.
-    sample_collection = db.get_collection(name=Collections.SAMPLES.value.name)
-    file_collection = db.get_collection(name=Collections.FILES.value.name)
+    # Get sample collection.
+    collection = db.get_collection(name=Collections.SAMPLES.value.name)
 
     # Convert sample_data to dict.
     sample_data_dict = sample_data.model_dump()
 
-    # Check if associated file exists and get its metadata.
-    file_id = sample_data_dict.get("file_id")
-    file_id_obj = PyObjectId(oid=file_id)
-    file = await file_collection.find_one({"_id": file_id_obj})
-    if not file:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"File with ID {file_id} does not exist.")
-
-    # Check if file belongs to the specified project.
+    # Get sample metadata.
     project_id = sample_data_dict.get("project_id")
-    project_id_obj = PyObjectId(oid=project_id)
-    if project_id_obj not in file.get("project_id_list", []):
+    metadata = await get_create_sample_metadata(sample_data=sample_data, project_id=project_id, db=db)  # type: ignore
+
+    # Check number of samples already created for the associated file and task.
+    file_id = metadata.get("file_id")
+    file_id_obj = PyObjectId(oid=file_id)
+    task = metadata.get("task")
+    valid_number_of_samples = get_valid_number_of_samples_per_file(task=task)  # type: ignore
+    if not valid_number_of_samples:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"File with ID {file_id} does not belong to project with ID {project_id}.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Task {task} is not supported.",
+        )
+
+    number_of_samples = await collection.count_documents({"project_id": project_id, "file_id": file_id_obj})
+    if valid_number_of_samples > 0 and number_of_samples >= valid_number_of_samples:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Number of samples for file with ID {file_id} for the task {task} cannot exceed \
+{valid_number_of_samples}.",
         )
 
     # HARDCODED: Copy the text content of the file to the sample if the task is text-related.
-    if file.get("file_format") in FileFormat.get_text_formats():
+    if metadata.get("file_format") in FileFormat.get_text_formats():
         # Load file content.
-        filename = file.get("filename")
-        text_bytes = await run_in_threadpool(_load_file_content, filename=filename, file_id=file_id)  # type: ignore
+        filename = metadata.get("filename")
+        text_bytes = await run_in_threadpool(_load_file_content, filename=filename, file_id=metadata.get("file_id"))  # type: ignore
         sample_data_dict["text"] = text_bytes.decode(encoding="utf-8")
         del text_bytes
 
     # Create sample document.
-    result = await sample_collection.insert_one(sample_data_dict)
+    result = await collection.insert_one(sample_data_dict)
 
     # Retrieve the created sample.
-    created_sample = await sample_collection.find_one({"_id": result.inserted_id})
+    created_sample = await collection.find_one({"_id": result.inserted_id})
 
     return created_sample  # type: ignore
 
