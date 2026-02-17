@@ -8,14 +8,18 @@ from pymongo.asynchronous.database import AsyncDatabase
 from backend.api.v1.models.projects import Project
 from backend.api.v1.models.samples import (
     ObjectDetectionSample,
-    ObjectDetectionSampleCreate,
-    ObjectDetectionSampleUpdate,
     TextClassificationSample,
-    TextClassificationSampleCreate,
-    TextClassificationSampleUpdate,
 )
 from backend.api.v1.utils.projects import get_authenticated_project
-from backend.api.v1.utils.samples import create_sample, delete_sample, get_sample_by_id, get_samples, update_sample
+from backend.api.v1.utils.samples import (
+    _SAMPLE_CREATE_,
+    _SAMPLE_UPDATE_,
+    create_sample,
+    delete_sample,
+    get_sample_by_id,
+    get_samples,
+    update_sample,
+)
 from backend.database.configs import DatabaseConfig
 
 # Instantiate the router.
@@ -28,8 +32,6 @@ router = APIRouter(
 
 # Sample responses.
 __SAMPLE_RESPONSES__ = TextClassificationSample | ObjectDetectionSample
-__SAMPLE_CREATE__ = TextClassificationSampleCreate | ObjectDetectionSampleCreate
-__SAMPLE_UPDATE__ = TextClassificationSampleUpdate | ObjectDetectionSampleUpdate
 
 
 # Endpoints.
@@ -68,7 +70,7 @@ async def get_sample_endpoint(
 
 @router.post(path="/", response_model=__SAMPLE_RESPONSES__, status_code=status.HTTP_201_CREATED)
 async def create_sample_endpoint(
-    sample: __SAMPLE_CREATE__,
+    sample: _SAMPLE_CREATE_,
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> __SAMPLE_RESPONSES__:
@@ -76,7 +78,7 @@ async def create_sample_endpoint(
     Endpoint to create a new sample.
 
     Args:
-            sample (__SAMPLE_CREATE__): The sample data to create.
+            sample (_SAMPLE_CREATE_): The sample data to create.
 
     Returns:
             __SAMPLE_RESPONSES__: The created sample.
@@ -87,7 +89,7 @@ async def create_sample_endpoint(
 @router.put(path="/{sample_id}", response_model=__SAMPLE_RESPONSES__, status_code=status.HTTP_201_CREATED)
 async def update_sample_endpoint(
     sample_id: str,
-    sample: __SAMPLE_UPDATE__,
+    sample: _SAMPLE_UPDATE_,
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> __SAMPLE_RESPONSES__:
@@ -97,7 +99,7 @@ async def update_sample_endpoint(
     Args:
             id (str): The ID of the project that contains the sample to update.
             sample_id (str): The ID of the sample to update.
-            sample (__SAMPLE_UPDATE__): The sample data to update.
+            sample (_SAMPLE_UPDATE_): The sample data to update.
 
     Returns:
             __SAMPLE_RESPONSES__: The updated sample.
