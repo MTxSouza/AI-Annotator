@@ -7,9 +7,18 @@ from fastapi.exceptions import HTTPException
 from pymongo.asynchronous.collection import ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
 
-from backend.api.v1.models.samples import ObjectDetectionSampleCreate, ObjectDetectionSampleUpdate
+from backend.api.v1.models.samples import (
+    ObjectDetectionSampleCreate,
+    ObjectDetectionSampleUpdate,
+    TextClassificationSampleCreate,
+    TextClassificationSampleUpdate,
+)
 from backend.database.configs import Collections
 from backend.database.enums import PyObjectId
+
+# Sample input and output types.
+_SAMPLE_CREATE_ = TextClassificationSampleCreate | ObjectDetectionSampleCreate
+_SAMPLE_UPDATE_ = TextClassificationSampleUpdate | ObjectDetectionSampleUpdate
 
 
 # Functions.
@@ -95,13 +104,13 @@ async def get_sample_by_id(sample_id: str | PyObjectId, db: AsyncDatabase) -> di
 
 
 async def get_create_sample_metadata(
-    sample_data: dict | ObjectDetectionSampleCreate, project_id: str | PyObjectId, db: AsyncDatabase
+    sample_data: _SAMPLE_CREATE_, project_id: str | PyObjectId, db: AsyncDatabase
 ) -> dict:
     """
     Get the metadata for creating a sample.
 
     Args:
-            sample_data (dict | ObjectDetectionSampleCreate): The data for the new sample.
+            sample_data (_SAMPLE_CREATE_): The data for the new sample.
             project_id (str | PyObjectId): The ID of the associated project.
             db (AsyncDatabase): The database instance.
 
@@ -113,10 +122,7 @@ async def get_create_sample_metadata(
     project_collection = db.get_collection(name=Collections.PROJECTS.value.name)
 
     # Convert sample_data to dict.
-    if not isinstance(sample_data, dict):
-        sample_data_dict = sample_data.model_dump()
-    else:
-        sample_data_dict = sample_data
+    sample_data_dict = sample_data.model_dump()
 
     # Check if associated file exists and get its metadata.
     file_id = sample_data_dict.get("file_id")
@@ -144,12 +150,12 @@ async def get_create_sample_metadata(
     }
 
 
-async def create_sample(sample_data: dict | ObjectDetectionSampleCreate, db: AsyncDatabase) -> dict:
+async def create_sample(sample_data: _SAMPLE_CREATE_, db: AsyncDatabase) -> dict:
     """
     Create a new sample in the database.
 
     Args:
-            sample_data (dict | ObjectDetectionSampleCreate): The data for the new sample.
+            sample_data (_SAMPLE_CREATE_): The data for the new sample.
             db (AsyncDatabase): The database instance.
 
     Returns:
@@ -160,10 +166,7 @@ async def create_sample(sample_data: dict | ObjectDetectionSampleCreate, db: Asy
     file_collection = db.get_collection(name=Collections.FILES.value.name)
 
     # Convert sample_data to dict.
-    if not isinstance(sample_data, dict):
-        sample_data_dict = sample_data.model_dump()
-    else:
-        sample_data_dict = sample_data
+    sample_data_dict = sample_data.model_dump()
 
     # Check if associated file exists and get its metadata.
     file_id = sample_data_dict.get("file_id")
@@ -193,7 +196,7 @@ async def create_sample(sample_data: dict | ObjectDetectionSampleCreate, db: Asy
 async def update_sample(
     sample_id: str | PyObjectId,
     project_id: str | PyObjectId,
-    sample_data: dict | ObjectDetectionSampleUpdate,
+    sample_data: _SAMPLE_UPDATE_,
     db: AsyncDatabase,
 ) -> dict:
     """
@@ -202,7 +205,7 @@ async def update_sample(
     Args:
             sample_id (str | PyObjectId): The ID of the sample to update.
             project_id (str | PyObjectId): The ID of the associated project.
-            sample_data (dict | ObjectDetectionSampleUpdate): The updated data for the sample.
+            sample_data (_SAMPLE_UPDATE_): The updated data for the sample.
             db (AsyncDatabase): The database instance.
 
     Returns:
@@ -218,10 +221,7 @@ async def update_sample(
     await check_if_sample_belongs_to_project(sample_id=sample_id, project_id=project_id, db=db)
 
     # Convert sample_data to dict.
-    if not isinstance(sample_data, dict):
-        sample_data_dict = sample_data.model_dump(exclude_unset=True, exclude_none=True)
-    else:
-        sample_data_dict = sample_data
+    sample_data_dict = sample_data.model_dump(exclude_unset=True, exclude_none=True)
 
     # Update sample document.
     sample_id_obj = PyObjectId(oid=sample_id)
