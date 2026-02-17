@@ -16,6 +16,7 @@ from PIL import Image, UnidentifiedImageError
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.files import ImageFile_Create, TextFile_Create, UploadedFileResponse
+from backend.api.v1.utils.common import _load_file_content
 from backend.api.v1.utils.samples import delete_samples_by_file_id
 from backend.api.v1.utils.task_details import get_task_file
 from backend.configs import BackendSettings
@@ -209,29 +210,6 @@ async def get_file_by_it_hash(file_hash: str, db: AsyncDatabase) -> dict | None:
     # Query file by its hash.
     file_document = await collection.find_one({"file_hash": file_hash})
     return file_document
-
-
-def _load_file_content(filename: str, file_id: str | PyObjectId) -> bytes:
-    """
-    Utility function to load the content of a file from disk.
-
-    Args:
-            filename (str): The filename of the file to load.
-            file_id (str | PyObjectId): The ID of the file to load.
-
-    Returns:
-            bytes: The content of the file.
-    """
-    # Load file content from disk.
-    file_path = Path(BackendSettings.static_file_directory, filename)
-    if not file_path.exists():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"File with ID {file_id} does not exist on disk."
-        )
-    with file_path.open(mode="rb") as file_buffer:
-        content = file_buffer.read()
-
-    return content
 
 
 async def load_file_content_by_id(

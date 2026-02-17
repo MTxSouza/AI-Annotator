@@ -2,9 +2,8 @@
 Module with all utilities related to sample operations.
 """
 
-from pathlib import Path
-
 from fastapi import status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import HTTPException
 from pymongo.asynchronous.collection import ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
@@ -15,7 +14,7 @@ from backend.api.v1.models.samples import (
     TextClassificationSampleCreate,
     TextClassificationSampleUpdate,
 )
-from backend.configs import BackendSettings
+from backend.api.v1.utils.common import _load_file_content
 from backend.database.configs import Collections
 from backend.database.enums import FileFormat, PyObjectId
 
@@ -191,8 +190,7 @@ async def create_sample(sample_data: _SAMPLE_CREATE_, db: AsyncDatabase) -> dict
     if file.get("file_format") in FileFormat.get_text_formats():
         # Load file content.
         filename = file.get("filename")
-        with Path(BackendSettings.static_file_directory, filename).open(mode="r") as file_buffer:
-            sample_data_dict["text"] = file_buffer.read()
+        sample_data_dict["text"] = await run_in_threadpool(_load_file_content, filename=filename, file_id=file_id)  # type: ignore
 
     # Create sample document.
     result = await sample_collection.insert_one(sample_data_dict)
