@@ -17,11 +17,11 @@ from pymongo.asynchronous.database import AsyncDatabase
 from backend.api.v1.models.files import ImageFile_Create, TextFile_Create, UploadedFileResponse
 from backend.api.v1.utils.samples import delete_samples_by_file_id
 from backend.api.v1.utils.task_details import get_task_file
+from backend.configs import BackendSettings
 from backend.database.configs import Collections
 from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId
 
 # Global variables.
-STATIC_FILE_DIRECTORY = "/app/storage"
 FILE_CHUNK_SIZE = 64 * 1024  # 64 KB
 FILE_FORMAT_CHUNK_SIZE = 512  # 512 Bytes
 
@@ -71,26 +71,6 @@ def generate_unique_filename(file_format: FileFormat) -> str:
     file_extension = file_format.value.lower()
     unique_filename = f"{unique_id}.{file_extension}"
     return unique_filename
-
-
-def load_text_file_content(filename: str, file_format: FileFormat) -> str:
-    """
-    Utility function to load the content of a text file.
-
-    Args:
-            filename (str): The name of the text file to load.
-            file_format (FileFormat): The format of the file.
-
-    Returns:
-            str: The content of the text file.
-    """
-    # Add file extension.
-    file_extension = file_format.value.lower()
-    filename = f"{filename}.{file_extension}"
-
-    # Load file content.
-    with Path(STATIC_FILE_DIRECTORY, filename).open(mode="r") as file_buffer:
-        return file_buffer.read()
 
 
 def load_upload_file_in_chunks(file: UploadFile) -> Generator[bytes, None, None]:
@@ -159,7 +139,7 @@ def save_upload_file_to_disk(file: UploadFile, unique_filename: str) -> None:
     file.file.seek(0)
 
     # Save file in chunks to avoid memory issues.
-    with Path(STATIC_FILE_DIRECTORY, unique_filename).open(mode="wb") as file_buffer:
+    with Path(BackendSettings.static_file_directory, unique_filename).open(mode="wb") as file_buffer:
         shutil.copyfileobj(fsrc=file.file, fdst=file_buffer)
 
 
@@ -717,5 +697,5 @@ async def delete_file_records(
 
     # Delete the file from disk.
     for filename in filename_list:
-        file_path = Path(STATIC_FILE_DIRECTORY, filename)
+        file_path = Path(BackendSettings.static_file_directory, filename)
         file_path.unlink(missing_ok=True)
