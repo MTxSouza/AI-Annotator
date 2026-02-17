@@ -56,9 +56,11 @@ def test_create_text_file_record(
     assert "data" in file_response_json
     assert len(file_response_json["data"]) == len(list_text_file_payload)
 
+    file_id_list = []
     for i, file_data in enumerate(iterable=file_response_json["data"]):
         assert file_data["status"] == "Created"
         assert file_data["message"] == f"Text file '{list_text_file_payload[i][1][0]}' uploaded successfully."
+        file_id_list.append(file_data["file_id"])
 
     # Get project again to check number of files and samples.
     project_response = client.get(url=f"/projects/{project_id}/")
@@ -68,6 +70,12 @@ def test_create_text_file_record(
     assert project_details["number_of_files"] == len(list_text_file_payload)
     assert project_details["number_of_samples"] == 0
     assert not project_details["class_name_list"]
+
+    # Check file content.
+    for i, file_id in enumerate(iterable=file_id_list):
+        file_content_response = client.get(url=f"/projects/{project_id}/files/{file_id}/data/")
+        assert file_content_response.status_code == 200, f"Failed to get file content: {file_content_response.text}"
+        assert file_content_response.text == list_text_file_payload[i][1][1].getvalue().decode("utf-8")
 
 
 def test_create_duplicate_text_file_record(
