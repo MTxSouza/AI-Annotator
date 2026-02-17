@@ -12,7 +12,6 @@ from fastapi.testclient import TestClient
 from PIL import Image
 from pymongo import MongoClient
 
-from backend.api.v1.utils.files import STATIC_FILE_DIRECTORY
 from backend.app import app
 from backend.configs import BackendSettings
 from backend.database.configs import DatabaseConfig
@@ -96,7 +95,7 @@ def reset_file_directory():
     Fixture to reset the file storage directory before each module.
     """
     # Reset the static file directory.
-    shutil.rmtree(STATIC_FILE_DIRECTORY, ignore_errors=True)
+    shutil.rmtree(BackendSettings.static_file_directory, ignore_errors=True)
 
 
 @pytest.fixture
