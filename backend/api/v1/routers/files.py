@@ -5,11 +5,12 @@ Module with all endpoints related to file operations.
 from fastapi import APIRouter, Depends, UploadFile, status
 from fastapi.params import File, Param
 from fastapi.requests import Request
+from fastapi.responses import Response
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.files import AudioFile, ImageFile, TextFile, UploadedFileListResponse
 from backend.api.v1.models.projects import Project
-from backend.api.v1.utils.files import create_file_records, delete_file_records, get_files
+from backend.api.v1.utils.files import create_file_records, delete_file_records, get_files, load_file_content_by_id
 from backend.api.v1.utils.projects import get_authenticated_project
 from backend.database.configs import DatabaseConfig
 from backend.limiter import limiter
@@ -40,6 +41,27 @@ async def get_files_endpoint(
     project_id = project.id
 
     return await get_files(limit=limit, offset=offset, db=db, query={"project_id_list": project_id})  # type: ignore
+
+
+@router.get(path="/{file_id}/data", response_model=Response, status_code=status.HTTP_200_OK)
+async def get_file_data_endpoint(
+    file_id: str,
+    project: Project = Depends(dependency=get_authenticated_project),
+    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
+) -> Response:
+    """
+    Endpoint to get the data of a file by its ID.
+
+    Args:
+            file_id (str): The ID of the file to get.
+
+    Returns:
+            Response: The file data.
+    """
+    # Get project ID.
+    project_id = project.id
+
+    return await load_file_content_by_id(file_id=file_id, project_id=project_id, db=db)  # type: ignore
 
 
 @router.post(path="/", response_model=UploadedFileListResponse, status_code=status.HTTP_201_CREATED)
