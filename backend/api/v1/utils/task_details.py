@@ -36,6 +36,30 @@ def get_task_file(task: str) -> str | None:
     return task_file_map.get(task)
 
 
+def get_valid_number_of_samples_per_file(task: str) -> int | None:
+    """
+    Get the valid number of samples per file for a given task. If it returns -1, there is no limit to
+    the number of samples/annotations per file.
+
+    Args:
+            task (str): The task to get the valid number of samples per file for.
+
+    Returns:
+            int | None: The valid number of samples per file for the task, or None if not found.
+    """
+    task_samples_per_file_map = {
+        Task.OBJECT_DETECTION.value: -1,
+        Task.IMAGE_CLASSIFICATION.value: 1,
+        Task.IMAGE_CAPTION.value: -1,
+        Task.OBJECT_CAPTION.value: 1,
+        Task.TEXT_CLASSIFICATION.value: -1,
+        Task.TEXT_TAGGING.value: -1,
+        Task.AUDIO_CLASSIFICATION.value: -1,
+        Task.AUDIO_CAPTION.value: -1,
+    }
+    return task_samples_per_file_map.get(task)
+
+
 async def setup_task_detail(task: Task, project_id: str | PyObjectId, db: AsyncDatabase) -> dict:
     """
     Utility function to setup the task configuration based on the task type.
