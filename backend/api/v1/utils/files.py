@@ -11,6 +11,7 @@ from pathlib import Path
 from fastapi import UploadFile, status
 from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import HTTPException
+from fastapi.responses import Response
 from PIL import Image, UnidentifiedImageError
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -39,9 +40,7 @@ async def check_if_file_belongs_to_project(
             db (AsyncDatabase): The database instance.
     """
     # Query file by ID.
-    file = await get_file_by_id(file_id=file_id, db=db)  # type: ignore
-    if not file:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"File with ID {file_id} does not exist.")
+    file = await get_file_by_id(file_id=file_id, db=db)
     file_project_id_list = file.get("project_id_list", [])
     file_project_id_list = [PyObjectId(oid=pid) for pid in file_project_id_list]  # type: ignore
 
@@ -170,7 +169,7 @@ async def get_files(limit: int, offset: int, db: AsyncDatabase, query: dict | No
     return files
 
 
-async def get_file_by_id(file_id: str | PyObjectId, db: AsyncDatabase) -> dict | None:
+async def get_file_by_id(file_id: str | PyObjectId, db: AsyncDatabase) -> dict:
     """
     Utility function to get a file from the database by its ID.
 
@@ -179,7 +178,7 @@ async def get_file_by_id(file_id: str | PyObjectId, db: AsyncDatabase) -> dict |
             db (AsyncDatabase): The database instance.
 
     Returns:
-            dict | None: The file document if found, None otherwise.
+            dict: The file document.
     """
     # Get files collection.
     collection = db.get_collection(name=Collections.FILES.value.name)
@@ -187,6 +186,9 @@ async def get_file_by_id(file_id: str | PyObjectId, db: AsyncDatabase) -> dict |
     # Query file by its ID.
     file_id_obj = PyObjectId(oid=file_id)
     file_document = await collection.find_one({"_id": file_id_obj})
+    if not file_document:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"File with ID {file_id} does not exist.")
+
     return file_document
 
 
@@ -207,6 +209,73 @@ async def get_file_by_it_hash(file_hash: str, db: AsyncDatabase) -> dict | None:
     # Query file by its hash.
     file_document = await collection.find_one({"file_hash": file_hash})
     return file_document
+
+
+async def _load_file_content(
+    file_id: str | PyObjectId, project_id: str | PyObjectId, db: AsyncDatabase
+) -> tuple[bytes, str]:
+    """
+    Utility function to load the content of a file from disk.
+
+    Args:
+            file_id (str | PyObjectId): The ID of the file to load.
+            project_id (str | PyObjectId): The ID of the project the file belongs to.
+            db (AsyncDatabase): The database instance.
+
+    Returns:
+            tuple[bytes, str]: The content of the file and its format.
+    """
+    # Check if file belongs to the project.
+    await check_if_file_belongs_to_project(file_id=file_id, project_id=project_id, db=db)
+
+    # Get file document.
+    file_document = await get_file_by_id(file_id=file_id, db=db)
+    filename = file_document["filename"]
+    file_format = file_document["file_format"]
+
+    # Load file content from disk.
+    file_path = Path(BackendSettings.static_file_directory, filename)
+    if not file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"File with ID {file_id} does not exist on disk."
+        )
+    with file_path.open(mode="rb") as file_buffer:
+        content = file_buffer.read()
+
+    return content, file_format
+
+
+async def load_file_content_by_id(
+    file_id: str | PyObjectId, project_id: str | PyObjectId, db: AsyncDatabase
+) -> Response:
+    """
+    Utility function to load the content of a file from disk by its ID.
+
+    Args:
+            file_id (str | PyObjectId): The ID of the file to load.
+            project_id (str | PyObjectId): The ID of the project the file belongs to.
+            db (AsyncDatabase): The database instance.
+
+    Returns:
+            Response: The response containing the file content and metadata.
+    """
+    # Load file content and format.
+    content, file_format = await run_in_threadpool(  # type: ignore
+        func=_load_file_content, file_id=file_id, project_id=project_id, db=db
+    )
+
+    # Set media type based on file format.
+    media_type_map = {
+        FileFormat.JPEG.value: "image/jpeg",
+        FileFormat.PNG.value: "image/png",
+        FileFormat.TXT.value: "text/plain",
+    }
+    media_type = media_type_map.get(file_format)  # type: ignore
+    if not media_type:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported file format: {file_format}.")  # type: ignore
+
+    # Create response.
+    return Response(content=content, media_type=media_type)  # type: ignore
 
 
 async def is_file_exists(file: UploadFile, db: AsyncDatabase) -> bool:
@@ -681,10 +750,8 @@ async def delete_file_records(
     # Check if files exists.
     filename_list = []
     for fid in file_id_obj_list:
-        sample = await get_file_by_id(file_id=fid, db=db)
-        if not sample:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"File with ID {fid} does not exist.")
-        filename_list.append(sample["filename"])  # type: ignore
+        file = await get_file_by_id(file_id=fid, db=db)
+        filename_list.append(file["filename"])
 
         # Check if file belongs to the project.
         await check_if_file_belongs_to_project(file_id=fid, project_id=project_id, db=db)
