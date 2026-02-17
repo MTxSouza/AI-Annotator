@@ -193,7 +193,7 @@ async def create_sample(sample_data: _SAMPLE_CREATE_, db: AsyncDatabase) -> dict
 
     project_id_obj = PyObjectId(oid=project_id)
     number_of_samples = await collection.count_documents(filter={"project_id": project_id_obj, "file_id": file_id_obj})
-    if valid_number_of_samples > 0 and number_of_samples >= valid_number_of_samples:
+    if valid_number_of_samples != -1 and number_of_samples >= valid_number_of_samples:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Number of samples for file with ID {file_id} for the task {task} cannot exceed \
