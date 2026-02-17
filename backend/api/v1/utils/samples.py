@@ -192,6 +192,7 @@ async def create_sample(sample_data: _SAMPLE_CREATE_, db: AsyncDatabase) -> dict
         filename = file.get("filename")
         text_bytes = await run_in_threadpool(_load_file_content, filename=filename, file_id=file_id)  # type: ignore
         sample_data_dict["text"] = text_bytes.decode(encoding="utf-8")
+        del text_bytes
 
     # Create sample document.
     result = await sample_collection.insert_one(sample_data_dict)
