@@ -10,6 +10,9 @@ from backend.api.v1.models.samples import (
     ObjectDetectionSample,
     ObjectDetectionSampleCreate,
     ObjectDetectionSampleUpdate,
+    TextClassificationSample,
+    TextClassificationSampleCreate,
+    TextClassificationSampleUpdate,
 )
 from backend.api.v1.utils.projects import get_authenticated_project
 from backend.api.v1.utils.samples import create_sample, delete_sample, get_sample_by_id, get_samples, update_sample
@@ -23,14 +26,20 @@ router = APIRouter(
 )
 
 
+# Sample responses.
+__SAMPLE_RESPONSES__ = TextClassificationSample | ObjectDetectionSample
+__SAMPLE_CREATE__ = TextClassificationSampleCreate | ObjectDetectionSampleCreate
+__SAMPLE_UPDATE__ = TextClassificationSampleUpdate | ObjectDetectionSampleUpdate
+
+
 # Endpoints.
-@router.get(path="/", response_model=list[ObjectDetectionSample], status_code=status.HTTP_200_OK)
+@router.get(path="/", response_model=list[__SAMPLE_RESPONSES__], status_code=status.HTTP_200_OK)
 async def get_samples_endpoint(
     limit: int = 10,
     offset: int = 0,
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
-) -> list[ObjectDetectionSample]:
+) -> list[__SAMPLE_RESPONSES__]:
     """
     Endpoint to get all samples of a project.
 
@@ -43,55 +52,55 @@ async def get_samples_endpoint(
     return await get_samples(limit=limit, offset=offset, db=db, query={"project_id": project_id})  # type: ignore
 
 
-@router.get(path="/{sample_id}", response_model=ObjectDetectionSample, status_code=status.HTTP_200_OK)
+@router.get(path="/{sample_id}", response_model=__SAMPLE_RESPONSES__, status_code=status.HTTP_200_OK)
 async def get_sample_endpoint(
     sample_id: str,
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
-) -> ObjectDetectionSample:
+) -> __SAMPLE_RESPONSES__:
     """
     Endpoint to get a sample by ID.
 
     Returns:
-            ObjectDetectionSample: The sample with the specified ID.
+            __SAMPLE_RESPONSES__: The sample with the specified ID.
     """
     return await get_sample_by_id(sample_id=sample_id, db=db)  # type: ignore
 
 
-@router.post(path="/", response_model=ObjectDetectionSample, status_code=status.HTTP_201_CREATED)
+@router.post(path="/", response_model=__SAMPLE_RESPONSES__, status_code=status.HTTP_201_CREATED)
 async def create_sample_endpoint(
-    sample: ObjectDetectionSampleCreate,
+    sample: __SAMPLE_CREATE__,
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
-) -> ObjectDetectionSample:
+) -> __SAMPLE_RESPONSES__:
     """
     Endpoint to create a new sample.
 
     Args:
-            sample (ObjectDetectionSampleCreate): The sample data to create.
+            sample (__SAMPLE_CREATE__): The sample data to create.
 
     Returns:
-            ObjectDetectionSample: The created sample.
+            __SAMPLE_RESPONSES__: The created sample.
     """
     return await create_sample(sample_data=sample, db=db)  # type: ignore
 
 
-@router.put(path="/{sample_id}", response_model=ObjectDetectionSample, status_code=status.HTTP_201_CREATED)
+@router.put(path="/{sample_id}", response_model=__SAMPLE_RESPONSES__, status_code=status.HTTP_201_CREATED)
 async def update_sample_endpoint(
     sample_id: str,
-    sample: ObjectDetectionSampleUpdate,
+    sample: __SAMPLE_UPDATE__,
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
-) -> ObjectDetectionSample:
+) -> __SAMPLE_RESPONSES__:
     """
     Endpoint to update a sample.
 
     Args:
             id (str): The ID of the project that contains the sample to update.
             sample_id (str): The ID of the sample to update.
-            sample (ObjectDetectionSampleUpdate): The sample data to update.
+            sample (__SAMPLE_UPDATE__): The sample data to update.
 
     Returns:
-            ObjectDetectionSample: The updated sample.
+            __SAMPLE_RESPONSES__: The updated sample.
     """
     # Get project ID.
     project_id = project.id
