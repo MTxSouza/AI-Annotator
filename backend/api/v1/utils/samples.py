@@ -13,8 +13,9 @@ from backend.api.v1.models.samples import (
     TextClassificationSampleCreate,
     TextClassificationSampleUpdate,
 )
+from backend.api.v1.utils.files import load_text_file_content
 from backend.database.configs import Collections
-from backend.database.enums import PyObjectId
+from backend.database.enums import FileFormat, PyObjectId
 
 # Sample input and output types.
 _SAMPLE_CREATE_ = TextClassificationSampleCreate | ObjectDetectionSampleCreate
@@ -182,6 +183,12 @@ async def create_sample(sample_data: _SAMPLE_CREATE_, db: AsyncDatabase) -> dict
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"File with ID {file_id} does not belong to project with ID {project_id}.",
+        )
+
+    # HARDCODED: Copy the text content of the file to the sample if the task is text-related.
+    if file.get("file_format") in FileFormat.get_text_formats():
+        sample_data_dict["text"] = load_text_file_content(
+            filename=file.get("filename"), file_format=file.get("file_format")
         )
 
     # Create sample document.
