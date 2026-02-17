@@ -190,7 +190,8 @@ async def create_sample(sample_data: _SAMPLE_CREATE_, db: AsyncDatabase) -> dict
     if file.get("file_format") in FileFormat.get_text_formats():
         # Load file content.
         filename = file.get("filename")
-        sample_data_dict["text"] = await run_in_threadpool(_load_file_content, filename=filename, file_id=file_id)  # type: ignore
+        text_bytes = await run_in_threadpool(_load_file_content, filename=filename, file_id=file_id)  # type: ignore
+        sample_data_dict["text"] = text_bytes.decode(encoding="utf-8")
 
     # Create sample document.
     result = await sample_collection.insert_one(sample_data_dict)
