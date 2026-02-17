@@ -2,7 +2,7 @@
 Main module with all schemas used in Samples collection.
 """
 
-from pydantic import Field
+from pydantic import Field, computed_field
 
 from backend.database.enums import PyObjectId
 from backend.database.models import CommonModel, CommonRequestModel, CommonResponseModel
@@ -87,7 +87,10 @@ class _TextSample(_Sample):
     Schema for a text sample.
     """
 
-    text: str = Field(..., description="Text associated with the sample.")
+    @computed_field(description="The text content of the sample, derived from the associated file.")  # type: ignore
+    @property
+    def text(self) -> str:
+        return ""
 
 
 class _TextSampleUpdate(_SampleUpdate):
