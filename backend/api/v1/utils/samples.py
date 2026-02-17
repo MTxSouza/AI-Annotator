@@ -190,7 +190,7 @@ async def create_sample(sample_data: _SAMPLE_CREATE_, db: AsyncDatabase) -> dict
     # HARDCODED: Copy the text content of the file to the sample if the task is text-related.
     if file.get("file_format") in FileFormat.get_text_formats():
         # Add file extension.
-        file_extension = file.get("file_format").value.lower()
+        file_extension = file.get("file_format").lower()
         filename = f"{file.get('filename')}.{file_extension}"
 
         # Load file content.
