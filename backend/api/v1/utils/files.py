@@ -688,14 +688,11 @@ async def unset_project_id_in_file_records(project_id: str | PyObjectId, db: Asy
     # Get files collection.
     collection = db.get_collection(name=Collections.FILES.value.name)
 
-    # Update all file records to remove the project ID from their project_id_list field.
+    # Get all files that belong to the project.
     project_id_obj = PyObjectId(oid=project_id)
-    await collection.update_many(
-        filter={"project_id_list": {"$in": [project_id_obj]}}, update={"$pull": {"project_id_list": project_id_obj}}
-    )
+    file_id_list = await collection.distinct(key="_id", filter={"project_id_list": {"$in": [project_id_obj]}})
 
     # Delete files that no longer belong to any project.
-    file_id_list = await collection.distinct(key="_id", filter={"project_id_list": {"$size": 0}})
     if file_id_list:
         await delete_file_records(file_id=file_id_list, project_id=project_id_obj, db=db)
 
@@ -720,22 +717,27 @@ async def delete_file_records(
     else:
         file_id_obj_list = [PyObjectId(oid=file_id)]
 
-    # Check if files exists.
-    filename_list = []
+    # Check if file belongs to the project.
     for fid in file_id_obj_list:
-        file = await get_file_by_id(file_id=fid, db=db)
-        filename_list.append(file["filename"])
-
-        # Check if file belongs to the project.
         await check_if_file_belongs_to_project(file_id=fid, project_id=project_id, db=db)
 
     # Delete associated samples.
-    await delete_samples_by_file_id(file_id=file_id_obj_list, db=db)
+    await delete_samples_by_file_id(file_id=file_id_obj_list, db=db, project_id=project_id)
 
-    # Delete the file from database.
-    await collection.delete_many({"_id": {"$in": file_id_obj_list}})
+    # Update all file records to remove the project ID from their project_id_list field.
+    project_id_obj = PyObjectId(oid=project_id)
+    await collection.update_many(
+        filter={"project_id_list": {"$in": [project_id_obj]}}, update={"$pull": {"project_id_list": project_id_obj}}
+    )
 
-    # Delete the file from disk.
-    for filename in filename_list:
-        file_path = Path(BackendSettings.static_file_directory, filename)
-        file_path.unlink(missing_ok=True)
+    # Get all files that no longer belong to any project and delete them from the database and disk.
+    orphan_file_id_list = await collection.distinct(key="_id", filter={"project_id_list": {"$size": 0}})
+    if orphan_file_id_list:
+        # Delete files from disk.
+        filename_list = await collection.distinct(key="filename", filter={"_id": {"$in": orphan_file_id_list}})
+        for filename in filename_list:
+            file_path = Path(BackendSettings.static_file_directory, filename)
+            file_path.unlink(missing_ok=True)
+
+        # Delete file records from the database.
+        await collection.delete_many({"_id": {"$in": orphan_file_id_list}})
