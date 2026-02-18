@@ -25,6 +25,7 @@ from backend.api.v1.utils.task_details import get_task_file
 from backend.configs import BackendSettings
 from backend.database.configs import Collections
 from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId
+from backend.worker import WorkerUploadFile, process_uploaded_file_task
 
 # Global variables.
 FILE_CHUNK_SIZE = 64 * 1024  # 64 KB
@@ -76,12 +77,12 @@ def generate_unique_filename(file_format: FileFormat) -> str:
     return unique_filename
 
 
-def load_upload_file_in_chunks(file: UploadFile) -> Generator[bytes, None, None]:
+def load_upload_file_in_chunks(file: WorkerUploadFile) -> Generator[bytes, None, None]:
     """
     Generator to load an upload file in chunks.
 
     Args:
-            file (UploadFile): The upload file to load in chunks.
+            file (WorkerUploadFile): The upload file to load in chunks.
 
     Yields:
             bytes: The next chunk of the file.
@@ -94,12 +95,12 @@ def load_upload_file_in_chunks(file: UploadFile) -> Generator[bytes, None, None]
         yield chunk
 
 
-def get_upload_file_hash(file: UploadFile) -> str:
+def get_upload_file_hash(file: WorkerUploadFile) -> str:
     """
     Utility function to compute the hash of an upload file.
 
     Args:
-            file (UploadFile): The upload file to compute the hash for.
+            file (WorkerUploadFile): The upload file to compute the hash for.
 
     Returns:
             str: The computed hash of the upload file.
@@ -114,12 +115,12 @@ def get_upload_file_hash(file: UploadFile) -> str:
     return sha256_hash.hexdigest()
 
 
-def get_file_metadata(file: UploadFile) -> dict:
+def get_file_metadata(file: WorkerUploadFile) -> dict:
     """
     Utility function to get metadata of an upload file.
 
     Args:
-            file (UploadFile): The upload file to get metadata for.
+            file (WorkerUploadFile): The upload file to get metadata for.
 
     Returns:
             dict: Metadata of the upload file.
@@ -130,12 +131,12 @@ def get_file_metadata(file: UploadFile) -> dict:
     return {"format": file_extension, "size_in_bytes": file_size}
 
 
-def save_upload_file_to_disk(file: UploadFile, unique_filename: str) -> None:
+def save_upload_file_to_disk(file: UploadFile | WorkerUploadFile, unique_filename: str) -> None:
     """
     Utility function to save the upload file to disk.
 
     Args:
-            file (UploadFile): The upload file to save.
+            file (UploadFile | WorkerUploadFile): The upload file to save.
             unique_filename (str): The unique filename to save the file as.
     """
     # Move cursor to the beginning of the file.
@@ -163,6 +164,35 @@ def save_temporary_upload_file_to_disk(file: UploadFile) -> str:
     save_upload_file_to_disk(file=file, unique_filename=temp_filename)
 
     return temp_filename
+
+
+async def push_upload_file_to_redis_queue(
+    file_list: UploadFile | list[UploadFile], project_id: str | PyObjectId
+) -> None:
+    """
+    Utility function to push the upload file or list of upload files to a Redis queue for asynchronous processing.
+
+    Args:
+            file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to push to the Redis
+            queue.
+            project_id (str | PyObjectId): The project ID associated with the files.
+    """
+    # Check if single file is provided.
+    if isinstance(file_list, UploadFile):
+        file_list = [file_list]
+
+    # Push each file to the Redis queue.
+    temp_file_list: list[dict] = []
+    for file in file_list:
+        # Save file to disk with a temporary filename.
+        temp_filename = await run_in_threadpool(func=save_temporary_upload_file_to_disk, file=file)
+        temp_file_path = Path(BackendSettings.static_file_directory, temp_filename)
+        temp_file_list.append(
+            {"temp_file_path": str(temp_file_path), "filename": file.filename, "content_type": file.content_type}
+        )
+
+    # Push temp_file_list to Redis queue for asynchronous processing in the worker.
+    process_uploaded_file_task.delay(temp_file_list=temp_file_list, project_id=project_id)  # type: ignore
 
 
 async def get_files(limit: int, offset: int, db: AsyncDatabase, query: dict | None = None) -> list[dict]:
@@ -275,12 +305,12 @@ async def load_file_content_by_id(
     return Response(content=content, media_type=media_type)  # type: ignore
 
 
-async def is_file_exists(file: UploadFile, db: AsyncDatabase) -> bool:
+async def is_file_exists(file: WorkerUploadFile, db: AsyncDatabase) -> bool:
     """
     Utility function to check if an upload file exists in the database by its hash.
 
     Args:
-            file (UploadFile): The upload file to check.
+            file (WorkerUploadFile): The upload file to check.
             db (AsyncDatabase): The database instance.
 
     Returns:
@@ -294,12 +324,12 @@ async def is_file_exists(file: UploadFile, db: AsyncDatabase) -> bool:
     return existing_file is not None
 
 
-def _sync_get_file_format(file: UploadFile) -> FileFormat | None:
+def _sync_get_file_format(file: WorkerUploadFile) -> FileFormat | None:
     """
     Utility function to get the file format of an upload file.
 
     Args:
-            file (UploadFile): The upload file to get the format for.
+            file (WorkerUploadFile): The upload file to get the format for.
 
     Returns:
             FileFormat | None: The file format if detected, None otherwise.
@@ -314,12 +344,12 @@ def _sync_get_file_format(file: UploadFile) -> FileFormat | None:
     return FileFormat._check_file_format(file_bytes=file_bytes)
 
 
-def _sync_check_image_corruption(file: UploadFile) -> bool:
+def _sync_check_image_corruption(file: WorkerUploadFile) -> bool:
     """
     Synchronous utility function to check if an image file is corrupted.
 
     Args:
-            file (UploadFile): The upload file to check.
+            file (WorkerUploadFile): The upload file to check.
 
     Returns:
             bool: True if the image file is corrupted, False otherwise.
@@ -333,12 +363,12 @@ def _sync_check_image_corruption(file: UploadFile) -> bool:
         return True
 
 
-def _sync_check_text_corruption(file: UploadFile) -> bool:
+def _sync_check_text_corruption(file: WorkerUploadFile) -> bool:
     """
     Synchronous utility function to check if a text file is corrupted.
 
     Args:
-            file (UploadFile): The upload file to check.
+            file (WorkerUploadFile): The upload file to check.
 
     Returns:
             bool: True if the text file is corrupted, False otherwise.
@@ -362,12 +392,12 @@ def _sync_check_text_corruption(file: UploadFile) -> bool:
     return False
 
 
-def _sync_check_audio_corruption(file: UploadFile) -> bool:
+def _sync_check_audio_corruption(file: WorkerUploadFile) -> bool:
     """
     Synchronous utility function to check if an audio file is corrupted.
 
     Args:
-            file (UploadFile): The upload file to check.
+            file (WorkerUploadFile): The upload file to check.
 
     Returns:
             bool: True if the audio file is corrupted, False otherwise.
@@ -420,12 +450,12 @@ def _sync_check_audio_corruption(file: UploadFile) -> bool:
     return False
 
 
-def _sync_get_image_metadata(file: UploadFile) -> dict:
+def _sync_get_image_metadata(file: WorkerUploadFile) -> dict:
     """
     Synchronous utility function to get metadata of an image upload file.
 
     Args:
-            file (UploadFile): The upload file to get metadata for.
+            file (WorkerUploadFile): The upload file to get metadata for.
 
     Returns:
             dict: Metadata of the upload file.
@@ -442,12 +472,12 @@ def _sync_get_image_metadata(file: UploadFile) -> dict:
     return {"size_in_bytes": file_size, "width": width, "height": height, "channels": channels}
 
 
-def _sync_get_text_metadata(file: UploadFile) -> dict:
+def _sync_get_text_metadata(file: WorkerUploadFile) -> dict:
     """
     Synchronous utility function to get metadata of a text upload file.
 
     Args:
-            file (UploadFile): The upload file to get metadata for.
+            file (WorkerUploadFile): The upload file to get metadata for.
 
     Returns:
             dict: Metadata of the upload file.
@@ -474,12 +504,12 @@ def _sync_get_text_metadata(file: UploadFile) -> dict:
     }
 
 
-def _sync_get_audio_metadata(file: UploadFile) -> dict:
+def _sync_get_audio_metadata(file: WorkerUploadFile) -> dict:
     """
     Synchronous utility function to get metadata of an audio upload file.
 
     Args:
-            file (UploadFile): The upload file to get metadata for.
+            file (WorkerUploadFile): The upload file to get metadata for.
 
     Returns:
             dict: Metadata of the upload file.
@@ -543,7 +573,7 @@ def _is_valid_audio_file_format(file_format: FileFormat) -> bool:
 
 async def process_file_record(
     file_type_name: str,
-    file: UploadFile,
+    file: WorkerUploadFile,
     file_metadata: dict,
     file_hash: str,
     project_id: str | PyObjectId,
@@ -555,7 +585,7 @@ async def process_file_record(
 
     Args:
             file_type_name (str): The name of the file type to process (for logging purposes).
-            file (UploadFile): The upload file to process.
+            file (WorkerUploadFile): The upload file to process.
             file_metadata (dict): The metadata of the upload file.
             file_hash (str): The hash of the upload file.
             project_id (str | PyObjectId): The project ID associated with the file.
@@ -595,7 +625,7 @@ async def process_file_record(
 
 
 async def create_file_records(
-    file_list: UploadFile | list[UploadFile],
+    file_list: WorkerUploadFile | list[WorkerUploadFile],
     project_id: str | PyObjectId,
     db: AsyncDatabase,
 ) -> list[dict]:
@@ -603,7 +633,8 @@ async def create_file_records(
     Utility function to create file records in the database.
 
     Args:
-            file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to create records for.
+            file_list (WorkerUploadFile | list[WorkerUploadFile]): The upload file or list of upload files to create
+            records for.
             project_id (str | PyObjectId): The project ID associated with the files.
             db (AsyncDatabase): The database instance.
 
@@ -611,7 +642,7 @@ async def create_file_records(
             list[dict]: List of created file records.
     """
     # Check if single file is provided.
-    if isinstance(file_list, UploadFile):
+    if isinstance(file_list, WorkerUploadFile):
         file_list = [file_list]
 
     # Get project task.
