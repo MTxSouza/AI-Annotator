@@ -5,9 +5,11 @@ Module used to configure the Celery worker for the backend.
 from typing import BinaryIO
 
 from celery import Celery
+from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.utils.files import create_file_records
 from backend.configs import BackendSettings
+from backend.database.enums import PyObjectId
 
 # Setup Celery application.
 __CELERY_BROKER_URL__ = f"{BackendSettings.redis_uri}:{BackendSettings.redis_port}/{BackendSettings.redis_db}"
@@ -87,17 +89,20 @@ class WorkerUploadFile:
 
 # Tasks.
 @app.task(name="process_uploaded_file")
-async def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str) -> list[dict]:
+async def process_uploaded_file_task(
+    self, temp_file_list: list[dict], project_id: str | PyObjectId, db: AsyncDatabase
+) -> list[dict]:
     """
     Celery task to process an uploaded file.
 
     Args:
         temp_file_list (list[dict]): The list of temporary file paths to process.
-        project_id (str): The ID of the project the files belong to.
+        project_id (str | PyObjectId): The ID of the project the files belong to.
+        db (AsyncDatabase): The database instance.
     """
     # Instantiate the WorkerUploadFile objects.
     worker_file_list = [WorkerUploadFile(**temp_file) for temp_file in temp_file_list]
 
     # Process the files and create the file records in the database.
-    created_file_records = await create_file_records(file_list=worker_file_list, project_id=project_id)  # type: ignore
+    created_file_records = await create_file_records(file_list=worker_file_list, project_id=project_id, db=db)  # type: ignore
     return created_file_records
