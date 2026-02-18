@@ -4,6 +4,7 @@ Module with all utilities related to file operations.
 
 import hashlib
 import shutil
+import struct
 import uuid
 from collections.abc import Callable, Generator
 from pathlib import Path
@@ -353,9 +354,27 @@ def _sync_check_audio_corruption(file: UploadFile) -> bool:
             bool: True if the audio file is corrupted, False otherwise.
     """
     try:
+        # Get real audio size.
+        file.file.seek(0, 2)
+        file_size = file.file.tell()
         file.file.seek(0)
 
+        # Check header of the file.
+        audio_header_signature = file.file.read(4)
+        if audio_header_signature == b"RIFF":  # WAV file header signature.
+            # Check declared file size in header.
+            chunk_size_bytes = file.file.read(4)
+            if len(chunk_size_bytes) < 4:
+                return True
+
+            declared_file_size = (
+                struct.unpack("<I", chunk_size_bytes)[0] + 8
+            )  # Chunk size does not include the header size (8 bytes).
+            if declared_file_size > file_size:
+                return True
+
         # Load file bytes.
+        file.file.seek(0)
         with sf.SoundFile(file=file.file) as file_buffer:
             # Check if audio has no frames.
             if not file_buffer.frames:
