@@ -241,6 +241,8 @@ async def load_file_content_by_id(
         FileFormat.JPEG.value: "image/jpeg",
         FileFormat.PNG.value: "image/png",
         FileFormat.TXT.value: "text/plain",
+        FileFormat.WAV.value: "audio/wav",
+        FileFormat.MP3.value: "audio/mpeg",
     }
     media_type = media_type_map.get(file_format)  # type: ignore
     if not media_type:
