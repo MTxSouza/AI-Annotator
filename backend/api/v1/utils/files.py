@@ -574,7 +574,7 @@ async def process_file_record(
         )
 
     # Create filename to record.
-    file_format = FileFormat(file_metadata["format"])
+    file_format = FileFormat(file_metadata.pop("format"))
     unique_filename = generate_unique_filename(file_format=file_format)
 
     # Save file to disk.
@@ -582,21 +582,21 @@ async def process_file_record(
 
     # Create file record in the database.
     collection = db.get_collection(name=Collections.FILES.value.name)
-    file = create_model_schema(  # type: ignore
+    file_schema = create_model_schema(  # type: ignore
         project_id_list=[project_id_obj],
         file_hash=file_hash,
         filename=unique_filename,
         file_format=file_format,
         **file_metadata,
     ).model_dump()
-    result = await collection.insert_one(document=file)
+    result = await collection.insert_one(document=file_schema)
 
     # Create response model.
     return UploadedFileResponse(
         file_id=result.inserted_id,
         status=FileUploadStatus.CREATED,
         message=f"{file_type_name.title()} file '{file.filename}' uploaded successfully.",
-        size_in_bytes=file_metadata["size_in_bytes"],
+        size_in_bytes=file_schema["size_in_bytes"],
     )
 
 
