@@ -5,6 +5,7 @@ Main module with all schemas used in Projects collection.
 from pydantic import BaseModel, Field, computed_field, model_validator
 
 from backend.api.v1.models.task_details import (
+    AudioTranscriptionTaskDetail,
     ImageCaptionTaskDetail,
     ImageClassificationTaskDetail,
     ObjectCaptionTaskDetail,
@@ -27,6 +28,7 @@ __PROJECT_DETAILS__ = (
     | ImageClassificationTaskDetail
     | TextClassificationTaskDetail
     | TextTaggingTaskDetail
+    | AudioTranscriptionTaskDetail
 )
 
 
