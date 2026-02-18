@@ -55,7 +55,7 @@ class Task(StrEnum):
 
     # Audio.
     AUDIO_CLASSIFICATION = "Audio Classification"
-    AUDIO_CAPTION = "Audio Caption"
+    AUDIO_TRANSCRIPTION = "Audio Transcription"
 
 
 class FileFormat(StrEnum):

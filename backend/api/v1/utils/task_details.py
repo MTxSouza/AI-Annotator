@@ -31,7 +31,7 @@ def get_task_file(task: str) -> str | None:
         Task.TEXT_CLASSIFICATION.value: "text",
         Task.TEXT_TAGGING.value: "text",
         Task.AUDIO_CLASSIFICATION.value: "audio",
-        Task.AUDIO_CAPTION.value: "audio",
+        Task.AUDIO_TRANSCRIPTION.value: "audio",
     }
     return task_file_map.get(task)
 
@@ -55,7 +55,7 @@ def get_valid_number_of_samples_per_file(task: str) -> int | None:
         Task.TEXT_CLASSIFICATION.value: 1,
         Task.TEXT_TAGGING.value: -1,
         Task.AUDIO_CLASSIFICATION.value: 1,
-        Task.AUDIO_CAPTION.value: 1,
+        Task.AUDIO_TRANSCRIPTION.value: 1,
     }
     return task_samples_per_file_map.get(task)
 
