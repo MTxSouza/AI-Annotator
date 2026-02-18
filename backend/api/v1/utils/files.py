@@ -146,6 +146,25 @@ def save_upload_file_to_disk(file: UploadFile, unique_filename: str) -> None:
         shutil.copyfileobj(fsrc=file.file, fdst=file_buffer)
 
 
+def save_temporary_upload_file_to_disk(file: UploadFile) -> str:
+    """
+    Utility function to save the upload file to disk with a temporary filename.
+
+    Args:
+            file (UploadFile): The upload file to save.
+
+    Returns:
+            str: The temporary filename the file was saved as.
+    """
+    # Generate a unique temporary filename.
+    temp_filename = f"temp_{uuid.uuid4()}"
+
+    # Save file to disk.
+    save_upload_file_to_disk(file=file, unique_filename=temp_filename)
+
+    return temp_filename
+
+
 async def get_files(limit: int, offset: int, db: AsyncDatabase, query: dict | None = None) -> list[dict]:
     """
     Utility function to get all files from the database.
