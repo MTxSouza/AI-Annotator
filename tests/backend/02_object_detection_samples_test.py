@@ -66,7 +66,7 @@ def list_object_detection_sample_payload() -> tuple[list[dict], list[str]]:
 # Tests.
 def test_create_object_detection_sample(
     client: TestClient,
-    image_project_payload: dict,
+    object_detection_project_payload: dict,
     image_file_payload: list[tuple[str, tuple[str, bytes, str]]],
     list_object_detection_sample_payload: tuple[list[dict], list[str]],
     reset_file_directory: None,  # Used to reset file directory
@@ -75,7 +75,7 @@ def test_create_object_detection_sample(
     Test to create an object detection sample.
     """
     # Create project first.
-    project_response = client.post(url="/projects/", json=image_project_payload)
+    project_response = client.post(url="/projects/", json=object_detection_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
@@ -118,7 +118,7 @@ def test_create_object_detection_sample(
 
 def test_create_object_detection_sample_with_nonexistent_file(
     client: TestClient,
-    image_project_payload: dict,
+    object_detection_project_payload: dict,
     list_object_detection_sample_payload: tuple[list[dict], list[str]],
     reset_file_directory: None,  # Used to reset file directory
 ) -> None:
@@ -126,7 +126,7 @@ def test_create_object_detection_sample_with_nonexistent_file(
     Test to create an object detection sample with a non-existent file.
     """
     # Create project first.
-    project_response = client.post(url="/projects/", json=image_project_payload)
+    project_response = client.post(url="/projects/", json=object_detection_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
@@ -147,7 +147,7 @@ def test_create_object_detection_sample_with_nonexistent_file(
 
 def test_update_object_detection_sample(
     client: TestClient,
-    image_project_payload: dict,
+    object_detection_project_payload: dict,
     image_file_payload: list[tuple[str, tuple[str, bytes, str]]],
     list_object_detection_sample_payload: tuple[list[dict], list[str]],
     reset_file_directory: None,  # Used to reset file directory
@@ -156,7 +156,7 @@ def test_update_object_detection_sample(
     Test to update an object detection sample.
     """
     # Create project first.
-    project_response = client.post(url="/projects/", json=image_project_payload)
+    project_response = client.post(url="/projects/", json=object_detection_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
@@ -199,7 +199,7 @@ def test_update_object_detection_sample(
 
 def test_update_object_detection_sample_with_wrong_project_id(
     client: TestClient,
-    image_project_payload: dict,
+    object_detection_project_payload: dict,
     image_file_payload: list[tuple[str, tuple[str, bytes, str]]],
     list_object_detection_sample_payload: tuple[list[dict], list[str]],
     reset_file_directory: None,  # Used to reset file directory
@@ -208,13 +208,13 @@ def test_update_object_detection_sample_with_wrong_project_id(
     Test to update an object detection sample with wrong project ID.
     """
     # Create project first.
-    project_response = client.post(url="/projects/", json=image_project_payload)
+    project_response = client.post(url="/projects/", json=object_detection_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
 
     # Create second project to get its ID.
-    second_image_project_payload = image_project_payload.copy()
+    second_image_project_payload = object_detection_project_payload.copy()
     second_image_project_payload["name"] = "Second Project"
 
     second_project_response = client.post(url="/projects/", json=second_image_project_payload)
@@ -261,7 +261,7 @@ def test_update_object_detection_sample_with_wrong_project_id(
 
 def test_delete_object_detection_sample(
     client: TestClient,
-    image_project_payload: dict,
+    object_detection_project_payload: dict,
     image_file_payload: list[tuple[str, tuple[str, bytes, str]]],
     list_object_detection_sample_payload: tuple[list[dict], list[str]],
     reset_file_directory: None,  # Used to reset file directory
@@ -270,7 +270,7 @@ def test_delete_object_detection_sample(
     Test to delete an object detection sample.
     """
     # Create project first.
-    project_response = client.post(url="/projects/", json=image_project_payload)
+    project_response = client.post(url="/projects/", json=object_detection_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
@@ -306,7 +306,7 @@ def test_delete_object_detection_sample(
 
 def test_delete_object_detection_sample_with_wrong_project_id(
     client: TestClient,
-    image_project_payload: dict,
+    object_detection_project_payload: dict,
     image_file_payload: list[tuple[str, tuple[str, bytes, str]]],
     list_object_detection_sample_payload: tuple[list[dict], list[str]],
     reset_file_directory: None,  # Used to reset file directory
@@ -315,13 +315,13 @@ def test_delete_object_detection_sample_with_wrong_project_id(
     Test to delete an object detection sample with wrong project ID.
     """
     # Create project first.
-    project_response = client.post(url="/projects/", json=image_project_payload)
+    project_response = client.post(url="/projects/", json=object_detection_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
 
     # Create second project to get its ID.
-    second_image_project_payload = image_project_payload.copy()
+    second_image_project_payload = object_detection_project_payload.copy()
     second_image_project_payload["name"] = "Second Project"
 
     second_project_response = client.post(url="/projects/", json=second_image_project_payload)
@@ -363,7 +363,7 @@ def test_delete_object_detection_sample_with_wrong_project_id(
 
 def test_delete_file_with_object_detection_samples(
     client: TestClient,
-    image_project_payload: dict,
+    object_detection_project_payload: dict,
     image_file_payload: list[tuple[str, tuple[str, bytes, str]]],
     list_object_detection_sample_payload: tuple[list[dict], list[str]],
     reset_file_directory: None,  # Used to reset file directory
@@ -372,7 +372,7 @@ def test_delete_file_with_object_detection_samples(
     Test to delete a file with object detection samples.
     """
     # Create project first.
-    project_response = client.post(url="/projects/", json=image_project_payload)
+    project_response = client.post(url="/projects/", json=object_detection_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]

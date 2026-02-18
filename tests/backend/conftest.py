@@ -76,25 +76,25 @@ def clear_database():
 
 # Global fixtures to be used during all tests.
 @pytest.fixture
-def image_project_payload() -> dict:
+def object_detection_project_payload() -> dict:
     """
-    Fixture to provide a sample project payload for image files.
+    Fixture to provide a sample project payload for object detection.
     """
     return {"name": "Test Project", "task": "Object Detection"}
 
 
 @pytest.fixture
-def text_project_payload() -> dict:
+def text_classification_project_payload() -> dict:
     """
-    Fixture to provide a sample project payload for text files.
+    Fixture to provide a sample project payload for text classification.
     """
     return {"name": "Test Project", "task": "Text Classification"}
 
 
 @pytest.fixture
-def audio_project_payload() -> dict:
+def audio_transcription_project_payload() -> dict:
     """
-    Fixture to provide a sample project payload for audio files.
+    Fixture to provide a sample project payload for audio transcription.
     """
     return {"name": "Test Project", "task": "Audio Transcription"}
 
@@ -109,7 +109,7 @@ def reset_file_directory():
 
 
 @pytest.fixture
-def list_image_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
+def list_png_image_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
     """
     Fixture to provide a list of image file payloads.
     """
@@ -162,7 +162,7 @@ def list_text_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
 
 
 @pytest.fixture
-def list_audio_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
+def list_wav_audio_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
     """
     Fixture to create a list of audio file payloads.
     """

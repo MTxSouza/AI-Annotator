@@ -29,7 +29,7 @@ def corrupt_text_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]
 # Tests.
 def test_create_text_file_record(
     client: TestClient,
-    text_project_payload: dict,
+    text_classification_project_payload: dict,
     list_text_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
     reset_file_directory: None,  # Used to reset file directory
 ):
@@ -37,7 +37,7 @@ def test_create_text_file_record(
     Test to create a text file record.
     """
     # Create project first.
-    project_response = client.post(url="/projects/", json=text_project_payload)
+    project_response = client.post(url="/projects/", json=text_classification_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
@@ -80,7 +80,7 @@ def test_create_text_file_record(
 
 def test_create_duplicate_text_file_record(
     client: TestClient,
-    text_project_payload: dict,
+    text_classification_project_payload: dict,
     list_text_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
     reset_file_directory: None,  # Used to reset file directory
 ):
@@ -88,7 +88,7 @@ def test_create_duplicate_text_file_record(
     Test to create a duplicate text file record.
     """
     # Create project first.
-    project_response = client.post(url="/projects/", json=text_project_payload)
+    project_response = client.post(url="/projects/", json=text_classification_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
@@ -119,7 +119,7 @@ def test_create_duplicate_text_file_record(
 
 def test_create_corrupt_text_file_record(
     client: TestClient,
-    text_project_payload: dict,
+    text_classification_project_payload: dict,
     corrupt_text_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
     reset_file_directory: None,  # Used to reset file directory
 ):
@@ -127,7 +127,7 @@ def test_create_corrupt_text_file_record(
     Test to create a corrupt text file record.
     """
     # Create project first.
-    project_response = client.post(url="/projects/", json=text_project_payload)
+    project_response = client.post(url="/projects/", json=text_classification_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]

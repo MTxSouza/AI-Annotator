@@ -36,7 +36,7 @@ def list_text_classification_sample_payload() -> tuple[list[tuple[str, tuple[str
 # Tests.
 def test_create_text_classification_sample(
     client: TestClient,
-    text_project_payload: dict,
+    text_classification_project_payload: dict,
     list_text_classification_sample_payload: tuple[list[tuple[str, tuple[str, bytes, str]]], list[str]],
     reset_file_directory: None,  # Used to reset file directory
 ):
@@ -47,7 +47,7 @@ def test_create_text_classification_sample(
     text_file_payload, sample_class_list = list_text_classification_sample_payload
 
     # Create project first.
-    project_response = client.post(url="/projects/", json=text_project_payload)
+    project_response = client.post(url="/projects/", json=text_classification_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
@@ -89,7 +89,7 @@ def test_create_text_classification_sample(
 
 def test_create_more_than_one_text_classification_sample_per_file(
     client: TestClient,
-    text_project_payload: dict,
+    text_classification_project_payload: dict,
     list_text_classification_sample_payload: tuple[list[tuple[str, tuple[str, bytes, str]]], list[str]],
     reset_file_directory: None,  # Used to reset file directory
 ):
@@ -100,7 +100,7 @@ def test_create_more_than_one_text_classification_sample_per_file(
     text_file_payload, sample_class_list = list_text_classification_sample_payload
 
     # Create project first.
-    project_response = client.post(url="/projects/", json=text_project_payload)
+    project_response = client.post(url="/projects/", json=text_classification_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
@@ -133,7 +133,7 @@ def test_create_more_than_one_text_classification_sample_per_file(
 
 def test_create_text_classification_sample_with_nonexistent_file(
     client: TestClient,
-    text_project_payload: dict,
+    text_classification_project_payload: dict,
     list_text_classification_sample_payload: tuple[list[tuple[str, tuple[str, bytes, str]]], list[str]],
     reset_file_directory: None,  # Used to reset file directory
 ):
@@ -144,7 +144,7 @@ def test_create_text_classification_sample_with_nonexistent_file(
     _, sample_class_list = list_text_classification_sample_payload
 
     # Create project first.
-    project_response = client.post(url="/projects/", json=text_project_payload)
+    project_response = client.post(url="/projects/", json=text_classification_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
@@ -166,7 +166,7 @@ def test_create_text_classification_sample_with_nonexistent_file(
 
 def test_update_text_classification_sample(
     client: TestClient,
-    text_project_payload: dict,
+    text_classification_project_payload: dict,
     list_text_classification_sample_payload: tuple[list[tuple[str, tuple[str, bytes, str]]], list[str]],
     reset_file_directory: None,  # Used to reset file directory
 ):
@@ -177,7 +177,7 @@ def test_update_text_classification_sample(
     text_file_payload, sample_class_list = list_text_classification_sample_payload
 
     # Create project first.
-    project_response = client.post(url="/projects/", json=text_project_payload)
+    project_response = client.post(url="/projects/", json=text_classification_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
@@ -237,7 +237,7 @@ def test_update_text_classification_sample(
 
 def test_update_text_classification_sample_with_wrong_project_id(
     client: TestClient,
-    text_project_payload: dict,
+    text_classification_project_payload: dict,
     list_text_classification_sample_payload: tuple[list[tuple[str, tuple[str, bytes, str]]], list[str]],
     reset_file_directory: None,  # Used to reset file directory
 ):
@@ -248,13 +248,13 @@ def test_update_text_classification_sample_with_wrong_project_id(
     text_file_payload, sample_class_list = list_text_classification_sample_payload
 
     # Create project first.
-    project_response = client.post(url="/projects/", json=text_project_payload)
+    project_response = client.post(url="/projects/", json=text_classification_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
 
     # Create second project to get its ID.
-    second_text_project_payload = text_project_payload.copy()
+    second_text_project_payload = text_classification_project_payload.copy()
     second_text_project_payload["name"] = "Second Text Classification Project"
     second_project_response = client.post(url="/projects/", json=second_text_project_payload)
     assert second_project_response.status_code == 201, (
@@ -303,7 +303,7 @@ def test_update_text_classification_sample_with_wrong_project_id(
 
 def test_delete_text_classification_sample(
     client: TestClient,
-    text_project_payload: dict,
+    text_classification_project_payload: dict,
     list_text_classification_sample_payload: tuple[list[tuple[str, tuple[str, bytes, str]]], list[str]],
     reset_file_directory: None,  # Used to reset file directory
 ):
@@ -314,7 +314,7 @@ def test_delete_text_classification_sample(
     text_file_payload, sample_class_list = list_text_classification_sample_payload
 
     # Create project first.
-    project_response = client.post(url="/projects/", json=text_project_payload)
+    project_response = client.post(url="/projects/", json=text_classification_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
@@ -356,7 +356,7 @@ def test_delete_text_classification_sample(
 
 def test_delete_text_classification_sample_with_wrong_project_id(
     client: TestClient,
-    text_project_payload: dict,
+    text_classification_project_payload: dict,
     list_text_classification_sample_payload: tuple[list[tuple[str, tuple[str, bytes, str]]], list[str]],
     reset_file_directory: None,  # Used to reset file directory
 ):
@@ -367,13 +367,13 @@ def test_delete_text_classification_sample_with_wrong_project_id(
     text_file_payload, sample_class_list = list_text_classification_sample_payload
 
     # Create project first.
-    project_response = client.post(url="/projects/", json=text_project_payload)
+    project_response = client.post(url="/projects/", json=text_classification_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]
 
     # Create second project to get its ID.
-    second_text_project_payload = text_project_payload.copy()
+    second_text_project_payload = text_classification_project_payload.copy()
     second_text_project_payload["name"] = "Second Text Classification Project"
     second_project_response = client.post(url="/projects/", json=second_text_project_payload)
     assert second_project_response.status_code == 201, (
@@ -418,7 +418,7 @@ def test_delete_text_classification_sample_with_wrong_project_id(
 
 def test_delete_file_with_text_classification_sample(
     client: TestClient,
-    text_project_payload: dict,
+    text_classification_project_payload: dict,
     list_text_classification_sample_payload: tuple[list[tuple[str, tuple[str, bytes, str]]], list[str]],
     reset_file_directory: None,  # Used to reset file directory
 ):
@@ -429,7 +429,7 @@ def test_delete_file_with_text_classification_sample(
     text_file_payload, sample_class_list = list_text_classification_sample_payload
 
     # Create project first.
-    project_response = client.post(url="/projects/", json=text_project_payload)
+    project_response = client.post(url="/projects/", json=text_classification_project_payload)
     assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
     project = project_response.json()
     project_id = project["_id"]

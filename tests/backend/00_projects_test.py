@@ -408,57 +408,57 @@ def test_get_private_project_with_token_of_another_project(client: TestClient, p
 @pytest.mark.order(-1)
 def test_delete_project_and_ensure_files_and_samples_deleted(
     client: TestClient,
-    image_project_payload: dict,
-    list_image_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
+    object_detection_project_payload: dict,
+    list_png_image_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
     reset_file_directory: None,  # Used to reset file directory
 ):
     """
     Test deleting a project and ensuring that associated files and samples are also deleted.
     """
     # Create a project.
-    response = client.post(url="/projects/", json=image_project_payload)
+    response = client.post(url="/projects/", json=object_detection_project_payload)
     assert response.status_code == 201, f"Failed to create project: {response.text}"
     project_id = response.json()["_id"]
 
     # Create second project.
-    second_image_project_payload = image_project_payload.copy()
+    second_image_project_payload = object_detection_project_payload.copy()
     second_image_project_payload["name"] = "Second Test Project"
     response = client.post(url="/projects/", json=second_image_project_payload)
     assert response.status_code == 201, f"Failed to create second project: {response.text}"
     second_project_id = response.json()["_id"]
 
     # Create file record for the first project.
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=list_image_file_payload)
+    file_response = client.post(url=f"/projects/{project_id}/files/", files=list_png_image_file_payload)
     assert file_response.status_code == 201, f"Failed to create file for the first project: {file_response.text}"
 
     # Check response.
     file_response_json = file_response.json()
     assert "data" in file_response_json
-    assert len(file_response_json["data"]) == len(list_image_file_payload)
+    assert len(file_response_json["data"]) == len(list_png_image_file_payload)
 
     for i, file_data in enumerate(iterable=file_response_json["data"]):
         assert file_data["status"] == "Created"
-        assert file_data["message"] == f"Image file '{list_image_file_payload[i][1][0]}' uploaded successfully."
+        assert file_data["message"] == f"Image file '{list_png_image_file_payload[i][1][0]}' uploaded successfully."
 
     # Create file record for the second project.
-    file_response = client.post(url=f"/projects/{second_project_id}/files/", files=list_image_file_payload)
+    file_response = client.post(url=f"/projects/{second_project_id}/files/", files=list_png_image_file_payload)
     assert file_response.status_code == 201, f"Failed to create file for the second project: {file_response.text}"
 
     # Check response.
     file_response_json = file_response.json()
     assert "data" in file_response_json
-    assert len(file_response_json["data"]) == len(list_image_file_payload)
+    assert len(file_response_json["data"]) == len(list_png_image_file_payload)
 
     for i, file_data in enumerate(iterable=file_response_json["data"]):
         assert file_data["status"] == "Skipped"
-        assert file_data["message"] == f"File '{list_image_file_payload[i][1][0]}' already exists."
+        assert file_data["message"] == f"File '{list_png_image_file_payload[i][1][0]}' already exists."
 
     # Get associated files for the first project to ensure they exist.
     response = client.get(url=f"/projects/{project_id}/files/")
     assert response.status_code == 200, f"Failed to get files for the first project: {response.text}"
     files_data_list = response.json()
-    assert len(files_data_list) == len(list_image_file_payload), (
-        f"Expected {len(list_image_file_payload)} files, got {len(files_data_list)}"
+    assert len(files_data_list) == len(list_png_image_file_payload), (
+        f"Expected {len(list_png_image_file_payload)} files, got {len(files_data_list)}"
     )
 
     # Check project_id_list field.
@@ -470,8 +470,8 @@ def test_delete_project_and_ensure_files_and_samples_deleted(
     response = client.get(url=f"/projects/{second_project_id}/files/")
     assert response.status_code == 200, f"Failed to get files for the second project: {response.text}"
     files_data_list = response.json()
-    assert len(files_data_list) == len(list_image_file_payload), (
-        f"Expected {len(list_image_file_payload)} files, got {len(files_data_list)}"
+    assert len(files_data_list) == len(list_png_image_file_payload), (
+        f"Expected {len(list_png_image_file_payload)} files, got {len(files_data_list)}"
     )
 
     # Check project_id_list field.
@@ -491,8 +491,8 @@ def test_delete_project_and_ensure_files_and_samples_deleted(
     response = client.get(url=f"/projects/{second_project_id}/files/")
     assert response.status_code == 200, f"Failed to get files for the second project: {response.text}"
     files_data_list = response.json()
-    assert len(files_data_list) == len(list_image_file_payload), (
-        f"Expected {len(list_image_file_payload)} files, got {len(files_data_list)}"
+    assert len(files_data_list) == len(list_png_image_file_payload), (
+        f"Expected {len(list_png_image_file_payload)} files, got {len(files_data_list)}"
     )
 
     # Check project_id_list field to ensure the deleted project's ID is removed.
