@@ -7,3 +7,4 @@ slowapi
 python-jose
 pillow
 soundfile
+asgiref
