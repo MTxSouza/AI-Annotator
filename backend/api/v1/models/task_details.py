@@ -116,10 +116,35 @@ class TextClassificationTaskDetail(_TextTaskDetail, _ClassTaskDetail):
     pass
 
 
-# - Text Tagging Task Configs.
+# * Text Tagging Task Configs.
 class TextTaggingTaskDetail(_TextTaskDetail, _ClassTaskDetail):
     """
     Task configuration for text tagging tasks.
+    """
+
+    pass
+
+
+# - Audio Task Configs.
+class _AudioTaskDetail(_TaskDetail):
+    """
+    Task configuration for audio-related tasks.
+    """
+
+    file_format: list[FileFormat] = Field(
+        default_factory=FileFormat.get_audio_formats,
+        description="The audio file formats supported for the task.",
+        frozen=True,
+    )
+    total_duration_in_seconds: float = Field(
+        default=0.0, description="The total duration of all audio samples in seconds for the task."
+    )
+
+
+# * Audio Transcription Task Configs.
+class AudioTranscriptionTaskDetail(_TextTaskDetail, _AudioTaskDetail):
+    """
+    Task configuration for audio transcription tasks.
     """
 
     pass
