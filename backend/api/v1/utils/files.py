@@ -8,6 +8,7 @@ import uuid
 from collections.abc import Callable, Generator
 from pathlib import Path
 
+import soundfile as sf
 from fastapi import UploadFile, status
 from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import HTTPException
@@ -16,7 +17,7 @@ from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel
 from pymongo.asynchronous.database import AsyncDatabase
 
-from backend.api.v1.models.files import ImageFileCreate, TextFileCreate, UploadedFileResponse
+from backend.api.v1.models.files import AudioFileCreate, ImageFileCreate, TextFileCreate, UploadedFileResponse
 from backend.api.v1.utils.common import _load_file_content
 from backend.api.v1.utils.samples import delete_samples_by_file_id
 from backend.api.v1.utils.task_details import get_task_file
@@ -339,6 +340,46 @@ def _sync_check_text_corruption(file: UploadFile) -> bool:
     return False
 
 
+def _sync_check_audio_corruption(file: UploadFile) -> bool:
+    """
+    Synchronous utility function to check if an audio file is corrupted.
+
+    Args:
+            file (UploadFile): The upload file to check.
+
+    Returns:
+            bool: True if the audio file is corrupted, False otherwise.
+    """
+    try:
+        file.file.seek(0)
+
+        # Load file bytes.
+        with sf.SoundFile(file=file.file) as file_buffer:
+            # Check if audio has no frames.
+            if not file_buffer.frames:
+                return True
+
+            # Check if audio has lower sample rate.
+            if file_buffer.samplerate < 8000:
+                return True
+
+            # Truncate file buffer to the end of the file to check for any read errors.
+            seek_position = max(0, file_buffer.frames - FILE_FORMAT_CHUNK_SIZE)
+            file_buffer.seek(seek_position)
+
+            audio_data = file_buffer.read(dtype="float32")
+            if not audio_data.shape[0] and file_buffer.frames > 0:
+                return True
+
+    except Exception:
+        return True
+
+    finally:
+        file.file.seek(0)
+
+    return False
+
+
 def _sync_get_image_metadata(file: UploadFile) -> dict:
     """
     Synchronous utility function to get metadata of an image upload file.
@@ -393,6 +434,34 @@ def _sync_get_text_metadata(file: UploadFile) -> dict:
     }
 
 
+def _sync_get_audio_metadata(file: UploadFile) -> dict:
+    """
+    Synchronous utility function to get metadata of an audio upload file.
+
+    Args:
+            file (UploadFile): The upload file to get metadata for.
+
+    Returns:
+            dict: Metadata of the upload file.
+    """
+    # Get file size.
+    file_size = file.size
+
+    # Get audio properties.
+    file.file.seek(0)
+    with sf.SoundFile(file=file.file) as file_buffer:
+        sample_rate = file_buffer.samplerate
+        channels = file_buffer.channels
+        duration_in_seconds = file_buffer.frames / sample_rate if sample_rate else 0
+
+    return {
+        "size_in_bytes": file_size,
+        "sample_rate": sample_rate,
+        "channels": channels,
+        "duration_in_seconds": duration_in_seconds,
+    }
+
+
 def _is_valid_image_file_format(file_format: FileFormat) -> bool:
     """
     Utility function to check if a file format is a valid image file format.
@@ -417,6 +486,19 @@ def _is_valid_text_file_format(file_format: FileFormat) -> bool:
             bool: True if the file format is a valid text file format, False otherwise.
     """
     return file_format in FileFormat.get_text_formats()
+
+
+def _is_valid_audio_file_format(file_format: FileFormat) -> bool:
+    """
+    Utility function to check if a file format is a valid audio file format.
+
+    Args:
+            file_format (FileFormat): The file format to check.
+
+    Returns:
+            bool: True if the file format is a valid audio file format, False otherwise.
+    """
+    return file_format in FileFormat.get_audio_formats()
 
 
 async def process_file_record(
@@ -516,6 +598,13 @@ async def create_file_records(
             "is_valid_file_format": _is_valid_text_file_format,
             "sync_file_validator": _sync_check_text_corruption,
             "sync_get_file_metadata": _sync_get_text_metadata,
+        },
+        "audio": {
+            "file_type_name": "audio",
+            "create_model_schema": AudioFileCreate,
+            "is_valid_file_format": _is_valid_audio_file_format,
+            "sync_file_validator": _sync_check_audio_corruption,
+            "sync_get_file_metadata": _sync_get_audio_metadata,
         },
     }
     task_utils = task_map.get(file_type)
