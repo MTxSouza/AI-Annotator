@@ -13,6 +13,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import HTTPException
 from fastapi.responses import Response
 from PIL import Image, UnidentifiedImageError
+from pydantic import BaseModel
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.files import ImageFileCreate, TextFileCreate, UploadedFileResponse
@@ -418,120 +419,183 @@ def _is_valid_text_file_format(file_format: FileFormat) -> bool:
     return file_format in FileFormat.get_text_formats()
 
 
-async def process_image_record(
-    file: UploadFile, file_metadata: dict, file_hash: str, project_id: str, db: AsyncDatabase
+# async def process_image_record(
+#     file: UploadFile, file_metadata: dict, file_hash: str, project_id: str, db: AsyncDatabase
+# ) -> UploadedFileResponse:
+#     """
+#     Utility function to process an image file and create its record in the database.
+
+#     Args:
+#             file (UploadFile): The upload file to process.
+#             file_metadata (dict): The metadata of the upload file.
+#             file_hash (str): The hash of the upload file.
+#             project_id (str): The project ID associated with the file.
+#             db (AsyncDatabase): The database instance.
+
+#     Returns:
+#             UploadedFileResponse: The response model for the uploaded image file.
+#     """
+#     # Check project ID type.
+#     if isinstance(project_id, str):
+#         project_id_obj = PyObjectId(oid=project_id)
+#     else:
+#         project_id_obj = project_id
+
+#     # Check file format.
+#     if file_metadata["format"] not in FileFormat.get_image_formats():
+#         return UploadedFileResponse(
+#             status=FileUploadStatus.FAILED, message=f"Invalid file format for image file: {file_metadata['format']}."
+#         )
+
+#     # Create image filename to record.
+#     file_format = FileFormat(file_metadata["format"])
+#     unique_filename = generate_unique_filename(file_format=file_format)
+
+#     # Save file to disk.
+#     save_upload_file_to_disk(file=file, unique_filename=unique_filename)
+
+#     # Create image file record in the database.
+#     collection = db.get_collection(name=Collections.FILES.value.name)
+#     image_file = ImageFileCreate(
+#         project_id_list=[project_id_obj],
+#         file_hash=file_hash,
+#         filename=unique_filename,
+#         file_format=file_format,
+#         size_in_bytes=file_metadata["size_in_bytes"],
+#         width=file_metadata["width"],
+#         height=file_metadata["height"],
+#         channels=file_metadata["channels"],
+#     ).model_dump()
+#     image_file["project_id_list"] = [project_id_obj]  # Ensure project_id_list is set correctly.
+#     result = await collection.insert_one(document=image_file)
+
+#     # Create response model.
+#     return UploadedFileResponse(
+#         file_id=result.inserted_id,
+#         status=FileUploadStatus.CREATED,
+#         message=f"Image file '{file.filename}' uploaded successfully.",
+#         size_in_bytes=file_metadata["size_in_bytes"],
+#     )
+
+
+# async def process_text_record(
+#     file: UploadFile, file_metadata: dict, file_hash: str, project_id: str, db: AsyncDatabase
+# ) -> UploadedFileResponse:
+#     """
+#     Utility function to process a text file and create its record in the database.
+
+#     Args:
+#             file (UploadFile): The upload file to process.
+#             file_metadata (dict): The metadata of the upload file.
+#             file_hash (str): The hash of the upload file.
+#             project_id (str): The project ID associated with the file.
+#             db (AsyncDatabase): The database instance.
+
+#     Returns:
+#             UploadedFileResponse: The response model for the uploaded text file.
+#     """
+#     # Check project ID type.
+#     if isinstance(project_id, str):
+#         project_id_obj = PyObjectId(oid=project_id)
+#     else:
+#         project_id_obj = project_id
+
+#     # Check file format.
+#     if file_metadata["format"] not in FileFormat.get_text_formats():
+#         return UploadedFileResponse(
+#             status=FileUploadStatus.FAILED, message=f"Invalid file format for text file: {file_metadata['format']}."
+#         )
+
+#     # Create text filename to record.
+#     file_format = FileFormat(file_metadata["format"])
+#     unique_filename = generate_unique_filename(file_format=file_format)
+
+#     # Save file to disk.
+#     save_upload_file_to_disk(file=file, unique_filename=unique_filename)
+
+#     # Create text file record in the database.
+#     collection = db.get_collection(name=Collections.FILES.value.name)
+#     text_file = TextFileCreate(
+#         project_id_list=[project_id_obj],
+#         file_hash=file_hash,
+#         filename=unique_filename,
+#         file_format=file_format,
+#         size_in_bytes=file_metadata["size_in_bytes"],
+#         number_of_lines=file_metadata["number_of_lines"],
+#         number_of_words=file_metadata["number_of_words"],
+#         number_of_characters=file_metadata["number_of_characters"],
+#     ).model_dump()
+#     text_file["project_id_list"] = [project_id_obj]  # Ensure project_id_list is set correctly.
+#     result = await collection.insert_one(document=text_file)
+
+#     # Create response model.
+#     return UploadedFileResponse(
+#         file_id=result.inserted_id,
+#         status=FileUploadStatus.CREATED,
+#         message=f"Text file '{file.filename}' uploaded successfully.",
+#         size_in_bytes=file_metadata["size_in_bytes"],
+#     )
+
+
+async def process_file_record(
+    file_type_name: str,
+    file: UploadFile,
+    file_metadata: dict,
+    file_hash: str,
+    project_id: str | PyObjectId,
+    db: AsyncDatabase,
+    valid_file_format_list: list[str],
+    create_model_schema: BaseModel,
 ) -> UploadedFileResponse:
     """
-    Utility function to process an image file and create its record in the database.
+    Utility function to process a file and create its record in the database.
 
     Args:
+            file_type_name (str): The name of the file type to process (for logging purposes).
             file (UploadFile): The upload file to process.
             file_metadata (dict): The metadata of the upload file.
             file_hash (str): The hash of the upload file.
-            project_id (str): The project ID associated with the file.
+            project_id (str | PyObjectId): The project ID associated with the file.
             db (AsyncDatabase): The database instance.
+            valid_file_format_list (list[str]): The list of valid file formats for the project.
+            create_model_schema (BaseModel): The Pydantic model schema to use for creating the file record.
 
     Returns:
-            UploadedFileResponse: The response model for the uploaded image file.
+            UploadedFileResponse: The response model for the uploaded file.
     """
-    # Check project ID type.
-    if isinstance(project_id, str):
-        project_id_obj = PyObjectId(oid=project_id)
-    else:
-        project_id_obj = project_id
+    # Setup project ID object.
+    project_id_obj = PyObjectId(oid=project_id)
 
     # Check file format.
-    if file_metadata["format"] not in FileFormat.get_image_formats():
+    if file_metadata["format"] not in valid_file_format_list:
         return UploadedFileResponse(
-            status=FileUploadStatus.FAILED, message=f"Invalid file format for image file: {file_metadata['format']}."
+            status=FileUploadStatus.FAILED,
+            message=f"Invalid file format for {file_type_name} file: {file_metadata['format']}.",
         )
 
-    # Create image filename to record.
+    # Create filename to record.
     file_format = FileFormat(file_metadata["format"])
     unique_filename = generate_unique_filename(file_format=file_format)
 
     # Save file to disk.
     save_upload_file_to_disk(file=file, unique_filename=unique_filename)
 
-    # Create image file record in the database.
+    # Create file record in the database.
     collection = db.get_collection(name=Collections.FILES.value.name)
-    image_file = ImageFileCreate(
+    file = create_model_schema(  # type: ignore
         project_id_list=[project_id_obj],
         file_hash=file_hash,
         filename=unique_filename,
         file_format=file_format,
-        size_in_bytes=file_metadata["size_in_bytes"],
-        width=file_metadata["width"],
-        height=file_metadata["height"],
-        channels=file_metadata["channels"],
+        **file_metadata,
     ).model_dump()
-    image_file["project_id_list"] = [project_id_obj]  # Ensure project_id_list is set correctly.
-    result = await collection.insert_one(document=image_file)
+    result = await collection.insert_one(document=file)
 
     # Create response model.
     return UploadedFileResponse(
         file_id=result.inserted_id,
         status=FileUploadStatus.CREATED,
-        message=f"Image file '{file.filename}' uploaded successfully.",
-        size_in_bytes=file_metadata["size_in_bytes"],
-    )
-
-
-async def process_text_record(
-    file: UploadFile, file_metadata: dict, file_hash: str, project_id: str, db: AsyncDatabase
-) -> UploadedFileResponse:
-    """
-    Utility function to process a text file and create its record in the database.
-
-    Args:
-            file (UploadFile): The upload file to process.
-            file_metadata (dict): The metadata of the upload file.
-            file_hash (str): The hash of the upload file.
-            project_id (str): The project ID associated with the file.
-            db (AsyncDatabase): The database instance.
-
-    Returns:
-            UploadedFileResponse: The response model for the uploaded text file.
-    """
-    # Check project ID type.
-    if isinstance(project_id, str):
-        project_id_obj = PyObjectId(oid=project_id)
-    else:
-        project_id_obj = project_id
-
-    # Check file format.
-    if file_metadata["format"] not in FileFormat.get_text_formats():
-        return UploadedFileResponse(
-            status=FileUploadStatus.FAILED, message=f"Invalid file format for text file: {file_metadata['format']}."
-        )
-
-    # Create text filename to record.
-    file_format = FileFormat(file_metadata["format"])
-    unique_filename = generate_unique_filename(file_format=file_format)
-
-    # Save file to disk.
-    save_upload_file_to_disk(file=file, unique_filename=unique_filename)
-
-    # Create text file record in the database.
-    collection = db.get_collection(name=Collections.FILES.value.name)
-    text_file = TextFileCreate(
-        project_id_list=[project_id_obj],
-        file_hash=file_hash,
-        filename=unique_filename,
-        file_format=file_format,
-        size_in_bytes=file_metadata["size_in_bytes"],
-        number_of_lines=file_metadata["number_of_lines"],
-        number_of_words=file_metadata["number_of_words"],
-        number_of_characters=file_metadata["number_of_characters"],
-    ).model_dump()
-    text_file["project_id_list"] = [project_id_obj]  # Ensure project_id_list is set correctly.
-    result = await collection.insert_one(document=text_file)
-
-    # Create response model.
-    return UploadedFileResponse(
-        file_id=result.inserted_id,
-        status=FileUploadStatus.CREATED,
-        message=f"Text file '{file.filename}' uploaded successfully.",
+        message=f"{file_type_name.title()} file '{file.filename}' uploaded successfully.",
         size_in_bytes=file_metadata["size_in_bytes"],
     )
 
@@ -568,13 +632,17 @@ async def create_file_records(
 
     task_map = {
         "image": {
-            "file_processor": process_image_record,
+            "file_type_name": "image",
+            "valid_file_format_list": FileFormat.get_image_formats(),
+            "create_model_schema": ImageFileCreate,
             "is_valid_file_format": _is_valid_image_file_format,
             "sync_file_validator": _sync_check_image_corruption,
             "sync_get_file_metadata": _sync_get_image_metadata,
         },
         "text": {
-            "file_processor": process_text_record,
+            "file_type_name": "text",
+            "valid_file_format_list": FileFormat.get_text_formats(),
+            "create_model_schema": TextFileCreate,
             "is_valid_file_format": _is_valid_text_file_format,
             "sync_file_validator": _sync_check_text_corruption,
             "sync_get_file_metadata": _sync_get_text_metadata,
@@ -584,7 +652,9 @@ async def create_file_records(
     if not task_utils:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported file type: {file_type}.")
 
-    file_processor: Callable = task_utils["file_processor"]  # type: ignore
+    file_type_name: str = task_utils["file_type_name"]  # type: ignore
+    valid_file_format_list: list[str] = task_utils["valid_file_format_list"]  # type: ignore
+    create_model_schema: BaseModel = task_utils["create_model_schema"]  # type: ignore
     is_valid_file_format: Callable = task_utils["is_valid_file_format"]  # type: ignore
     sync_file_validator: Callable = task_utils["sync_file_validator"]  # type: ignore
     sync_get_file_metadata: Callable = task_utils["sync_get_file_metadata"]  # type: ignore
@@ -639,8 +709,15 @@ async def create_file_records(
         file_metadata["format"] = file_format.value  # Ensure format is consistent.
 
         # Process file and create record.
-        file_record = await file_processor(
-            file=file, file_metadata=file_metadata, project_id=project_id, db=db, file_hash=file_hash
+        file_record = await process_file_record(
+            file_type_name=file_type_name,
+            file=file,
+            file_metadata=file_metadata,
+            project_id=project_id,
+            db=db,
+            file_hash=file_hash,
+            valid_file_format_list=valid_file_format_list,
+            create_model_schema=create_model_schema,
         )
         processed_file_records.append(file_record.model_dump())
 
