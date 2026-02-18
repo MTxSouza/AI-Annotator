@@ -10,6 +10,7 @@ from collections.abc import Callable, Generator
 from pathlib import Path
 
 import soundfile as sf
+from celery.result import AsyncResult
 from fastapi import UploadFile, status
 from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import HTTPException
@@ -168,7 +169,7 @@ def save_temporary_upload_file_to_disk(file: UploadFile) -> str:
 
 async def push_upload_file_to_redis_queue(
     file_list: UploadFile | list[UploadFile], project_id: str | PyObjectId
-) -> None:
+) -> AsyncResult:
     """
     Utility function to push the upload file or list of upload files to a Redis queue for asynchronous processing.
 
@@ -176,6 +177,9 @@ async def push_upload_file_to_redis_queue(
             file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to push to the Redis
             queue.
             project_id (str | PyObjectId): The project ID associated with the files.
+
+    Returns:
+            AsyncResult: The Celery AsyncResult object representing the enqueued task.
     """
     # Check if single file is provided.
     if isinstance(file_list, UploadFile):
@@ -192,7 +196,9 @@ async def push_upload_file_to_redis_queue(
         )
 
     # Push temp_file_list to Redis queue for asynchronous processing in the worker.
-    process_uploaded_file_task.delay(temp_file_list=temp_file_list, project_id=project_id)  # type: ignore
+    result: AsyncResult = process_uploaded_file_task.delay(temp_file_list=temp_file_list, project_id=project_id)  # type: ignore
+
+    return result
 
 
 async def get_files(limit: int, offset: int, db: AsyncDatabase, query: dict | None = None) -> list[dict]:
