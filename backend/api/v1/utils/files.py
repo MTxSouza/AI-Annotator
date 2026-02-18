@@ -426,7 +426,6 @@ async def process_file_record(
     file_hash: str,
     project_id: str | PyObjectId,
     db: AsyncDatabase,
-    valid_file_format_list: list[str],
     create_model_schema: BaseModel,
 ) -> UploadedFileResponse:
     """
@@ -439,7 +438,6 @@ async def process_file_record(
             file_hash (str): The hash of the upload file.
             project_id (str | PyObjectId): The project ID associated with the file.
             db (AsyncDatabase): The database instance.
-            valid_file_format_list (list[str]): The list of valid file formats for the project.
             create_model_schema (BaseModel): The Pydantic model schema to use for creating the file record.
 
     Returns:
@@ -448,16 +446,9 @@ async def process_file_record(
     # Setup project ID object.
     project_id_obj = PyObjectId(oid=project_id)
 
-    # Check file format.
-    if file_metadata["format"] not in valid_file_format_list:
-        return UploadedFileResponse(
-            status=FileUploadStatus.FAILED,
-            message=f"Invalid file format for {file_type_name} file: {file_metadata['format']}.",
-        )
-
     # Create filename to record.
-    file_format = FileFormat(file_metadata.pop("format"))
-    unique_filename = generate_unique_filename(file_format=file_format)
+    file_metadata["file_format"] = FileFormat(file_metadata["file_format"])
+    unique_filename = generate_unique_filename(file_format=file_metadata["file_format"])
 
     # Save file to disk.
     save_upload_file_to_disk(file=file, unique_filename=unique_filename)
@@ -468,7 +459,6 @@ async def process_file_record(
         project_id_list=[project_id_obj],
         file_hash=file_hash,
         filename=unique_filename,
-        file_format=file_format,
         **file_metadata,
     ).model_dump()
     result = await collection.insert_one(document=file_schema)
@@ -515,7 +505,6 @@ async def create_file_records(
     task_map = {
         "image": {
             "file_type_name": "image",
-            "valid_file_format_list": FileFormat.get_image_formats(),
             "create_model_schema": ImageFileCreate,
             "is_valid_file_format": _is_valid_image_file_format,
             "sync_file_validator": _sync_check_image_corruption,
@@ -523,7 +512,6 @@ async def create_file_records(
         },
         "text": {
             "file_type_name": "text",
-            "valid_file_format_list": FileFormat.get_text_formats(),
             "create_model_schema": TextFileCreate,
             "is_valid_file_format": _is_valid_text_file_format,
             "sync_file_validator": _sync_check_text_corruption,
@@ -535,7 +523,6 @@ async def create_file_records(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported file type: {file_type}.")
 
     file_type_name: str = task_utils["file_type_name"]  # type: ignore
-    valid_file_format_list: list[str] = task_utils["valid_file_format_list"]  # type: ignore
     create_model_schema: BaseModel = task_utils["create_model_schema"]  # type: ignore
     is_valid_file_format: Callable = task_utils["is_valid_file_format"]  # type: ignore
     sync_file_validator: Callable = task_utils["sync_file_validator"]  # type: ignore
@@ -588,7 +575,7 @@ async def create_file_records(
 
         # Get file metadata.
         file_metadata = await run_in_threadpool(func=sync_get_file_metadata, file=file)
-        file_metadata["format"] = file_format.value  # Ensure format is consistent.
+        file_metadata["file_format"] = file_format.value  # Ensure format is consistent.
 
         # Process file and create record.
         file_record = await process_file_record(
@@ -598,7 +585,6 @@ async def create_file_records(
             project_id=project_id,
             db=db,
             file_hash=file_hash,
-            valid_file_format_list=valid_file_format_list,
             create_model_schema=create_model_schema,
         )
         processed_file_records.append(file_record.model_dump())
