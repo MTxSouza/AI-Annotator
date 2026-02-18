@@ -141,3 +141,57 @@ def test_create_corrupt_audio_file_record(
     for i, file_data in enumerate(iterable=file_response_json["data"]):
         assert file_data["status"] == "Failed"
         assert file_data["message"] == f"Corrupted file: {corrupt_audio_file_payload[i][1][0]}."
+
+
+def test_create_image_file_format_record(
+    client: TestClient,
+    audio_transcription_project_payload: dict,
+    list_png_image_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
+    reset_file_directory: None,  # Used to reset file directory
+):
+    """
+    Test to create an image file record in an audio transcription project.
+    """
+    # Create project first.
+    project_response = client.post(url="/projects/", json=audio_transcription_project_payload)
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
+    project_id = project_response.json()["_id"]
+
+    # Create file record.
+    file_response = client.post(url=f"/projects/{project_id}/files/", files=list_png_image_file_payload)
+    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
+
+    # Check response.
+    file_response_json = file_response.json()
+    assert "data" in file_response_json
+    assert len(file_response_json["data"]) == len(list_png_image_file_payload)
+    for i, file_data in enumerate(iterable=file_response_json["data"]):
+        assert file_data["status"] == "Failed"
+        assert file_data["message"] == "Invalid file format for this project: png."
+
+
+def test_create_text_file_format_record(
+    client: TestClient,
+    audio_transcription_project_payload: dict,
+    list_text_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
+    reset_file_directory: None,  # Used to reset file directory
+):
+    """
+    Test to create a text file record in an audio transcription project.
+    """
+    # Create project first.
+    project_response = client.post(url="/projects/", json=audio_transcription_project_payload)
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
+    project_id = project_response.json()["_id"]
+
+    # Create file record.
+    file_response = client.post(url=f"/projects/{project_id}/files/", files=list_text_file_payload)
+    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
+
+    # Check response.
+    file_response_json = file_response.json()
+    assert "data" in file_response_json
+    assert len(file_response_json["data"]) == len(list_text_file_payload)
+    for i, file_data in enumerate(iterable=file_response_json["data"]):
+        assert file_data["status"] == "Failed"
+        assert file_data["message"] == "Invalid file format for this project: txt."

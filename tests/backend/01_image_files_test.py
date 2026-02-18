@@ -29,17 +29,6 @@ def corrupt_image_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]
     return [("file_list", ("corrupt_image.png", corrupt_buffer, "image/png"))]
 
 
-@pytest.fixture
-def invalid_file_format_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
-    """
-    Fixture to provide an invalid file format payload.
-    """
-    # Create text file bytes.
-    buffer = io.BytesIO(b"This is a text file, not an image.")
-
-    return [("file_list", ("invalid_file.txt", buffer, "text/plain"))]
-
-
 # Tests.
 def test_create_image_file_record(
     client: TestClient,
@@ -151,14 +140,14 @@ def test_create_corrupt_image_file_record(
         assert file_data["message"] == f"Corrupted file: {corrupt_image_file_payload[i][1][0]}."
 
 
-def test_create_invalid_file_format_record(
+def test_create_text_file_format_record(
     client: TestClient,
     object_detection_project_payload: dict,
-    invalid_file_format_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
+    list_text_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
     reset_file_directory: None,  # Used to reset file directory
 ):
     """
-    Test to create an invalid file format record.
+    Test to create a text file record in an object detection project.
     """
     # Create project first.
     project_response = client.post(url="/projects/", json=object_detection_project_payload)
@@ -166,13 +155,40 @@ def test_create_invalid_file_format_record(
     project_id = project_response.json()["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=invalid_file_format_payload)
+    file_response = client.post(url=f"/projects/{project_id}/files/", files=list_text_file_payload)
     assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
 
     # Check response.
     file_response_json = file_response.json()
     assert "data" in file_response_json
-    assert len(file_response_json["data"]) == len(invalid_file_format_payload)
+    assert len(file_response_json["data"]) == len(list_text_file_payload)
     for i, file_data in enumerate(iterable=file_response_json["data"]):
         assert file_data["status"] == "Failed"
         assert file_data["message"] == "Invalid file format for this project: txt."
+
+
+def test_create_audio_file_format_record(
+    client: TestClient,
+    object_detection_project_payload: dict,
+    list_wav_audio_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
+    reset_file_directory: None,  # Used to reset file directory
+):
+    """
+    Test to create an audio file record in an object detection project.
+    """
+    # Create project first.
+    project_response = client.post(url="/projects/", json=object_detection_project_payload)
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
+    project_id = project_response.json()["_id"]
+
+    # Create file record.
+    file_response = client.post(url=f"/projects/{project_id}/files/", files=list_wav_audio_file_payload)
+    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
+
+    # Check response.
+    file_response_json = file_response.json()
+    assert "data" in file_response_json
+    assert len(file_response_json["data"]) == len(list_wav_audio_file_payload)
+    for i, file_data in enumerate(iterable=file_response_json["data"]):
+        assert file_data["status"] == "Failed"
+        assert file_data["message"] == "Invalid file format for this project: wav."
