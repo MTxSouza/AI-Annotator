@@ -6,7 +6,9 @@ import io
 import shutil
 from contextlib import asynccontextmanager
 
+import numpy as np
 import pytest
+import soundfile as sf
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from PIL import Image
@@ -90,6 +92,14 @@ def text_project_payload() -> dict:
 
 
 @pytest.fixture
+def audio_project_payload() -> dict:
+    """
+    Fixture to provide a sample project payload for audio files.
+    """
+    return {"name": "Test Project", "task": "Audio Transcription"}
+
+
+@pytest.fixture
 def reset_file_directory():
     """
     Fixture to reset the file storage directory before each module.
@@ -149,3 +159,25 @@ def list_text_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
         text_file_list.append(("file_list", (f"test_file_{i + 1}.txt", buffer, "text/plain")))
 
     return text_file_list
+
+
+@pytest.fixture
+def list_audio_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
+    """
+    Fixture to create a list of audio file payloads.
+    """
+    # Create a simple sine wave audio signal as bytes.
+    sample_rate = 16000  # 16 kHz
+    audio_file_list = []
+    for i in range(5):
+        duration = np.random.uniform(1, 5)  # Random duration between 1 and 5 seconds
+
+        signal = np.random.uniform(-1, 1, int(sample_rate * duration)).astype(np.float32)
+
+        # Write the signal to a bytes buffer in WAV format.
+        audio_buffer = io.BytesIO()
+        sf.write(audio_buffer, signal, sample_rate, format="WAV", subtype="PCM_16")
+        audio_buffer.seek(0)
+        audio_file_list.append(("file_list", (f"test_audio_{i}.wav", audio_buffer, "audio/wav")))
+
+    return audio_file_list
