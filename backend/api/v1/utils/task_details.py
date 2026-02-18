@@ -5,6 +5,7 @@ Module with all utilities related to task configuration operations.
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.task_details import (
+    AudioTranscriptionTaskDetail,
     ObjectDetectionTaskDetail,
     TextClassificationTaskDetail,
 )
@@ -109,6 +110,9 @@ async def setup_task_detail_model_schema(task: str, project_id: str | PyObjectId
         # Text Tasks.
         Task.TEXT_CLASSIFICATION.value: _setup_text_classification_task_detail_model_schema,
         Task.TEXT_TAGGING.value: None,
+        # Audio Tasks.
+        Task.AUDIO_CLASSIFICATION.value: None,
+        Task.AUDIO_TRANSCRIPTION.value: _setup_audio_transcription_task_detail_model_schema,
     }
     task_detail_setup_function = task_detail_model_map.get(task)
     if not task_detail_setup_function:
@@ -206,6 +210,33 @@ async def _get_text_task_detail_information(project_id: str | PyObjectId, db: As
     }
 
 
+async def _get_audio_task_detail_information(project_id: str | PyObjectId, db: AsyncDatabase) -> dict:
+    """
+    Get audio-related task detail information for a given project.
+
+    Args:
+            project_id (str | PyObjectId): The ID of the project to get the audio-related information for.
+            db (AsyncDatabase): The database instance.
+
+    Returns:
+            dict: A dictionary containing total duration of audio samples for the project.
+    """
+    # Get sample collection.
+    collection = db.get_collection(name=Collections.SAMPLES.value.name)
+
+    # Get total duration of audio samples for the project.
+    project_id_obj = PyObjectId(oid=project_id)
+    total_duration_in_seconds = 0
+    async with collection.find(
+        filter={"project_id": project_id_obj, "audio_duration_in_seconds": {"$ne": None}}
+    ) as cursor:
+        async for sample in cursor:
+            duration = sample.get("audio_duration_in_seconds", 0)
+            total_duration_in_seconds += duration
+
+    return {"total_duration_in_seconds": total_duration_in_seconds}
+
+
 async def _setup_object_detection_task_detail_model_schema(
     project_id: str | PyObjectId, db: AsyncDatabase
 ) -> ObjectDetectionTaskDetail:
@@ -267,6 +298,41 @@ async def _setup_text_classification_task_detail_model_schema(
         total_number_of_lines=text_task_detail_information["total_number_of_lines"],
         total_number_of_words=text_task_detail_information["total_number_of_words"],
         total_number_of_characters=text_task_detail_information["total_number_of_characters"],
+    )
+
+    return task_detail_model_schema
+
+
+async def _setup_audio_transcription_task_detail_model_schema(
+    project_id: str | PyObjectId, db: AsyncDatabase
+) -> AudioTranscriptionTaskDetail:
+    """
+    Setup function for the audio transcription task detail model schema.
+
+    Args:
+            project_id (str | PyObjectId): The ID of the project to setup the task detail for.
+            db (AsyncDatabase): The database instance.
+
+    Returns:
+            AudioTranscriptionTaskDetail: The setup audio transcription task detail model schema.
+    """
+    # Get total number of files and samples for the project.
+    number_of_files_and_samples = await _get_number_of_files_and_samples(project_id=project_id, db=db)
+
+    # Get text-related task detail information for the project.
+    text_task_detail_information = await _get_text_task_detail_information(project_id=project_id, db=db)
+
+    # Get audio-related task detail information for the project.
+    audio_task_detail_information = await _get_audio_task_detail_information(project_id=project_id, db=db)
+
+    # Create task detail model schema with total duration of audio samples.
+    task_detail_model_schema = AudioTranscriptionTaskDetail(
+        number_of_files=number_of_files_and_samples["number_of_files"],
+        number_of_samples=number_of_files_and_samples["number_of_samples"],
+        total_number_of_lines=text_task_detail_information["total_number_of_lines"],
+        total_number_of_words=text_task_detail_information["total_number_of_words"],
+        total_number_of_characters=text_task_detail_information["total_number_of_characters"],
+        total_duration_in_seconds=audio_task_detail_information["total_duration_in_seconds"],
     )
 
     return task_detail_model_schema
