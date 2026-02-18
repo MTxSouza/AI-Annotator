@@ -1,6 +1,6 @@
 fastapi[standard]
 uvicorn[standard]
-redis
+celery
 pymongo
 pydantic_settings
 slowapi
