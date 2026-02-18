@@ -221,16 +221,18 @@ async def _get_audio_task_detail_information(project_id: str | PyObjectId, db: A
     Returns:
             dict: A dictionary containing total duration of audio samples for the project.
     """
-    # Get sample collection.
-    collection = db.get_collection(name=Collections.SAMPLES.value.name)
+    # Get file collection.
+    collection = db.get_collection(name=Collections.FILES.value.name)
 
     # Get total duration of audio samples for the project.
     project_id_obj = PyObjectId(oid=project_id)
     total_duration_in_seconds = 0
-    async with collection.find(filter={"project_id": project_id_obj, "duration_in_seconds": {"$ne": None}}) as cursor:
-        async for sample in cursor:
-            duration = sample.get("duration_in_seconds", 0)
-            total_duration_in_seconds += duration
+    async with collection.find(
+        filter={"project_id_list": project_id_obj, "duration_in_seconds": {"$ne": None}}
+    ) as cursor:
+        async for file in cursor:
+            duration_in_seconds = file.get("duration_in_seconds", 0)
+            total_duration_in_seconds += duration_in_seconds
 
     return {"total_duration_in_seconds": total_duration_in_seconds}
 
