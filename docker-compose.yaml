@@ -7,6 +7,11 @@ services:
     volumes:
       - ${LOCAL_STORAGE_PATH}/mongodb:/data/db
     command: ["mongod", "--quiet", "--logpath", "/dev/null"]
+  redis:
+    image: redis:8.2.4
+    container_name: ai_annotator_redis
+    ports:
+      - "6379:6379"
   backend:
     build:
       context: .
@@ -19,6 +24,7 @@ services:
       - ${LOCAL_STORAGE_PATH}/static:/app/storage
     depends_on:
       - database
+      - redis
     profiles:
       - app
   backend-tests:
@@ -31,6 +37,7 @@ services:
       - ${LOCAL_STORAGE_PATH}/static:/app/storage
     depends_on:
       - database
+      - redis
     environment:
       - AI_ANNOTATOR_DATABASE_NAME=ai_annotator_db_test
     profiles:
