@@ -142,7 +142,7 @@ class _AudioTaskDetail(_TaskDetail):
 
 
 # * Audio Transcription Task Configs.
-class AudioTranscriptionTaskDetail(_TextTaskDetail, _AudioTaskDetail):
+class AudioTranscriptionTaskDetail(_AudioTaskDetail, _TextTaskDetail):
     """
     Task configuration for audio transcription tasks.
     """
