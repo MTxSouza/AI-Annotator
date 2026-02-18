@@ -42,3 +42,14 @@ services:
       - AI_ANNOTATOR_DATABASE_NAME=ai_annotator_db_test
     profiles:
       - unittest
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: ai_annotator_worker
+    command: ["celery", "-A", "backend.worker.app", "worker", "--loglevel=info"]
+    volumes:
+      - ${LOCAL_STORAGE_PATH}/static:/app/storage
+    depends_on:
+      - database
+      - redis
