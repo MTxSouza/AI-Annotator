@@ -1,8 +1,6 @@
 services:
   database:
-    build:
-      context: .
-      dockerfile: Dockerfile.db
+    image: mongo:8.0.0
     container_name: ai_annotator_db
     ports:
       - "27017:27017"
