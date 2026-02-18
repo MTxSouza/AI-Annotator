@@ -5,7 +5,7 @@ Main module with all schemas used in Files collection.
 from pydantic import BaseModel, Field, computed_field, field_validator
 
 from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId
-from backend.database.models import CommonModel, CommonRequestModel, CommonResponseModel, CommonUpdateModel
+from backend.database.models import CommonModel, CommonRequestModel, CommonResponseModel
 
 
 # Schemas.
@@ -23,9 +23,9 @@ class __File(CommonResponseModel):
 
 
 # - Images.
-class ImageFile_DB(__File):
+class _ImageFile(__File):
     """
-    Image file model in the database.
+    Schema for an image file.
     """
 
     # Fields.
@@ -53,7 +53,7 @@ class ImageFile_DB(__File):
         return value
 
 
-class ImageFile_Create(ImageFile_DB, CommonRequestModel):
+class ImageFileCreate(_ImageFile, CommonRequestModel):
     """
     Image file creation model.
     """
@@ -61,15 +61,7 @@ class ImageFile_Create(ImageFile_DB, CommonRequestModel):
     pass
 
 
-class ImageFile_Update(ImageFile_DB, CommonUpdateModel):
-    """
-    Image file update model.
-    """
-
-    pass
-
-
-class ImageFile(ImageFile_DB):
+class ImageFile(_ImageFile):
     """
     Image file response model.
     """
@@ -78,9 +70,9 @@ class ImageFile(ImageFile_DB):
 
 
 # - Texts.
-class TextFile_DB(__File):
+class _TextFile(__File):
     """
-    Text file model in the database.
+    Schema for a text file.
     """
 
     # Fields.
@@ -108,7 +100,7 @@ class TextFile_DB(__File):
         return value
 
 
-class TextFile_Create(TextFile_DB, CommonRequestModel):
+class TextFileCreate(_TextFile, CommonRequestModel):
     """
     Text file creation model.
     """
@@ -116,15 +108,7 @@ class TextFile_Create(TextFile_DB, CommonRequestModel):
     pass
 
 
-class TextFile_Update(TextFile_DB, CommonUpdateModel):
-    """
-    Text file update model.
-    """
-
-    pass
-
-
-class TextFile(TextFile_DB):
+class TextFile(_TextFile):
     """
     Text file response model.
     """
@@ -133,9 +117,9 @@ class TextFile(TextFile_DB):
 
 
 # - Audios.
-class AudioFile_DB(__File):
+class _AudioFile(__File):
     """
-    Audio file model in the database.
+    Schema for an audio file.
     """
 
     # Fields.
@@ -163,7 +147,7 @@ class AudioFile_DB(__File):
         return value
 
 
-class AudioFile_Create(AudioFile_DB, CommonRequestModel):
+class AudioFileCreate(_AudioFile, CommonRequestModel):
     """
     Audio file creation model.
     """
@@ -171,15 +155,7 @@ class AudioFile_Create(AudioFile_DB, CommonRequestModel):
     pass
 
 
-class AudioFile_Update(AudioFile_DB, CommonUpdateModel):
-    """
-    Audio file update model.
-    """
-
-    pass
-
-
-class AudioFile(AudioFile_DB):
+class AudioFile(_AudioFile):
     """
     Audio file response model.
     """

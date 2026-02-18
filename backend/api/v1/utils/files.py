@@ -15,7 +15,7 @@ from fastapi.responses import Response
 from PIL import Image, UnidentifiedImageError
 from pymongo.asynchronous.database import AsyncDatabase
 
-from backend.api.v1.models.files import ImageFile_Create, TextFile_Create, UploadedFileResponse
+from backend.api.v1.models.files import ImageFileCreate, TextFileCreate, UploadedFileResponse
 from backend.api.v1.utils.common import _load_file_content
 from backend.api.v1.utils.samples import delete_samples_by_file_id
 from backend.api.v1.utils.task_details import get_task_file
@@ -455,7 +455,7 @@ async def process_image_record(
 
     # Create image file record in the database.
     collection = db.get_collection(name=Collections.FILES.value.name)
-    image_file = ImageFile_Create(
+    image_file = ImageFileCreate(
         project_id_list=[project_id_obj],
         file_hash=file_hash,
         filename=unique_filename,
@@ -514,7 +514,7 @@ async def process_text_record(
 
     # Create text file record in the database.
     collection = db.get_collection(name=Collections.FILES.value.name)
-    text_file = TextFile_Create(
+    text_file = TextFileCreate(
         project_id_list=[project_id_obj],
         file_hash=file_hash,
         filename=unique_filename,
