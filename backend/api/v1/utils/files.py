@@ -753,7 +753,7 @@ async def create_file_records(
             file_hash=file_hash,
             create_model_schema=create_model_schema,
         )
-        processed_file_records.append(file_record.model_dump())
+        processed_file_records.append(file_record.model_dump(mode="json"))
 
     return processed_file_records
 
