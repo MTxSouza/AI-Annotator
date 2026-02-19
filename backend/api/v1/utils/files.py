@@ -196,7 +196,7 @@ async def push_upload_file_to_redis_queue(
         )
 
     # Push temp_file_list to Redis queue for asynchronous processing in the worker.
-    result: AsyncResult = process_uploaded_file_task.delay(temp_file_list=temp_file_list, project_id=project_id)  # type: ignore
+    result: AsyncResult = process_uploaded_file_task.delay(temp_file_list=temp_file_list, project_id=str(project_id))  # type: ignore
 
     return result
 
