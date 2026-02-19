@@ -10,6 +10,8 @@ import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
+from tests.backend.conftest import check_for_worker_task_completion
+
 
 # Mocks.
 @pytest.fixture
@@ -81,14 +83,21 @@ def test_create_object_detection_sample(
     project_id = project["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=image_file_payload)
-    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
-    file_list = file_response.json()["data"]
-    assert len(file_list) == 1
-    file_id = file_list.pop()["file_id"]
+    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=image_file_payload)
+    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
+
+    # Wait for the file processing to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+    # Check response.
+    assert len(file_data_list) == 1
+    file_id = file_data_list[0]["file_id"]
 
     # Set sample payload.
-    sample_list, sample_class_name_list = list_object_detection_sample_payload
+    sample_list, _ = list_object_detection_sample_payload
     for sample in sample_list:
         sample["project_id"] = project_id
         sample["file_id"] = file_id
@@ -162,11 +171,18 @@ def test_update_object_detection_sample(
     project_id = project["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=image_file_payload)
-    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
-    file_list = file_response.json()["data"]
-    assert len(file_list) == 1
-    file_id = file_list.pop()["file_id"]
+    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=image_file_payload)
+    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
+
+    # Wait for the file processing to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+    # Check response.
+    assert len(file_data_list) == 1
+    file_id = file_data_list[0]["file_id"]
 
     # Set sample payload.
     sample_list, _ = list_object_detection_sample_payload
@@ -225,11 +241,18 @@ def test_update_object_detection_sample_with_wrong_project_id(
     second_project_id = second_project["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=image_file_payload)
-    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
-    file_list = file_response.json()["data"]
-    assert len(file_list) == 1
-    file_id = file_list.pop()["file_id"]
+    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=image_file_payload)
+    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
+
+    # Wait for the file processing to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+    # Check response.
+    assert len(file_data_list) == 1
+    file_id = file_data_list[0]["file_id"]
 
     # Set sample payload.
     sample_list, _ = list_object_detection_sample_payload
@@ -276,11 +299,18 @@ def test_delete_object_detection_sample(
     project_id = project["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=image_file_payload)
-    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
-    file_list = file_response.json()["data"]
-    assert len(file_list) == 1
-    file_id = file_list.pop()["file_id"]
+    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=image_file_payload)
+    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
+
+    # Wait for the file processing to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+    # Check response.
+    assert len(file_data_list) == 1
+    file_id = file_data_list[0]["file_id"]
 
     # Set sample payload.
     sample_list, _ = list_object_detection_sample_payload
@@ -332,11 +362,18 @@ def test_delete_object_detection_sample_with_wrong_project_id(
     second_project_id = second_project["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=image_file_payload)
-    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
-    file_list = file_response.json()["data"]
-    assert len(file_list) == 1
-    file_id = file_list.pop()["file_id"]
+    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=image_file_payload)
+    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
+
+    # Wait for the file processing to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+    # Check response.
+    assert len(file_data_list) == 1
+    file_id = file_data_list[0]["file_id"]
 
     # Set sample payload.
     sample_list, _ = list_object_detection_sample_payload
@@ -378,11 +415,18 @@ def test_delete_file_with_object_detection_samples(
     project_id = project["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=image_file_payload)
-    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
-    file_list = file_response.json()["data"]
-    assert len(file_list) == 1
-    file_id = file_list.pop()["file_id"]
+    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=image_file_payload)
+    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
+
+    # Wait for the file processing to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+    # Check response.
+    assert len(file_data_list) == 1
+    file_id = file_data_list[0]["file_id"]
 
     # Set sample payload.
     sample_list, _ = list_object_detection_sample_payload
