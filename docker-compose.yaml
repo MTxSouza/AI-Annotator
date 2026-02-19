@@ -53,3 +53,20 @@ services:
     depends_on:
       - database
       - redis
+    profiles:
+      - app
+  worker-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: worker
+    container_name: ai_annotator_worker_tests
+    volumes:
+      - ${LOCAL_STORAGE_PATH}/static:/app/storage
+    depends_on:
+      - database
+      - redis
+    environment:
+      - AI_ANNOTATOR_DATABASE_NAME=ai_annotator_db_test
+    profiles:
+      - unittest
