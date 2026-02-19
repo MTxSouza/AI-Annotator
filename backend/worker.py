@@ -96,6 +96,13 @@ async def _get_worker_db() -> AsyncDatabase:
     Returns:
         AsyncDatabase: The database instance.
     """
+    # Initialize the database client.
+    await DatabaseConfig.initialize_client(
+        uri=BackendSettings.database_uri,
+        database_name=BackendSettings.database_name,
+        port=BackendSettings.database_port,
+        setup_collections=False,  # Skip collection and index setup for the worker.
+    )
     return DatabaseConfig.get_database()  # type: ignore
 
 
