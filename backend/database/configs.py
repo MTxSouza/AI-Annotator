@@ -63,7 +63,9 @@ class DatabaseConfig:
 
     # Class methods.
     @classmethod
-    async def initialize_client(cls, uri: str, database_name: str, port: int = 27017) -> None:
+    async def initialize_client(
+        cls, uri: str, database_name: str, port: int = 27017, setup_collections: bool = True
+    ) -> None:
         """
         Method to initialize the database client.
 
@@ -71,20 +73,22 @@ class DatabaseConfig:
             uri (str): The database URI.
             database_name (str): The name of the database.
             port (int): The database port. (Default: 27017)
+            setup_collections (bool): Whether to setup collections and indexes. (Default: True)
         """
         # Initialize the MongoDB client.
         cls.__client = AsyncMongoClient(host=uri, port=port)
         cls.__database_name = database_name
 
         # Setup collections.
-        db = cls.get_database()
-        for collection_config in Collections:
-            collection = db.get_collection(name=collection_config.value.name)
-            for index_config in collection_config.value.index_configs:
-                if index_config.is_indexed or index_config.is_unique:
-                    await collection.create_index(
-                        keys=[(index_config.name, 1)], unique=index_config.is_unique, background=True
-                    )
+        if setup_collections:
+            db = cls.get_database()
+            for collection_config in Collections:
+                collection = db.get_collection(name=collection_config.value.name)
+                for index_config in collection_config.value.index_configs:
+                    if index_config.is_indexed or index_config.is_unique:
+                        await collection.create_index(
+                            keys=[(index_config.name, 1)], unique=index_config.is_unique, background=True
+                        )
 
     @classmethod
     async def close_client(cls) -> None:
