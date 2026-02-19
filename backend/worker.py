@@ -2,6 +2,7 @@
 Module used to configure the Celery worker for the backend.
 """
 
+import os
 from typing import BinaryIO
 
 from asgiref.sync import async_to_sync
@@ -86,6 +87,7 @@ class WorkerUploadFile:
         """
         if self.__file:
             self.__file.close()  # type: ignore
+            os.unlink(path=self.file_path)  # Remove the temporary file from disk.
 
 
 # Functions.
