@@ -46,8 +46,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+      target: worker
     container_name: ai_annotator_worker
-    command: ["celery", "-A", "backend.worker.app", "worker", "--loglevel=info"]
     volumes:
       - ${LOCAL_STORAGE_PATH}/static:/app/storage
     depends_on:
