@@ -30,4 +30,4 @@ ENTRYPOINT [ "python", "/home/backend/app.py" ]
 
 # --- STAGE FOR WORKER ---
 FROM base AS worker
-ENTRYPOINT [ "celery", "-A", "backend.worker.app", "worker", "--loglevel=info" ]
+ENTRYPOINT [ "celery", "-A", "backend.worker.app", "worker", "--loglevel=warning" ]
