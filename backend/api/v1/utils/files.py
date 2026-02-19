@@ -709,6 +709,7 @@ async def create_file_records(
                 status=FileUploadStatus.SKIPPED, message=f"File '{file.filename}' already exists."
             )
             processed_file_records.append(file_record.model_dump())
+            del file  # Delete buffer file from disk.
             continue
 
         # Check file format.
@@ -721,6 +722,7 @@ async def create_file_records(
                 message=f"Invalid file format: {file.content_type}. This file format is not supported at all.",
             )
             processed_file_records.append(file_record.model_dump())
+            del file  # Delete buffer file from disk.
             continue
 
         if not is_valid_file_format(file_format=file_format):
@@ -728,6 +730,7 @@ async def create_file_records(
                 status=FileUploadStatus.FAILED, message=f"Invalid file format for this project: {file_format.value}."
             )
             processed_file_records.append(file_record.model_dump())
+            del file  # Delete buffer file from disk.
             continue
 
         # Check file is corrupted.
@@ -737,6 +740,7 @@ async def create_file_records(
                 status=FileUploadStatus.FAILED, message=f"Corrupted file: {file.filename}."
             )
             processed_file_records.append(file_record.model_dump())
+            del file  # Delete buffer file from disk.
             continue
 
         # Get file metadata.
@@ -754,6 +758,9 @@ async def create_file_records(
             create_model_schema=create_model_schema,
         )
         processed_file_records.append(file_record.model_dump(mode="json"))
+
+        # Delete buffer file from disk.
+        del file
 
     return processed_file_records
 
