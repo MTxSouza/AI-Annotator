@@ -53,6 +53,13 @@ class WorkerUploadFile:
         """
         self.close()
 
+    def __del__(self):
+        """
+        Method to delete the WorkerUploadFile instance and remove the temporary file from disk.
+        """
+        self.close()
+        super().__del__()  # type: ignore
+
     # Properties.
     @property
     def file(self) -> BinaryIO:
