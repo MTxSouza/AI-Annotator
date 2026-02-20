@@ -146,8 +146,11 @@ def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str
         worker_file_list = [WorkerUploadFile(**temp_file) for temp_file in temp_file_list]
 
         # Process the files and create the file records in the database.
-        created_file_records = await create_file_records(file_list=worker_file_list, project_id=project_id, db=db)  # type: ignore
-        return created_file_records
+        try:
+            created_file_records = await create_file_records(file_list=worker_file_list, project_id=project_id, db=db)  # type: ignore
+            return created_file_records
+        finally:
+            await db.client.close()  # type: ignore  # Close the database client after processing to avoid sharing the same client instance across multiple worker processes.
 
     # Check if the task is running in eager mode (i.e., during tests) and execute the wrapper function accordingly.
     if self.request.is_eager:
