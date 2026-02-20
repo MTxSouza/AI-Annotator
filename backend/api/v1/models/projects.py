@@ -2,7 +2,7 @@
 Main module with all schemas used in Projects collection.
 """
 
-from pydantic import BaseModel, Field, computed_field, model_validator
+from pydantic import Field, computed_field
 
 from backend.api.v1.models.task_details import (
     AudioTranscriptionTaskDetail,
@@ -33,9 +33,9 @@ __PROJECT_DETAILS__ = (
 
 
 # Schemas.
-class _DB(BaseModel):
+class ProjectSimple(CommonResponseModel):
     """
-    Project model in the database.
+    Simple Project model.
     """
 
     # Fields.
@@ -47,59 +47,8 @@ class _DB(BaseModel):
     )
     task: Task = Field(..., description="The task for the project.")
     hashed_password: str | None = Field(
-        default=None, description="The hashed password for the project if it is private."
+        default=None, exclude=True, description="The hashed password for the project if it is private."
     )
-
-
-class Create(_DB, CommonRequestModel):
-    """
-    Project creation model.
-    """
-
-    # Fields.
-    password: str | None = Field(
-        default=None, min_length=1, exclude=True, description="The password for the project if it should be private."
-    )
-
-    # Validators.
-    @model_validator(mode="after")
-    def compute_hashed_password(self) -> "Create":
-        if self.password:
-            self.hashed_password = hash_password(password=self.password)
-        return self
-
-
-class Update(_DB, CommonUpdateModel):
-    """
-    Project update model.
-    """
-
-    # Fields.
-    name: str | None = Field(default=None, min_length=__MIN_NAME_LENGTH__, max_length=__MAX_NAME_LENGTH__)  # type: ignore
-    password: str | None = Field(
-        default=None, min_length=1, exclude=True, description="The password for the project if it should be private."
-    )
-
-    # To be excluded.
-    task: Task | None = Field(default=None, exclude=True)  # type: ignore
-
-    # Validators.
-    @model_validator(mode="after")
-    def compute_hashed_password(self) -> "Update":
-        if self.password:
-            self.hashed_password = hash_password(password=self.password)
-        elif "password" in self.model_fields_set:
-            self.hashed_password = None
-        return self
-
-
-class ProjectSimple(_DB, CommonResponseModel):
-    """
-    Simple Project model.
-    """
-
-    # To be excluded.
-    hashed_password: str | None = Field(default=None, exclude=True)
 
     # Computed Fields.
     @computed_field(description="Whether the project is private or public.")
@@ -111,6 +60,55 @@ class ProjectSimple(_DB, CommonResponseModel):
                 bool: True if the project is private, False otherwise.
         """
         return self.hashed_password is not None
+
+
+class Create(CommonRequestModel):
+    """
+    Project creation model.
+    """
+
+    # Fields.
+    name: str = Field(
+        ..., min_length=__MIN_NAME_LENGTH__, max_length=__MAX_NAME_LENGTH__, description="The name of the project."
+    )
+    description: str | None = Field(
+        default=None, max_length=__MAX_DESCRIPTION_LENGTH__, description="The description of the project."
+    )
+    task: Task = Field(..., description="The task for the project.")
+    password: str | None = Field(
+        default=None, min_length=1, exclude=True, description="The password for the project if it should be private."
+    )
+
+    # Computed Fields.
+    @computed_field(description="The hashed password for the project if it is private.")
+    def hashed_password(self) -> str | None:
+        if self.password:
+            return hash_password(password=self.password)
+        return None
+
+
+class Update(CommonUpdateModel):
+    """
+    Project update model.
+    """
+
+    # Fields.
+    name: str | None = Field(default=None, min_length=__MIN_NAME_LENGTH__, max_length=__MAX_NAME_LENGTH__)  # type: ignore
+    description: str | None = Field(
+        default=None, max_length=__MAX_DESCRIPTION_LENGTH__, description="The description of the project."
+    )
+    password: str | None = Field(
+        default=None, min_length=1, exclude=True, description="The password for the project if it should be private."
+    )
+
+    # Computed Fields.
+    @computed_field(description="The hashed password for the project if it is private.")
+    def hashed_password(self) -> str | None:
+        if self.password:
+            return hash_password(password=self.password)
+        elif "password" in self.model_fields_set:
+            return None
+        return None
 
 
 class Project(ProjectSimple):
