@@ -3,13 +3,11 @@ Module with all endpoints related to file operations.
 """
 
 from fastapi import APIRouter, Depends, UploadFile, status
-from fastapi.exceptions import HTTPException
 from fastapi.params import File, Param
-from fastapi.requests import Request
 from fastapi.responses import Response
 from pymongo.asynchronous.database import AsyncDatabase
 
-from backend.api.v1.models.files import AudioFile, ImageFile, TextFile, UploadedFileListResponse
+from backend.api.v1.models.files import AudioFile, ImageFile, TextFile
 from backend.api.v1.models.projects import Project
 from backend.api.v1.models.worker_tasks import WorkerTaskResult
 from backend.api.v1.utils.files import (
@@ -20,7 +18,6 @@ from backend.api.v1.utils.files import (
 )
 from backend.api.v1.utils.projects import get_authenticated_project
 from backend.database.configs import DatabaseConfig
-from backend.limiter import limiter
 
 # Instantiate the router.
 router = APIRouter(
@@ -69,29 +66,6 @@ async def get_file_data_endpoint(
     project_id = project.id
 
     return await load_file_content_by_id(file_id=file_id, project_id=project_id, db=db)  # type: ignore
-
-
-@router.post(path="/", response_model=UploadedFileListResponse, status_code=status.HTTP_201_CREATED, deprecated=True)
-@limiter.limit("10/minute")
-async def _upload_file_endpoint(
-    request: Request,
-    file_list: UploadFile | list[UploadFile] = File(...),  # type: ignore
-    project: Project = Depends(dependency=get_authenticated_project),
-    db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
-) -> UploadedFileListResponse:
-    """
-    Endpoint to upload any file. This endpoint will automatically check the project task and validate
-    the correct file type.
-
-    Args:
-            file_list (UploadFile | list[UploadFile]): The file or list of files to upload.
-
-    Returns:
-            UploadedFileListResponse: The uploaded files.
-    """
-    raise HTTPException(
-        status_code=status.HTTP_410_GONE, detail="This endpoint is deprecated. Please use the /queue endpoint instead."
-    )
 
 
 @router.post(path="/queue", response_model=WorkerTaskResult, status_code=status.HTTP_202_ACCEPTED)
