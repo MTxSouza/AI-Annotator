@@ -1,7 +1,6 @@
 services:
   database:
     image: mongo:8.0.0
-    container_name: ai_annotator_db
     ports:
       - "27017:27017"
     volumes:
@@ -9,7 +8,6 @@ services:
     command: ["mongod", "--quiet", "--logpath", "/dev/null"]
   redis:
     image: redis:8.2.4
-    container_name: ai_annotator_redis
     ports:
       - "6379:6379"
   backend:
@@ -17,7 +15,6 @@ services:
       context: .
       dockerfile: Dockerfile.backend
       target: production
-    container_name: ai_annotator_backend
     ports:
       - "8000:8000"
     volumes:
@@ -32,7 +29,6 @@ services:
       context: .
       dockerfile: Dockerfile.backend
       target: testing
-    container_name: ai_annotator_backend_tests
     volumes:
       - ${LOCAL_STORAGE_PATH}/static:/app/storage
     depends_on:
@@ -47,7 +43,6 @@ services:
       context: .
       dockerfile: Dockerfile.backend
       target: worker
-    container_name: ai_annotator_worker
     volumes:
       - ${LOCAL_STORAGE_PATH}/static:/app/storage
     depends_on:
