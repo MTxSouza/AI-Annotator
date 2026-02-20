@@ -8,6 +8,8 @@ from enum import Enum
 from pymongo import AsyncMongoClient
 from pymongo.asynchronous.database import AsyncDatabase
 
+from backend.configs import BackendSettings
+
 
 # Global variables.
 @dataclass
@@ -138,6 +140,23 @@ class DatabaseConfig:
 
         # Drop the database.
         await cls.__client.drop_database(name_or_database=cls.__database_name)  # type: ignore
+
+    # Static methods.
+    @staticmethod
+    async def get_local_database() -> AsyncDatabase:
+        """
+        Method that instantiates a client and returns the database connection without use the class-level client. This
+        is useful for the Celery worker to avoid sharing the same client instance across multiple worker processes.
+
+        Returns:
+            AsyncDatabase: The local database connection.
+        """
+        # Connect to the database using a local client instance.
+        client: AsyncMongoClient = AsyncMongoClient(
+            host=BackendSettings.database_uri, port=BackendSettings.database_port
+        )
+        assert await client.server_info()  # Check if the connection is successful.
+        return client.get_database(name=BackendSettings.database_name)
 
     # Properties.
     @property
