@@ -6,6 +6,8 @@ import bson
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.backend.conftest import check_for_worker_task_completion
+
 
 # Mocks.
 @pytest.fixture
@@ -58,17 +60,21 @@ def test_create_text_classification_sample(
     assert project_details["number_of_samples"] == 0
 
     # Create file record.
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
-    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
+    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
+
+    # Wait for the file processing to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
 
     # Get file ID and text content from response.
-    file_response_json = file_response.json()
-    assert "data" in file_response_json
-    assert len(file_response_json["data"]) == len(text_file_payload)
+    assert len(file_data_list) == len(text_file_payload)
 
     file_id_list = []
     file_content_list = []
-    for i, file_data in enumerate(iterable=file_response_json["data"]):
+    for i, file_data in enumerate(iterable=file_data_list):
         assert file_data["status"] == "Created"
         file_id_list.append(file_data["file_id"])
         file_content_list.append(text_file_payload[i][1][1].decode(encoding="utf-8"))
@@ -107,12 +113,18 @@ def test_create_more_than_one_text_classification_sample_per_file(
 
     # Create file record.
     single_text_file_payload = [text_file_payload[0]]
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=single_text_file_payload)
-    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
-    file_response_json = file_response.json()
-    assert "data" in file_response_json
-    assert len(file_response_json["data"]) == 1
-    file_id = file_response_json["data"][0]["file_id"]
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=single_text_file_payload)
+    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
+
+    # Wait for the file processing to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+    # Get file ID and text content from response.
+    assert len(file_data_list) == 1
+    file_id = file_data_list[0]["file_id"]
 
     # Set sample payload.
     sample_payload = {"project_id": project_id, "file_id": file_id, "class_name": sample_class_list[0]}
@@ -183,17 +195,22 @@ def test_update_text_classification_sample(
     project_id = project["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
-    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
+    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
+
+    # Wait for the file processing to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+    # Check response.
+    assert len(file_data_list) == len(text_file_payload)
 
     # Get file ID and text content from response.
-    file_response_json = file_response.json()
-    assert "data" in file_response_json
-    assert len(file_response_json["data"]) == len(text_file_payload)
-
     file_id_list = []
     file_content_list = []
-    for i, file_data in enumerate(iterable=file_response_json["data"]):
+    for i, file_data in enumerate(iterable=file_data_list):
         assert file_data["status"] == "Created"
         file_id_list.append(file_data["file_id"])
         file_content_list.append(text_file_payload[i][1][1].decode(encoding="utf-8"))
@@ -264,15 +281,19 @@ def test_update_text_classification_sample_with_wrong_project_id(
     second_project_id = second_project["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
-    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
+    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
+
+    # Wait for the file processing to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
 
     # Get file ID from response.
-    file_response_json = file_response.json()
-    assert "data" in file_response_json
-    assert len(file_response_json["data"]) == len(text_file_payload)
+    assert len(file_data_list) == len(text_file_payload)
     file_id_list = []
-    for file_data in file_response_json["data"]:
+    for file_data in file_data_list:
         assert file_data["status"] == "Created"
         file_id_list.append(file_data["file_id"])
 
@@ -320,15 +341,19 @@ def test_delete_text_classification_sample(
     project_id = project["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
-    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
+    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
+
+    # Wait for the file processing to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
 
     # Get file ID from response.
-    file_response_json = file_response.json()
-    assert "data" in file_response_json
-    assert len(file_response_json["data"]) == len(text_file_payload)
+    assert len(file_data_list) == len(text_file_payload)
     file_id_list = []
-    for file_data in file_response_json["data"]:
+    for file_data in file_data_list:
         assert file_data["status"] == "Created"
         file_id_list.append(file_data["file_id"])
 
@@ -383,15 +408,19 @@ def test_delete_text_classification_sample_with_wrong_project_id(
     second_project_id = second_project["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
-    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
+    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
+
+    # Wait for the file processing to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
 
     # Get file ID from response.
-    file_response_json = file_response.json()
-    assert "data" in file_response_json
-    assert len(file_response_json["data"]) == len(text_file_payload)
+    assert len(file_data_list) == len(text_file_payload)
     file_id_list = []
-    for file_data in file_response_json["data"]:
+    for file_data in file_data_list:
         assert file_data["status"] == "Created"
         file_id_list.append(file_data["file_id"])
 
@@ -435,15 +464,19 @@ def test_delete_file_with_text_classification_sample(
     project_id = project["_id"]
 
     # Create file record.
-    file_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
-    assert file_response.status_code == 201, f"Failed to create file: {file_response.text}"
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
+    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
+
+    # Wait for the file processing to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
 
     # Get file ID from response.
-    file_response_json = file_response.json()
-    assert "data" in file_response_json
-    assert len(file_response_json["data"]) == len(text_file_payload)
+    assert len(file_data_list) == len(text_file_payload)
     file_id_list = []
-    for file_data in file_response_json["data"]:
+    for file_data in file_data_list:
         assert file_data["status"] == "Created"
         file_id_list.append(file_data["file_id"])
 

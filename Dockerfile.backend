@@ -27,3 +27,7 @@ ENTRYPOINT [ "pytest", "-s", "-vv", "/home/tests" ]
 # --- STAGE FOR PRODUCTION ---
 FROM base AS production
 ENTRYPOINT [ "python", "/home/backend/app.py" ]
+
+# --- STAGE FOR WORKER ---
+FROM base AS worker
+ENTRYPOINT [ "celery", "-A", "backend.worker.app", "worker", "--loglevel=warning" ]

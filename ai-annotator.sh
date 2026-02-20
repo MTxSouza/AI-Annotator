@@ -52,7 +52,7 @@ stop_application() {
 
 clean_application() {
     echo "🧹 Cleaning up AI-Annotator application..."
-    docker compose --profile app down --rmi all -v
+    docker compose --profile app down --rmi all -v --remove-orphans 2>/dev/null || true
     echo ""
     echo "✅ Cleanup complete."
     exit 0
