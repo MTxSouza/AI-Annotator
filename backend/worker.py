@@ -104,6 +104,7 @@ class WorkerUploadFile:
         # Delete the temporary file from disk.
         if os.path.exists(path=self.file_path):
             os.unlink(path=self.file_path)  # Remove the temporary file from disk.
+        self.file_path = ""  # Clear the file path to prevent further access.
 
 
 # Functions.
