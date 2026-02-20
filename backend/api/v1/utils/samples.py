@@ -9,6 +9,8 @@ from pymongo.asynchronous.collection import ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.samples import (
+    AudioTranscriptionSampleCreate,
+    AudioTranscriptionSampleUpdate,
     ObjectDetectionSampleCreate,
     ObjectDetectionSampleUpdate,
     TextClassificationSampleCreate,
@@ -20,8 +22,8 @@ from backend.database.configs import Collections
 from backend.database.enums import FileFormat, PyObjectId
 
 # Sample input and output types.
-_SAMPLE_CREATE_ = TextClassificationSampleCreate | ObjectDetectionSampleCreate
-_SAMPLE_UPDATE_ = TextClassificationSampleUpdate | ObjectDetectionSampleUpdate
+_SAMPLE_CREATE_ = TextClassificationSampleCreate | ObjectDetectionSampleCreate | AudioTranscriptionSampleCreate
+_SAMPLE_UPDATE_ = TextClassificationSampleUpdate | ObjectDetectionSampleUpdate | AudioTranscriptionSampleUpdate
 
 
 # Functions.

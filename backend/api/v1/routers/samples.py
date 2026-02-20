@@ -6,10 +6,7 @@ from fastapi import APIRouter, Depends, status
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import Project
-from backend.api.v1.models.samples import (
-    ObjectDetectionSample,
-    TextClassificationSample,
-)
+from backend.api.v1.models.samples import AudioTranscriptionSample, ObjectDetectionSample, TextClassificationSample
 from backend.api.v1.utils.projects import get_authenticated_project
 from backend.api.v1.utils.samples import (
     _SAMPLE_CREATE_,
@@ -31,7 +28,7 @@ router = APIRouter(
 
 
 # Sample responses.
-__SAMPLE_RESPONSES__ = TextClassificationSample | ObjectDetectionSample
+__SAMPLE_RESPONSES__ = TextClassificationSample | ObjectDetectionSample | AudioTranscriptionSample
 
 
 # Endpoints.
