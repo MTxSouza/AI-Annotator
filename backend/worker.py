@@ -2,8 +2,11 @@
 Module used to configure the Celery worker for the backend.
 """
 
+import asyncio
 import os
-from typing import BinaryIO
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, BinaryIO
 
 from asgiref.sync import async_to_sync
 from celery import Celery
@@ -97,26 +100,31 @@ class WorkerUploadFile:
 
 
 # Functions.
-async def _get_worker_db() -> AsyncDatabase:
+def _run_worker_in_threading(wrapper_func: Callable) -> Any:
     """
-    Utility function to get the database instance for the Celery worker.
+    Utility function to run the Celery worker in a separate thread. This is used to execute the worker tasks
+    during tests without blocking the main test thread and event loop.
 
-    Returns:
-        AsyncDatabase: The database instance.
+    Args:
+        wrapper_func (Callable): The wrapper function to run the worker.
     """
-    # Initialize the database client.
-    await DatabaseConfig.initialize_client(
-        uri=BackendSettings.database_uri,
-        database_name=BackendSettings.database_name,
-        port=BackendSettings.database_port,
-        setup_collections=False,  # Skip collection and index setup for the worker.
-    )
-    return DatabaseConfig.get_database()  # type: ignore
+
+    def _thread_wrapper():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop=loop)
+        try:
+            return loop.run_until_complete(future=wrapper_func())
+        finally:
+            loop.close()
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(_thread_wrapper)
+        return future.result()
 
 
 # Tasks.
-@app.task(name="process_uploaded_file")
-def process_uploaded_file_task(temp_file_list: list[dict], project_id: str | PyObjectId) -> list[dict]:
+@app.task(bind=True, name="process_uploaded_file")
+def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str | PyObjectId) -> list[dict]:
     """
     Celery task to process an uploaded file.
 
@@ -126,13 +134,13 @@ def process_uploaded_file_task(temp_file_list: list[dict], project_id: str | PyO
     """
 
     # Async function to process the uploaded file.
-    async def wrapper():
+    async def wrapper() -> list[dict]:
 
         # Import function inside the task.
         from backend.api.v1.utils.files import create_file_records
 
         # Instantiate the database connection for the worker.
-        db = await _get_worker_db()
+        db: AsyncDatabase = await DatabaseConfig.get_local_database()  # type: ignore
 
         # Instantiate the WorkerUploadFile objects.
         worker_file_list = [WorkerUploadFile(**temp_file) for temp_file in temp_file_list]
@@ -141,4 +149,7 @@ def process_uploaded_file_task(temp_file_list: list[dict], project_id: str | PyO
         created_file_records = await create_file_records(file_list=worker_file_list, project_id=project_id, db=db)  # type: ignore
         return created_file_records
 
+    # Check if the task is running in eager mode (i.e., during tests) and execute the wrapper function accordingly.
+    if self.request.is_eager:
+        return _run_worker_in_threading(wrapper_func=wrapper)
     return async_to_sync(wrapper)()
