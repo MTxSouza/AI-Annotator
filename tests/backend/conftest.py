@@ -192,12 +192,15 @@ def list_text_file_payload() -> Callable[[], list[tuple[str, tuple[str, io.Bytes
 
 
 @pytest.fixture
-def list_wav_audio_file_payload() -> Callable[[], list[tuple[str, tuple[str, io.BytesIO, str]]]]:
+def list_wav_audio_file_payload(seed: int = 1234) -> Callable[[], list[tuple[str, tuple[str, io.BytesIO, str]]]]:
     """
     Fixture to create a list of audio file payloads.
     """
 
     def _wrapper() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
+        # Set random seed for reproducibility.
+        np.random.seed(seed)
+
         # Create a simple sine wave audio signal as bytes.
         sample_rate = 16000  # 16 kHz
         audio_file_list = []
