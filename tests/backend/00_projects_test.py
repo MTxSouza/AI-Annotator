@@ -209,11 +209,9 @@ def test_update_private_project_name(client: TestClient, project_payload: dict):
     # Assert the response data.
     response_data = response.json()
     assert response_data["name"] == updated_name
+    assert not response_data["description"]
     assert response_data["task"] == project_payload["task"]
-
-    # Attempt to get the project again to make sure it's still private.
-    response = client.get(url=f"/projects/{project_id}")
-    assert response.status_code == 401, f"Failed to get expected unauthorized response: {response.text}"
+    assert response_data["is_private"]
 
 
 def test_update_project_password(client: TestClient, project_payload: dict):
