@@ -264,3 +264,37 @@ class TextClassificationSampleUpdate(_ClassSampleUpdate, _TextSampleUpdate):
     """
 
     pass
+
+
+# Audio Task Samples.
+# * Audio Transcription Sample.
+class _AudioTranscriptionSample(_TextSample):
+    """
+    Schema for an audio transcription sample.
+    """
+
+    pass
+
+
+class AudioTranscriptionSample(_SampleDB, _AudioTranscriptionSample):
+    """
+    Schema for an audio transcription sample.
+    """
+
+    pass
+
+
+class AudioTranscriptionSampleCreate(_SampleCreate, _AudioTranscriptionSample):
+    """
+    Schema for creating an audio transcription sample.
+    """
+
+    pass
+
+
+class AudioTranscriptionSampleUpdate(_TextSampleUpdate):
+    """
+    Schema for updating an audio transcription sample.
+    """
+
+    pass
