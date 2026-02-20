@@ -4,6 +4,7 @@ Module with all endpoints related to file operations.
 
 from fastapi import APIRouter, Depends, UploadFile, status
 from fastapi.params import File, Param
+from fastapi.requests import Request
 from fastapi.responses import Response
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -72,6 +73,7 @@ async def get_file_data_endpoint(
 @router.post(path="/", response_model=WorkerTaskResult, status_code=status.HTTP_202_ACCEPTED)
 @limiter.limit(limit_value="5/minute")
 async def upload_file_endpoint(
+    request: Request,
     file_list: UploadFile | list[UploadFile] = File(...),  # type: ignore
     project: Project = Depends(dependency=get_authenticated_project),
 ) -> WorkerTaskResult:
