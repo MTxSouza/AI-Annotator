@@ -20,6 +20,7 @@ from pymongo import MongoClient
 from backend.app import app
 from backend.configs import BackendSettings
 from backend.database.configs import DatabaseConfig
+from backend.worker import app as celery_app
 
 
 # Session-wide fixtures.
@@ -64,6 +65,22 @@ def client(app_instance: FastAPI):
         assert health_check_response.get("ok") == 1.0
 
         yield client
+
+
+@pytest.fixture(autouse=True, scope="session")
+def setup_celery_worker():
+    """
+    Fixture to setup the Celery worker for tests.
+    """
+    # Enable eager mode for Celery to execute tasks synchronously during tests.
+    celery_app.conf.task_always_eager = True
+    celery_app.conf.task_store_eager_result = True
+
+    yield
+
+    # Reset Celery configuration after tests.
+    celery_app.conf.task_always_eager = False
+    celery_app.conf.task_store_eager_result = False
 
 
 @pytest.fixture(autouse=True)
@@ -212,6 +229,6 @@ def check_for_worker_task_completion(client: TestClient, worker_task_id: str, at
         if task_response.get("status") == SUCCESS:
             return task_response.get("results", [])
         elif task_response.get("status") == FAILURE:
-            pytest.fail(f"Worker task failed: {task_response.get('error', 'Unknown error')}")
+            pytest.fail(f"Worker task failed: {task_response.get('results', 'Unknown error')}")
         time.sleep(1)  # Wait before retrying.
     pytest.fail("Worker task did not complete within the expected time frame.")
