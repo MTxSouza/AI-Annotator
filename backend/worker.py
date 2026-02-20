@@ -84,9 +84,10 @@ class WorkerUploadFile:
             int: The file size in bytes.
         """
         file = self.file  # type: ignore
+        current_pos = file.tell()
         file.seek(0, 2)  # Seek to the end of the file.
         size = file.tell()  # Get the current position (i.e., the size).
-        file.seek(0)  # Reset the file pointer to the beginning.
+        file.seek(current_pos)  # Reset the file pointer to the original position.
         return size
 
     # Methods.
@@ -102,8 +103,11 @@ class WorkerUploadFile:
                 self.__file = None
 
         # Delete the temporary file from disk.
-        if os.path.exists(path=self.file_path):
-            os.unlink(path=self.file_path)  # Remove the temporary file from disk.
+        if self.file_path and os.path.exists(path=self.file_path):
+            try:
+                os.unlink(path=self.file_path)  # Remove the temporary file from disk.
+            except OSError:
+                pass
         self.file_path = ""  # Clear the file path to prevent further access.
 
 
