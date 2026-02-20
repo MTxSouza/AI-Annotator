@@ -116,6 +116,7 @@ def test_create_duplicate_audio_file_record(
     check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
 
     # Attempt to create duplicate file record.
+    list_wav_audio_file = list_wav_audio_file_payload()
     duplicate_file_response = client.post(url=f"/projects/{project_id}/files/", files=list_wav_audio_file)
     assert duplicate_file_response.status_code == 202, (
         f"Failed to create duplicate file: {duplicate_file_response.text}"
