@@ -18,6 +18,7 @@ from backend.api.v1.utils.files import (
 )
 from backend.api.v1.utils.projects import get_authenticated_project
 from backend.database.configs import DatabaseConfig
+from backend.limiter import limiter
 
 # Instantiate the router.
 router = APIRouter(
@@ -69,6 +70,7 @@ async def get_file_data_endpoint(
 
 
 @router.post(path="/", response_model=WorkerTaskResult, status_code=status.HTTP_202_ACCEPTED)
+@limiter.limit(limit_value="5/minute")
 async def upload_file_endpoint(
     file_list: UploadFile | list[UploadFile] = File(...),  # type: ignore
     project: Project = Depends(dependency=get_authenticated_project),
