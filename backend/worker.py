@@ -94,8 +94,15 @@ class WorkerUploadFile:
         """
         Method to close the WorkerUploadFile instance and remove the temporary file from disk.
         """
+        # Close the file if it's open.
         if self.__file:
-            self.__file.close()  # type: ignore
+            try:
+                self.__file.close()  # type: ignore
+            finally:
+                self.__file = None
+
+        # Delete the temporary file from disk.
+        if os.path.exists(path=self.file_path):
             os.unlink(path=self.file_path)  # Remove the temporary file from disk.
 
 
