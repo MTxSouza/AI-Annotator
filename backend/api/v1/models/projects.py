@@ -2,7 +2,7 @@
 Main module with all schemas used in Projects collection.
 """
 
-from pydantic import Field, computed_field
+from pydantic import Field, computed_field, model_validator
 
 from backend.api.v1.models.task_details import (
     AudioTranscriptionTaskDetail,
@@ -101,14 +101,28 @@ class Update(CommonUpdateModel):
         default=None, min_length=1, exclude=True, description="The password for the project if it should be private."
     )
 
-    # Computed Fields.
-    @computed_field(description="The hashed password for the project if it is private.")
-    def hashed_password(self) -> str | None:
-        if self.password:
-            return hash_password(password=self.password)
-        elif "password" in self.model_fields_set:
-            return None
-        return None
+    # To be auto filled.
+    hashed_password: str | None = Field(
+        default=None, description="The hashed password for the project if it is private."
+    )
+
+    # Model Validators.
+    @model_validator(mode="before")
+    @classmethod
+    def validate_password(cls, values: dict) -> dict:
+        """
+        Model validator to hash the password if it is provided.
+
+        Args:
+                values (dict): The input values for the model.
+
+        Returns:
+                dict: The validated values with the hashed password if applicable.
+        """
+        if "password" in values:
+            password = values["password"]
+            values["hashed_password"] = hash_password(password=values["password"]) if password else None
+        return values
 
 
 class Project(ProjectSimple):
