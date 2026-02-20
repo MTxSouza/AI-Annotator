@@ -89,7 +89,7 @@ async def upload_file_endpoint(
     # Push file to Redis queue.
     result = await push_upload_file_to_redis_queue(file_list=file_list, project_id=project_id)
 
-    return WorkerTaskResult(task_id=result.id, message="File(s) has been queued for processing.")  # type: ignore
+    return WorkerTaskResult(task_id=result.id, message="File(s) have been queued for processing.")  # type: ignore
 
 
 @router.delete(path="/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
