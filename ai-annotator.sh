@@ -59,6 +59,7 @@ clean_application() {
 }
 
 test_application() {
+    clean_application
     echo "🧪 Running backend tests..."
     docker compose --profile unittest up --build --quiet-build --abort-on-container-exit
     EXIT_CODE=$?
