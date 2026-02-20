@@ -68,7 +68,7 @@ async def get_file_data_endpoint(
     return await load_file_content_by_id(file_id=file_id, project_id=project_id, db=db)  # type: ignore
 
 
-@router.post(path="/queue", response_model=WorkerTaskResult, status_code=status.HTTP_202_ACCEPTED)
+@router.post(path="/", response_model=WorkerTaskResult, status_code=status.HTTP_202_ACCEPTED)
 async def upload_file_endpoint(
     file_list: UploadFile | list[UploadFile] = File(...),  # type: ignore
     project: Project = Depends(dependency=get_authenticated_project),

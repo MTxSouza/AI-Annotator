@@ -432,7 +432,7 @@ def test_delete_project_and_ensure_files_and_samples_deleted(
 
     # Create file record for the first project.
     list_png_image_file_payload_data = list_png_image_file_payload()
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=list_png_image_file_payload_data)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=list_png_image_file_payload_data)
     assert worker_response.status_code == 202, f"Failed to create file for the first project: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -452,9 +452,7 @@ def test_delete_project_and_ensure_files_and_samples_deleted(
 
     # Create file record for the second project.
     list_png_image_file_payload_data = list_png_image_file_payload()
-    worker_response = client.post(
-        url=f"/projects/{second_project_id}/files/queue", files=list_png_image_file_payload_data
-    )
+    worker_response = client.post(url=f"/projects/{second_project_id}/files/", files=list_png_image_file_payload_data)
     assert worker_response.status_code == 202, f"Failed to create file for the second project: {worker_response.text}"
 
     # Wait for the file processing to complete.

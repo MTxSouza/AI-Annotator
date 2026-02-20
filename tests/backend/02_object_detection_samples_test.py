@@ -83,7 +83,7 @@ def test_create_object_detection_sample(
     project_id = project["_id"]
 
     # Create file record.
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=image_file_payload)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=image_file_payload)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -171,7 +171,7 @@ def test_update_object_detection_sample(
     project_id = project["_id"]
 
     # Create file record.
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=image_file_payload)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=image_file_payload)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -241,7 +241,7 @@ def test_update_object_detection_sample_with_wrong_project_id(
     second_project_id = second_project["_id"]
 
     # Create file record.
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=image_file_payload)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=image_file_payload)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -299,7 +299,7 @@ def test_delete_object_detection_sample(
     project_id = project["_id"]
 
     # Create file record.
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=image_file_payload)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=image_file_payload)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -362,7 +362,7 @@ def test_delete_object_detection_sample_with_wrong_project_id(
     second_project_id = second_project["_id"]
 
     # Create file record.
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=image_file_payload)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=image_file_payload)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -415,7 +415,7 @@ def test_delete_file_with_object_detection_samples(
     project_id = project["_id"]
 
     # Create file record.
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=image_file_payload)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=image_file_payload)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.

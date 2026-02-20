@@ -55,7 +55,7 @@ def test_create_image_file_record(
 
     # Create file record.
     list_png_image_file = list_png_image_file_payload()
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=list_png_image_file)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=list_png_image_file)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -104,7 +104,7 @@ def test_create_duplicate_file_record(
 
     # Create file record.
     list_png_image_file = list_png_image_file_payload()
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=list_png_image_file)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=list_png_image_file)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -115,7 +115,7 @@ def test_create_duplicate_file_record(
 
     # Attempt to create duplicate file record.
     list_png_image_file = list_png_image_file_payload()
-    duplicate_file_response = client.post(url=f"/projects/{project_id}/files/queue", files=list_png_image_file)
+    duplicate_file_response = client.post(url=f"/projects/{project_id}/files/", files=list_png_image_file)
     assert duplicate_file_response.status_code == 202, (
         f"Failed to create duplicate file: {duplicate_file_response.text}"
     )
@@ -148,7 +148,7 @@ def test_create_corrupt_image_file_record(
     project_id = project_response.json()["_id"]
 
     # Create file record.
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=corrupt_image_file_payload)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=corrupt_image_file_payload)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -180,7 +180,7 @@ def test_create_text_file_format_record(
 
     # Create file record.
     list_text_file = list_text_file_payload()
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=list_text_file)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=list_text_file)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -212,7 +212,7 @@ def test_create_audio_file_format_record(
 
     # Create file record.
     list_wav_audio_file = list_wav_audio_file_payload()
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=list_wav_audio_file)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=list_wav_audio_file)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.

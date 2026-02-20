@@ -60,7 +60,7 @@ def test_create_text_classification_sample(
     assert project_details["number_of_samples"] == 0
 
     # Create file record.
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=text_file_payload)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -113,7 +113,7 @@ def test_create_more_than_one_text_classification_sample_per_file(
 
     # Create file record.
     single_text_file_payload = [text_file_payload[0]]
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=single_text_file_payload)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=single_text_file_payload)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -195,7 +195,7 @@ def test_update_text_classification_sample(
     project_id = project["_id"]
 
     # Create file record.
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=text_file_payload)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -281,7 +281,7 @@ def test_update_text_classification_sample_with_wrong_project_id(
     second_project_id = second_project["_id"]
 
     # Create file record.
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=text_file_payload)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -341,7 +341,7 @@ def test_delete_text_classification_sample(
     project_id = project["_id"]
 
     # Create file record.
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=text_file_payload)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -408,7 +408,7 @@ def test_delete_text_classification_sample_with_wrong_project_id(
     second_project_id = second_project["_id"]
 
     # Create file record.
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=text_file_payload)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
@@ -464,7 +464,7 @@ def test_delete_file_with_text_classification_sample(
     project_id = project["_id"]
 
     # Create file record.
-    worker_response = client.post(url=f"/projects/{project_id}/files/queue", files=text_file_payload)
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=text_file_payload)
     assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
 
     # Wait for the file processing to complete.
