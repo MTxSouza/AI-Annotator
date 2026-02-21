@@ -92,6 +92,7 @@ def clear_database():
     client: MongoClient = MongoClient(host=BackendSettings.database_uri, port=BackendSettings.database_port)
     client.drop_database(BackendSettings.database_name)
     yield
+    client.close()
 
 
 # Global fixtures to be used during all tests.
