@@ -97,3 +97,62 @@ def test_create_audio_transcription_sample(
     project_details = project_response.json().get("details", {})
     assert project_details["number_of_files"] == len(list_wav_audio_file)
     assert project_details["number_of_samples"] == len(audio_transcription_list)
+
+
+def test_create_more_than_one_audio_transcription_sample_per_file(
+    client: TestClient,
+    audio_transcription_project_payload: dict,
+    audio_transcription_sample_payload: tuple[list[tuple[str, tuple[str, io.BytesIO, str]]], list[dict]],
+    reset_file_directory: None,  # Used to reset file directory
+):
+    """
+    Test to create more than one audio transcription sample per file.
+    """
+    # Unpack sample payload.
+    list_wav_audio_file, audio_transcription_list = audio_transcription_sample_payload
+
+    # Create a project.
+    project_response = client.post(url="/projects/", json=audio_transcription_project_payload)
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
+    project = project_response.json()
+    project_id = project["_id"]
+
+    # Check number of files and samples in project response.
+    project_details = project.get("details", {})
+    assert project_details["number_of_files"] == 0
+    assert project_details["number_of_samples"] == 0
+
+    # Create file record.
+    single_wav_audio_file = [list_wav_audio_file[0]]
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=single_wav_audio_file)
+    assert worker_response.status_code == 202, f"Failed to create file record: {worker_response.text}"
+
+    # Wait for worker task to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+    # Check response.
+    assert len(file_data_list) == 1
+    file_id = file_data_list[0]["file_id"]
+
+    # Set sample payload.
+    single_audio_transcription = audio_transcription_list[0]
+    single_audio_transcription["project_id"] = project_id
+    single_audio_transcription["file_id"] = file_id
+    sample_response = client.post(url=f"/projects/{project_id}/samples/", json=single_audio_transcription)
+    assert sample_response.status_code == 201, f"Failed to create sample record: {sample_response.text}"
+
+    # Set second sample payload with same file ID.
+    second_audio_transcription = audio_transcription_list[1]
+    second_audio_transcription["project_id"] = project_id
+    second_audio_transcription["file_id"] = file_id
+    second_sample_response = client.post(url=f"/projects/{project_id}/samples/", json=second_audio_transcription)
+    assert second_sample_response.status_code == 400, (
+        f"Failed to not create second sample with same file ID: {second_sample_response.text}"
+    )
+    assert (
+        second_sample_response.json().get("detail")
+        == f"Number of samples for file with ID {file_id} for the task Audio Transcription cannot exceed 1."
+    )
