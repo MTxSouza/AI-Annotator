@@ -251,3 +251,71 @@ def test_update_audio_transcription_sample(
         assert sample_response_json["project_id"] == project_id
         assert sample_response_json["file_id"] == file_id_list[i]
         assert sample_response_json["text"] == updated_text
+
+
+def test_update_audio_transcription_sample_with_wrong_project_id(
+    client: TestClient,
+    audio_transcription_project_payload: dict,
+    audio_transcription_sample_payload: tuple[list[tuple[str, tuple[str, io.BytesIO, str]]], list[dict]],
+    reset_file_directory: None,  # Used to reset file directory
+):
+    """
+    Test to update an audio transcription sample with a wrong project ID.
+    """
+    # Unpack sample payload.
+    list_wav_audio_file, audio_transcription_list = audio_transcription_sample_payload
+
+    # Create a project.
+    project_response = client.post(url="/projects/", json=audio_transcription_project_payload)
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
+    project = project_response.json()
+    project_id = project["_id"]
+
+    # Create second project to get its ID.
+    second_audio_project_payload = audio_transcription_project_payload.copy()
+    second_audio_project_payload["name"] = "Second Audio Transcription Project"
+    second_project_response = client.post(url="/projects/", json=second_audio_project_payload)
+    assert second_project_response.status_code == 201, (
+        f"Failed to create second project: {second_project_response.text}"
+    )
+    second_project = second_project_response.json()
+    second_project_id = second_project["_id"]
+
+    # Create file record.
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=list_wav_audio_file)
+    assert worker_response.status_code == 202, f"Failed to create file record: {worker_response.text}"
+
+    # Wait for worker task to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+    # Get file ID from response.
+    file_id_list = []
+    for file_data in file_data_list:
+        assert file_data["status"] == "Created"
+        file_id = file_data["file_id"]
+        file_id_list.append(file_id)
+    assert len(file_id_list) > 0, "File IDs not found in response"
+
+    # Create sample record.
+    single_audio_transcription_sample = audio_transcription_list[0]
+    single_audio_transcription_sample["project_id"] = project_id
+    single_audio_transcription_sample["file_id"] = file_id_list[0]
+    sample_response = client.post(url=f"/projects/{project_id}/samples/", json=single_audio_transcription_sample)
+    assert sample_response.status_code == 201, f"Failed to create sample record: {sample_response.text}"
+    sample = sample_response.json()
+    sample_id = sample["_id"]
+
+    # Update sample record with wrong project ID.
+    updated_text = "Updated transcription with wrong project ID"
+    update_payload = {"text": updated_text}
+    update_response = client.put(url=f"/projects/{second_project_id}/samples/{sample_id}/", json=update_payload)
+    assert update_response.status_code == 404, (
+        f"Failed to not update sample with wrong project ID: {update_response.text}"
+    )
+    assert (
+        update_response.json()["detail"]
+        == f"Sample with ID {sample_id} does not belong to project with ID {second_project_id}."
+    )
