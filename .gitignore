@@ -205,3 +205,19 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# MongoDB files.
+*.wt
+mongod.lock
+journal/
+storage.bson
+diagnostic.data/
+WiredTiger*
+
+# Sample files.
+**/static/*.jpeg
+**/static/*.jpg
+**/static/*.png
+**/static/*.txt
+**/static/*.wav
+**/static/*.mp3

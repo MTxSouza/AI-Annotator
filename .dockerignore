@@ -3,3 +3,12 @@ __pycache__/
 .env
 .venv
 *.md
+*.log
+storage/
+.git
+.ruff_cache/
+.mypy_cache/
+LICENSE
+*.sh
+*.yml
+*.yaml

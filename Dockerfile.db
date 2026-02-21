@@ -1,4 +1,0 @@
-# Base image.
-FROM mongo:8.0.0
-# Expose the MongoDB port.
-EXPOSE 27017
