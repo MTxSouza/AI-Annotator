@@ -60,10 +60,10 @@ class _VisualLocationSampleUpdate(_SampleUpdate):
     Schema for updating a visual location sample.
     """
 
-    cx: float | None = Field(ge=0.0, le=1.0, default=None)
-    cy: float | None = Field(ge=0.0, le=1.0, default=None)
-    width: float | None = Field(ge=0.0, le=1.0, default=None)
-    height: float | None = Field(ge=0.0, le=1.0, default=None)
+    cx: float = Field(ge=0.0, le=1.0, default=0.0)
+    cy: float = Field(ge=0.0, le=1.0, default=0.0)
+    width: float = Field(ge=0.0, le=1.0, default=0.0)
+    height: float = Field(ge=0.0, le=1.0, default=0.0)
 
 
 class _ClassSample(_Sample):
