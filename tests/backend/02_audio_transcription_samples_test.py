@@ -5,6 +5,7 @@ Module used to test audio transcription sample-related endpoints.
 import io
 from collections.abc import Callable
 
+import bson
 import pytest
 from fastapi.testclient import TestClient
 
@@ -156,3 +157,34 @@ def test_create_more_than_one_audio_transcription_sample_per_file(
         second_sample_response.json().get("detail")
         == f"Number of samples for file with ID {file_id} for the task Audio Transcription cannot exceed 1."
     )
+
+
+def test_create_audio_transcription_sample_with_nonexistent_file(
+    client: TestClient,
+    audio_transcription_project_payload: dict,
+    audio_transcription_sample_payload: tuple[list[tuple[str, tuple[str, io.BytesIO, str]]], list[dict]],
+    reset_file_directory: None,  # Used to reset file directory
+):
+    """
+    Test to create an audio transcription sample with a nonexistent file ID.
+    """
+    # Unpack sample payload.
+    _, audio_transcription_list = audio_transcription_sample_payload
+
+    # Create a project.
+    project_response = client.post(url="/projects/", json=audio_transcription_project_payload)
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
+    project = project_response.json()
+    project_id = project["_id"]
+
+    # Set sample payload with nonexistent file ID.
+    single_audio_transcription = audio_transcription_list[0]
+    single_audio_transcription["project_id"] = project_id
+    single_audio_transcription["file_id"] = str(bson.ObjectId())  # Generate random ObjectId for file ID
+
+    # Create sample record.
+    sample_response = client.post(url=f"/projects/{project_id}/samples/", json=single_audio_transcription)
+    assert sample_response.status_code == 404, (
+        f"Failed to not create sample with nonexistent file ID: {sample_response.text}"
+    )
+    assert sample_response.json()["detail"] == f"File with ID {single_audio_transcription['file_id']} does not exist."
