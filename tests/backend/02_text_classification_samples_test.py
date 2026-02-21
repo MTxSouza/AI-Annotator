@@ -92,6 +92,13 @@ def test_create_text_classification_sample(
         assert sample_response_json["class_name"] == sample_class
         assert sample_response_json["text"] == file_content_list[i]
 
+    # Get project details again and check number of files and samples.
+    project_response = client.get(url=f"/projects/{project_id}/")
+    assert project_response.status_code == 200, f"Failed to get project details: {project_response.text}"
+    project_details = project_response.json().get("details", {})
+    assert project_details["number_of_files"] == len(text_file_payload)
+    assert project_details["number_of_samples"] == len(sample_class_list)
+
 
 def test_create_more_than_one_text_classification_sample_per_file(
     client: TestClient,

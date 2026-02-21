@@ -116,7 +116,7 @@ def test_create_object_detection_sample(
         assert sample_data["width"] == sample["width"]
         assert sample_data["height"] == sample["height"]
 
-    # Get project again to check extra informations.
+    # Get project details again and check number of files and samples.
     project_response = client.get(url=f"/projects/{project_id}/")
     assert project_response.status_code == 200, f"Failed to get project: {project_response.text}"
     project = project_response.json()
