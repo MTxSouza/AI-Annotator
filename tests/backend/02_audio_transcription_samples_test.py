@@ -448,3 +448,66 @@ def test_delete_audio_transcription_sample_with_wrong_project_id(
             delete_response.json()["detail"]
             == f"Sample with ID {sample_id} does not belong to project with ID {second_project_id}."
         )
+
+
+def test_delete_file_with_audio_transcription_sample(
+    client: TestClient,
+    audio_transcription_project_payload: dict,
+    audio_transcription_sample_payload: tuple[list[tuple[str, tuple[str, io.BytesIO, str]]], list[dict]],
+    reset_file_directory: None,  # Used to reset file directory
+):
+    """
+    Test to delete a file with an associated audio transcription sample.
+    """
+    # Unpack sample payload.
+    list_wav_audio_file, audio_transcription_list = audio_transcription_sample_payload
+
+    # Create a project.
+    project_response = client.post(url="/projects/", json=audio_transcription_project_payload)
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
+    project = project_response.json()
+    project_id = project["_id"]
+
+    # Create file record.
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=list_wav_audio_file)
+    assert worker_response.status_code == 202, f"Failed to create file record: {worker_response.text}"
+
+    # Wait for worker task to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+    # Get file ID from response.
+    file_id_list = []
+    for file_data in file_data_list:
+        assert file_data["status"] == "Created"
+        file_id = file_data["file_id"]
+        file_id_list.append(file_id)
+    assert len(file_id_list) > 0, "File IDs not found in response"
+
+    # Set sample record.
+    for i, audio_transcription_sample in enumerate(iterable=audio_transcription_list):
+        audio_transcription_sample["project_id"] = project_id
+        audio_transcription_sample["file_id"] = file_id_list[i]
+
+        # Create sample record.
+        sample_response = client.post(url=f"/projects/{project_id}/samples/", json=audio_transcription_sample)
+        assert sample_response.status_code == 201, f"Failed to create sample record: {sample_response.text}"
+
+    # Get all samples of the current project.
+    sample_response = client.get(url=f"/projects/{project_id}/samples/")
+    assert sample_response.status_code == 200, f"Failed to get samples: {sample_response.text}"
+    sample_list = sample_response.json()
+    assert len(sample_list) == len(audio_transcription_list)
+
+    # Delete file record.
+    for i, file_id in enumerate(iterable=file_id_list):
+        delete_response = client.delete(url=f"/projects/{project_id}/files/{file_id}/")
+        assert delete_response.status_code == 204, f"Failed to delete file record: {delete_response.text}"
+
+        # Get all samples of the current project after file deletion.
+        sample_response = client.get(url=f"/projects/{project_id}/samples/")
+        assert sample_response.status_code == 200, f"Failed to get samples after file deletion: {sample_response.text}"
+        sample_list_after_deletion = sample_response.json()
+        assert len(sample_list_after_deletion) == len(audio_transcription_list) - (i + 1)
