@@ -1,0 +1,14 @@
+# Base image.
+FROM node:24.13
+# Set working directory.
+WORKDIR /home
+# Copy dependencies and install them.
+COPY ./frontend/package.json ./frontend/
+RUN npm install --prefix ./frontend
+# Copy application code.
+COPY ./frontend ./frontend
+# Expose the application port.
+EXPOSE 5173
+# Run the application.
+WORKDIR /home/frontend
+ENTRYPOINT [ "npm", "run", "start" ]
