@@ -38,7 +38,7 @@ deploy_application() {
     echo "🚀 Starting AI-Annotator application..."
     docker compose --profile app up -d
     echo ""
-    echo "✅ Application is running at http://127.0.0.1:8000"
+    echo "🖥️ Application is running at http://127.0.0.1:5173"
     exit 0
 }
 
