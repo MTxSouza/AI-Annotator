@@ -1,6 +1,7 @@
-import '../styles/BottomMenuBar.css'
+import { JSX } from 'react';
+import '../styles/BottomMenuBar.css';
 
-export function BottomMenuBar() {
+export function BottomMenuBar(): JSX.Element {
     return (
         <div className='bottom-menu-bar-component'>
             <div className='keyboard-shortcuts-image-container'>

@@ -17,7 +17,7 @@ export function switchApplicationTheme() {
     localStorage.setItem('theme', newTheme);
 }
 
-function applyCurrentApplicationTheme(theme) {
+function applyCurrentApplicationTheme(theme: string) {
     // Apply the given theme to the application.
     if (theme === 'light') {
         console.debug('Applying "light" theme to the application.');

@@ -1,8 +1,9 @@
-import { switchApplicationTheme } from '../scripts/TopMenuBar'
+import { JSX } from 'react';
+import { switchApplicationTheme } from '../scripts/TopMenuBar';
 
 import '../styles/TopMenuBar.css'
 
-export function TopMenuBar() {
+export function TopMenuBar(): JSX.Element {
     return (
         <div className='top-menu-bar-component'>
             <div className='project-logo-image-container'></div>
