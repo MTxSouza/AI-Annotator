@@ -13,7 +13,9 @@
     --tertiary-text-color: rgb(50, 50, 50);
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
