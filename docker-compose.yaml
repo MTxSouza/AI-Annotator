@@ -24,6 +24,7 @@ services:
       - redis
     profiles:
       - app
+      - test
   backend-tests:
     build:
       context: .
@@ -50,13 +51,28 @@ services:
       - redis
     profiles:
       - app
+      - test
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+      target: production
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    profiles:
+      - app
+  frontend-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: testing
+    volumes:
+      - ./frontend:/home
     ports:
       - "5173:5173"
     depends_on:
       - backend
     profiles:
-      - app
+      - test
