@@ -13,4 +13,3 @@ LICENSE
 *.yml
 *.yaml
 node_modules/
-package-lock.json
