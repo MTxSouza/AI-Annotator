@@ -134,8 +134,6 @@ elif [ "$ARG0" = "--run" ] || [ "$ARG0" = "-r" ]; then
         exit 0
     fi
 
-    # Check for necessary containers.
-
     # Deploy application.
     deploy_application
 
