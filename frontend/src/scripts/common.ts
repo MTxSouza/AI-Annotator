@@ -10,7 +10,7 @@ export enum RequestMethod {
 }
 
 // Functions.
-export async function fetchData(url: string, method: RequestMethod, params?: any, body?: any): Promise<any> {
+export async function fetchData(url: string, method: RequestMethod, params?: any, body?: any): Promise<any | void> {
 
     // Set up the full URL.
     let fullUrl: string = new URL(url, API_BASE_URL).toString();
@@ -38,8 +38,13 @@ export async function fetchData(url: string, method: RequestMethod, params?: any
     // Request data from the API.
     const response = await fetch(fullUrl, options);
     if (!response.ok) {
+        console.error('HTTP error:', response.status, 'Response:', await response.text());
         throw new Error(`HTTP error! status: ${response.status}`);
     }
     console.debug(`Fetched data from ${fullUrl} successfully.`);
+
+    if (response.status === 204) {
+        return;
+    }
     return await response.json();
 };
