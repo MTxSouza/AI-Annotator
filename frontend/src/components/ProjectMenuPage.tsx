@@ -175,7 +175,7 @@ export function ProjectMenuPage(): JSX.Element {
     useEffect(() => {
         async function getProjects() {
             try {
-                console.info('Featching projects from backend...')
+                console.info('Fetching projects from backend...')
                 const responseData = await fetchData('/projects/', RequestMethod.GET)
                 setProjects(responseData)
             } catch (error) {
