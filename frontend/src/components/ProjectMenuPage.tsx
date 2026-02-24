@@ -109,13 +109,21 @@ function CreateProjectPopup({
 
     // Request project tasks from backend.
     const [tasks, setTasks] = useState<Task[]>([])
+    const [selectedTask, setSelectedTask] = useState<string | null>(null)
     useEffect(() => {
         async function getTasks() {
             const responseData = await fetchData('/tasks/', RequestMethod.GET)
             setTasks(responseData)
+            if (responseData.length > 0) setSelectedTask(responseData[0].name)
         }
         getTasks()
     }, [])
+
+    // Set up state to manage selected project task.
+    function getTaskDescription(event: React.ChangeEvent<HTMLSelectElement>): void {
+        setSelectedTask(event.target.value)
+    }
+    const currentTaskDescription = tasks.find((task) => task.name === selectedTask)?.description || ''
 
     const component = (
         <div className="create-project-popup-component" onClick={(event) => event.stopPropagation()}>
@@ -134,13 +142,21 @@ function CreateProjectPopup({
                 </button>
             </div>
             <input id="create-project-name-input" type="text" maxLength={32} placeholder="Project Name" />
-            <select name="create-project-task" id="create-project-task-input">
-                {tasks.map((task) => (
-                    <option key={task.name} value={task.name}>
-                        {task.name}
-                    </option>
-                ))}
-            </select>
+            <div>
+                <select
+                    name="create-project-task"
+                    id="create-project-task-input"
+                    value={selectedTask || ''}
+                    onChange={getTaskDescription}
+                >
+                    {tasks.map((task) => (
+                        <option key={task.name} value={task.name}>
+                            {task.name}
+                        </option>
+                    ))}
+                </select>
+                <p id="create-project-task-description">{currentTaskDescription}</p>
+            </div>
             <button
                 id="create-project-confirm-button"
                 onClick={async () => {
