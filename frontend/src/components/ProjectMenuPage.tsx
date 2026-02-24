@@ -50,9 +50,11 @@ function LoadProjectMenuComponent(): JSX.Element {
 
 function ProjectMenuComponent({
     projects,
+    onProjectInsert,
     onProjectDelete,
 }: {
     projects: Project[]
+    onProjectInsert: (newProject: Project) => void
     onProjectDelete: (deletedProjectId: string) => void
 }): JSX.Element {
     console.info(`Number of projects fetched: ${projects.length}`)
@@ -73,7 +75,14 @@ function ProjectMenuComponent({
                 />
             ))}
 
-            {createProjectPopup && <CreateProjectPopup closePopup={() => setCreateProjectPopup(false)} />}
+            {createProjectPopup && (
+                <CreateProjectPopup
+                    closePopup={() => setCreateProjectPopup(false)}
+                    refreshProjects={(newProject) => {
+                        onProjectInsert(newProject)
+                    }}
+                />
+            )}
 
             {projectToDelete && (
                 <ConfirmProjectDeletionPopup
@@ -89,7 +98,13 @@ function ProjectMenuComponent({
     )
 }
 
-function CreateProjectPopup({ closePopup }: { closePopup: () => void }): JSX.Element {
+function CreateProjectPopup({
+    closePopup,
+    refreshProjects,
+}: {
+    closePopup: () => void
+    refreshProjects: (project: Project) => void
+}): JSX.Element {
     console.info('Opening create project popup...')
 
     // Request project tasks from backend.
@@ -126,7 +141,14 @@ function CreateProjectPopup({ closePopup }: { closePopup: () => void }): JSX.Ele
                     </option>
                 ))}
             </select>
-            <button id="create-project-confirm-button" onClick={triggerProjectCreation}>
+            <button
+                id="create-project-confirm-button"
+                onClick={async () => {
+                    const project = await triggerProjectCreation()
+                    if (project) refreshProjects(project)
+                    closePopup()
+                }}
+            >
                 Create
             </button>
         </div>
@@ -173,7 +195,11 @@ export function ProjectMenuPage(): JSX.Element {
     const [isLoading, setIsLoading] = useState(true)
 
     // Handle deleted project by refreshing the project list.
-    const refreshProjects = (deletedProjectId: string) => {
+    const insertProject = (newProject: Project) => {
+        console.info(`Refreshing projects after creation of project with ID: ${newProject._id}`)
+        setProjects((prevProjects) => [...prevProjects, newProject])
+    }
+    const deleteProject = (deletedProjectId: string) => {
         console.info(`Refreshing projects after deletion of project with ID: ${deletedProjectId}`)
         setProjects((prevProjects) => prevProjects.filter((project) => project._id !== deletedProjectId))
     }
@@ -198,5 +224,5 @@ export function ProjectMenuPage(): JSX.Element {
         return <LoadProjectMenuComponent />
     }
 
-    return <ProjectMenuComponent projects={projects} onProjectDelete={refreshProjects} />
+    return <ProjectMenuComponent projects={projects} onProjectInsert={insertProject} onProjectDelete={deleteProject} />
 }
