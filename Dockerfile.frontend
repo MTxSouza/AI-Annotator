@@ -1,0 +1,31 @@
+# -- BASE STAGE --
+FROM node:24.13 AS base
+# Set working directory.
+WORKDIR /home
+# Copy dependencies and install them.
+COPY ./frontend/package*.json ./
+RUN npm install --legacy-peer-deps
+# Copy application code.
+COPY ./frontend ./
+# Compile the application.
+RUN npm run build
+
+# -- STAGE FOR TESTING --
+FROM base AS testing
+# Clear npm cache to reduce image size.
+RUN npm cache clean --force
+# Expose the application port.
+EXPOSE 5173
+# Run the application.
+ENTRYPOINT [ "npm", "run", "dev" ]
+
+# -- STAGE FOR PRODUCTION --
+FROM nginx:alpine AS production
+# Clear default nginx static files.
+RUN rm -rf /usr/share/nginx/html/*
+# Copy compiled application from base stage.
+COPY --from=base /home/dist /usr/share/nginx/html
+# Expose the application port.
+EXPOSE 80
+# Run the application.
+ENTRYPOINT [ "nginx", "-g", "daemon off;" ]

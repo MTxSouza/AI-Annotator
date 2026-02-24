@@ -55,7 +55,7 @@ class BackendSettingsModel(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
 
-    front_host: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    front_host: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
     database_uri: str = "mongodb://database"
     database_port: int = 27017

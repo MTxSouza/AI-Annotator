@@ -1,0 +1,175 @@
+.main-page-component {
+    display: flex;
+    flex-direction: row;
+    padding: 50px 80px 50px 80px;
+    gap: 20px;
+}
+
+.load-create-project-card-component,
+.create-project-card-component,
+.project-card-component {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed var(--tertiary-text-color);
+    border-radius: 16px;
+    background-color: var(--primary-background-color);
+    padding: 20px;
+    user-select: none;
+    min-height: 140px;
+    max-height: 140px;
+    min-width: 300px;
+    max-width: 300px;
+    * {
+        color: var(--tertiary-text-color);
+    }
+    span {
+        font-size: 1.6em;
+    }
+}
+
+.load-create-project-card-component {
+    position: relative;
+}
+.load-create-project-card-component::before {
+    content: '...';
+    position: absolute;
+    font-size: 1.6em;
+    color: var(--tertiary-text-color);
+}
+
+.create-project-card-component {
+    position: relative;
+}
+.create-project-card-component:hover {
+    cursor: pointer;
+    border: 2px dashed var(--secondary-text-color);
+}
+.create-project-card-component::before {
+    content: 'New Project';
+    position: absolute;
+    font-size: 1.6em;
+    color: var(--tertiary-text-color);
+}
+.create-project-card-component:hover::before {
+    color: var(--secondary-text-color);
+}
+
+.project-card-component {
+    flex-direction: column;
+    border: 2px solid var(--secondary-text-color);
+    padding: 10px;
+    * {
+        width: 100%;
+    }
+    div {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: flex-end;
+        height: 80%;
+    }
+    button {
+        display: flex;
+        height: fit-content;
+        width: fit-content;
+    }
+    button svg {
+        fill: var(--tertiary-text-color);
+    }
+    button:hover svg {
+        fill: var(--primary-text-color);
+    }
+    h3 {
+        position: relative;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        line-clamp: 3;
+        overflow: hidden;
+        max-height: 50px;
+        color: var(--primary-text-color);
+    }
+}
+
+.create-project-popup-component {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    border: 2px solid var(--secondary-text-color);
+    border-radius: 20px;
+    background-color: var(--primary-background-color);
+    padding: 10px 30px 20px 30px;
+    min-width: 500px;
+    gap: 8px;
+    box-shadow: 0px 0px 20px 1px var(--primary-shadow-color);
+    div:first-child {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 50px;
+    }
+    button {
+        margin-left: auto;
+    }
+    button svg {
+        fill: var(--secondary-text-color);
+    }
+    button:hover svg {
+        fill: var(--primary-text-color);
+    }
+    h1 {
+        align-items: flex-start;
+        user-select: none;
+    }
+    input[type='text'],
+    select {
+        width: 100%;
+        border: 1px solid var(--secondary-text-color);
+        border-radius: 12px;
+        padding: 5px 10px 5px 10px;
+        font-size: 16px;
+    }
+}
+
+#create-project-confirm-button {
+    border: 1px solid var(--tertiary-text-color);
+    border-radius: 20px;
+    padding: 10px;
+    margin-top: 30px;
+}
+#create-project-confirm-button:hover {
+    border: 1px solid var(--secondary-text-color);
+}
+
+.confirm-project-deletion-popup-component {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 2px solid var(--secondary-text-color);
+    border-radius: 20px;
+    background-color: var(--primary-background-color);
+    padding: 20px 30px 30px 20px;
+    min-width: 500px;
+    gap: 12px;
+    box-shadow: 0px 0px 20px 1px var(--primary-shadow-color);
+    h4 {
+        align-items: flex-start;
+        user-select: none;
+        color: var(--primary-text-color);
+    }
+    div {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+    }
+}

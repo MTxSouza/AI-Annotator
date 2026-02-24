@@ -12,3 +12,4 @@ LICENSE
 *.sh
 *.yml
 *.yaml
+node_modules/

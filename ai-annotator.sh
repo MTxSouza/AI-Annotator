@@ -38,13 +38,21 @@ deploy_application() {
     echo "🚀 Starting AI-Annotator application..."
     docker compose --profile app up -d
     echo ""
-    echo "✅ Application is running at http://127.0.0.1:8000"
+    echo "🖥️ Application is running at http://127.0.0.1:80"
+    exit 0
+}
+
+development_deploy_application() {
+    echo "🚀 Starting AI-Annotator application (in development mode)..."
+    echo ""
+    docker compose --profile test up
     exit 0
 }
 
 stop_application() {
     echo "🛑 Stopping AI-Annotator application..."
     docker compose --profile app down
+    docker compose --profile test down
     echo ""
     echo "✅ Application stopped."
     exit 0
@@ -53,6 +61,7 @@ stop_application() {
 clean_application() {
     echo "🧹 Cleaning up AI-Annotator application..."
     docker compose --profile app down --rmi all -v --remove-orphans 2>/dev/null || true
+    docker compose --profile test down --rmi all -v --remove-orphans 2>/dev/null || true
     echo ""
     echo "✅ Cleanup complete."
     exit 0
@@ -77,6 +86,7 @@ if [ "$ARG0" = "--help" ] || [ "$ARG0" = "-h" ]; then
     echo "  --help, -h    Show this help message and exit."
     echo "  --install, -i  Runs the docker compose command to install the AI-Annotator application locally."
     echo "  --run, -r   Runs the docker compose command to start the AI-Annotator application."
+    echo "  --dev-run, -dr   Runs the docker compose command to start the AI-Annotator application in development mode."
     echo "  --stop, -s   Runs the docker compose command to stop the AI-Annotator application."
     echo "  --clean, -c   Runs the docker compose command to stop and remove all containers, networks, images, and volumes."
     echo ""
@@ -134,10 +144,28 @@ elif [ "$ARG0" = "--run" ] || [ "$ARG0" = "-r" ]; then
         exit 0
     fi
 
-    # Check for necessary containers.
-
     # Deploy application.
     deploy_application
+
+elif [ "$ARG0" = "--dev-run" ] || [ "$ARG0" = "-dr" ]; then
+
+    # Check --help option.
+    if [ "$ARG1" = "--help" ] || [ "$ARG1" = "-h" ]; then
+        echo "Usage: ai-annotator.sh --dev-run [--help|-h]"
+        echo ""
+        echo "This command starts the AI-Annotator application in development mode using Docker Compose."
+        echo ""
+        echo "Options:"
+        echo "  --help, -h    Show this help message and exit."
+        echo ""
+        echo "This command starts the AI-Annotator application containers with development settings. You"
+        echo "must have already installed the application using the --install option. This mode is intended"
+        echo "for development purposes only and may include additional tools or configurations for debugging."
+        exit 0
+    fi
+
+    # Deploy application in development mode.
+    development_deploy_application
 
 elif [ "$ARG0" = "--stop" ] || [ "$ARG0" = "-s" ]; then
 
