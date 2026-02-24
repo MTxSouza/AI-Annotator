@@ -93,7 +93,7 @@ def get_task_detail_builder_function(task: str) -> Callable | None:
 
 def get_tasks() -> list[Task]:
     """
-    Get a list of all available tasks.
+    Get a list of all available and already implemented tasks to be used in the application.
 
     Returns:
             list[Task]: A list of all available tasks.
@@ -112,11 +112,8 @@ def get_tasks() -> list[Task]:
         # Get task description.
         description = get_task_description(task=task_name)
 
-        # Get task details.
-        task_details = get_task_detail_builder_function(task=task_name)
-
         # Check content.
-        if not (task_file and description and task_details):
+        if not (task_file and description and get_task_detail_builder_function(task=task_name)):
             continue
 
         # Get available file formats for the task.
@@ -126,7 +123,6 @@ def get_tasks() -> list[Task]:
             "audio": FileFormat.get_audio_formats(),
         }
         file_format_list = file_format_map.get(task_file, [])
-        del task_file
 
         # Create Task model and add to list.
         task_model = Task(name=task, description=description, file_format_list=file_format_list)
