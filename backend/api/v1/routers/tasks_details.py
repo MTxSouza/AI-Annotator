@@ -20,4 +20,4 @@ async def get_tasks_endpoint() -> list[Task]:
     Returns:
             list[Task]: List of all tasks.
     """
-    return await get_tasks()  # type: ignore
+    return get_tasks()  # type: ignore
