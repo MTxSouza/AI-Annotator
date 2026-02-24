@@ -2,13 +2,25 @@
 Module with all models related to all task details.
 """
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from backend.database.enums import FileFormat
+from backend.database.enums import Task as TaskType
 from backend.database.models import CommonModel
 
 
 # Schemas.
+class Task(BaseModel):
+    """
+    Main task model.
+    """
+
+    # Fields.
+    name: TaskType = Field(..., description="The name of the task.")
+    description: str | None = Field(default=None, description="The description of the task.")
+    file_format_list: list[FileFormat] = Field(..., description="The file formats supported for the task.")
+
+
 class _TaskDetail(CommonModel):
     """
     Main task configuration model.
