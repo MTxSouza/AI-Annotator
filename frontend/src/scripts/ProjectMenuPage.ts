@@ -1,27 +1,19 @@
 import { fetchData, RequestMethod } from '../scripts/common'
 
 // Structures.
-export enum ProjectTask {
-    // Image.
-    OBJECT_DETECTION = 'Object Detection',
-    IMAGE_CLASSIFICATION = 'Image Classification',
-    IMAGE_CAPTION = 'Image Caption',
-    OBJECT_CAPTION = 'Object Caption',
-    // Text.
-    TEXT_CLASSIFICATION = 'Text Classification',
-    TEXT_TAGGING = 'Text Tagging',
-    // Audio.
-    AUDIO_CLASSIFICATION = 'Audio Classification',
-    AUDIO_TRANSCRIPTION = 'Audio Transcription',
-}
-
 export interface Project {
     _id: string
     name: string
     description: string | null
-    task: ProjectTask
+    task: string
     created_at: string
     updated_at: string
+}
+
+export interface Task {
+    name: string
+    description: string | null
+    file_format_list: string[]
 }
 
 // Functions.
@@ -36,14 +28,14 @@ export async function triggerProjectCreation(): Promise<Project> {
     }
 
     const projectName = (createProjectNameInput as HTMLInputElement).value
-    const projectTask = (createProjectTaskInput as HTMLSelectElement).value as ProjectTask
+    const projectTask = (createProjectTaskInput as HTMLSelectElement).value
     console.debug(`Collected input values - Name: ${projectName}, Task: ${projectTask}`)
 
     // Create project.
     return await createProjectRequest(projectName, projectTask)
 }
 
-async function createProjectRequest(name: string, task: ProjectTask): Promise<Project> {
+async function createProjectRequest(name: string, task: string): Promise<Project> {
     // Check input validity.
     console.debug(`Creating project with name: ${name}, task: ${task}`)
     if (!name || !task) {
