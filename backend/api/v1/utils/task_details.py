@@ -2,6 +2,8 @@
 Module with all utilities related to task configuration operations.
 """
 
+from fastapi import status
+from fastapi.exceptions import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.task_details import (
@@ -83,7 +85,9 @@ async def setup_task_detail(task: Task, project_id: str | PyObjectId, db: AsyncD
     task_detail_instance_dict = await setup_task_detail_model_schema(task=task_str, project_id=project_id, db=db)
 
     if not task_detail_instance_dict:
-        raise ValueError(f"Unsupported task type: {task_str}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Task detail setup is not implemented for task: {task_str}"
+        )
 
     return task_detail_instance_dict
 
