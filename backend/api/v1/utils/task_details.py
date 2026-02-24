@@ -39,6 +39,31 @@ def get_task_file(task: str) -> str | None:
     return task_file_map.get(task)
 
 
+def get_task_description(task: str) -> str | None:
+    """
+    Get the description for a given task.
+
+    Args:
+            task (str): The task to get the description for.
+
+    Returns:
+            str | None: The description for the task, or None if not found.
+    """
+    task_description_map = {
+        Task.OBJECT_DETECTION.value: "Draw a bounding box around the object on an image and label it with the "
+        "appropriate category or class name.",
+        Task.IMAGE_CLASSIFICATION.value: "Label the image with the appropriate category or class name.",
+        Task.IMAGE_CAPTION.value: "Create a descriptive caption for the image.",
+        Task.OBJECT_CAPTION.value: "Draw a bounding box around the object on an image and create a descriptive caption "
+        "for it.",
+        Task.TEXT_CLASSIFICATION.value: "Label the text with the appropriate category or class name.",
+        Task.TEXT_TAGGING.value: "Tag sentences or words in the text with the appropriate category or class name.",
+        Task.AUDIO_CLASSIFICATION.value: "Label the audio clip with the appropriate category or class name.",
+        Task.AUDIO_TRANSCRIPTION.value: "Transcribe the audio clip into text.",
+    }
+    return task_description_map.get(task)
+
+
 def get_valid_number_of_samples_per_file(task: str) -> int | None:
     """
     Get the valid number of samples per file for a given task. If it returns -1, there is no limit to
