@@ -1,8 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { TopMenuBar } from './components/TopMenuBar'
-import { ApplicationContainer } from './components/ApplicationContainer'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { BottomMenuBar } from './components/BottomMenuBar'
+import { ProjectMenuPage } from './components/ProjectMenuPage'
 
 import './main.css'
 
@@ -15,8 +16,12 @@ if (!rootElement) {
 }
 createRoot(rootElement).render(
     <StrictMode>
-        <TopMenuBar />
-        <ApplicationContainer />
-        <BottomMenuBar />
+        <BrowserRouter>
+            <TopMenuBar />
+            <Routes>
+                <Route path="/" element={<ProjectMenuPage />} />
+            </Routes>
+            <BottomMenuBar />
+        </BrowserRouter>
     </StrictMode>,
 )
