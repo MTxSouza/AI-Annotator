@@ -2,6 +2,8 @@
 Module with all utilities related to task configuration operations.
 """
 
+from collections.abc import Callable
+
 from fastapi import status
 from fastapi.exceptions import HTTPException
 from pymongo.asynchronous.database import AsyncDatabase
@@ -9,10 +11,12 @@ from pymongo.asynchronous.database import AsyncDatabase
 from backend.api.v1.models.task_details import (
     AudioTranscriptionTaskDetail,
     ObjectDetectionTaskDetail,
+    Task,
     TextClassificationTaskDetail,
 )
 from backend.database.configs import Collections
-from backend.database.enums import PyObjectId, Task
+from backend.database.enums import FileFormat, PyObjectId
+from backend.database.enums import Task as TaskType
 
 
 # Functions.
@@ -27,14 +31,14 @@ def get_task_file(task: str) -> str | None:
             str | None: The associated file type for the task, or None if not found.
     """
     task_file_map = {
-        Task.OBJECT_DETECTION.value: "image",
-        Task.IMAGE_CLASSIFICATION.value: "image",
-        Task.IMAGE_CAPTION.value: "image",
-        Task.OBJECT_CAPTION.value: "image",
-        Task.TEXT_CLASSIFICATION.value: "text",
-        Task.TEXT_TAGGING.value: "text",
-        Task.AUDIO_CLASSIFICATION.value: "audio",
-        Task.AUDIO_TRANSCRIPTION.value: "audio",
+        TaskType.OBJECT_DETECTION.value: "image",
+        TaskType.IMAGE_CLASSIFICATION.value: "image",
+        TaskType.IMAGE_CAPTION.value: "image",
+        TaskType.OBJECT_CAPTION.value: "image",
+        TaskType.TEXT_CLASSIFICATION.value: "text",
+        TaskType.TEXT_TAGGING.value: "text",
+        TaskType.AUDIO_CLASSIFICATION.value: "audio",
+        TaskType.AUDIO_TRANSCRIPTION.value: "audio",
     }
     return task_file_map.get(task)
 
@@ -50,18 +54,85 @@ def get_task_description(task: str) -> str | None:
             str | None: The description for the task, or None if not found.
     """
     task_description_map = {
-        Task.OBJECT_DETECTION.value: "Draw a bounding box around the object on an image and label it with the "
+        TaskType.OBJECT_DETECTION.value: "Draw a bounding box around the object on an image and label it with the "
         "appropriate category or class name.",
-        Task.IMAGE_CLASSIFICATION.value: "Label the image with the appropriate category or class name.",
-        Task.IMAGE_CAPTION.value: "Create a descriptive caption for the image.",
-        Task.OBJECT_CAPTION.value: "Draw a bounding box around the object on an image and create a descriptive caption "
-        "for it.",
-        Task.TEXT_CLASSIFICATION.value: "Label the text with the appropriate category or class name.",
-        Task.TEXT_TAGGING.value: "Tag sentences or words in the text with the appropriate category or class name.",
-        Task.AUDIO_CLASSIFICATION.value: "Label the audio clip with the appropriate category or class name.",
-        Task.AUDIO_TRANSCRIPTION.value: "Transcribe the audio clip into text.",
+        TaskType.IMAGE_CLASSIFICATION.value: "Label the image with the appropriate category or class name.",
+        TaskType.IMAGE_CAPTION.value: "Create a descriptive caption for the image.",
+        TaskType.OBJECT_CAPTION.value: "Draw a bounding box around the object on an image and create a descriptive "
+        "caption for it.",
+        TaskType.TEXT_CLASSIFICATION.value: "Label the text with the appropriate category or class name.",
+        TaskType.TEXT_TAGGING.value: "Tag sentences or words in the text with the appropriate category or class name.",
+        TaskType.AUDIO_CLASSIFICATION.value: "Label the audio clip with the appropriate category or class name.",
+        TaskType.AUDIO_TRANSCRIPTION.value: "Transcribe the audio clip into text.",
     }
     return task_description_map.get(task)
+
+
+def get_task_detail_builder_function(task: str) -> Callable | None:
+    """
+    Get the associated task detail builder function for a given task.
+
+    Args:
+            task (str): The task to get the detail builder function for.
+
+    Returns:
+            Callable | None: The associated task detail builder function for the task, or None if not found.
+    """
+    task_detail_builder_function_map = {
+        TaskType.OBJECT_DETECTION.value: _setup_object_detection_task_detail_model_schema,
+        TaskType.IMAGE_CLASSIFICATION.value: None,
+        TaskType.IMAGE_CAPTION.value: None,
+        TaskType.OBJECT_CAPTION.value: None,
+        TaskType.TEXT_CLASSIFICATION.value: _setup_text_classification_task_detail_model_schema,
+        TaskType.TEXT_TAGGING.value: None,
+        TaskType.AUDIO_CLASSIFICATION.value: None,
+        TaskType.AUDIO_TRANSCRIPTION.value: _setup_audio_transcription_task_detail_model_schema,
+    }
+    return task_detail_builder_function_map.get(task)
+
+
+def get_tasks() -> list[Task]:
+    """
+    Get a list of all available tasks.
+
+    Returns:
+            list[Task]: A list of all available tasks.
+    """
+    # Get all tasks from the TaskType enum.
+    task_list = [task for task in TaskType]
+
+    # Build list of Task models.
+    available_task_list = []
+    for task in task_list:
+        task_name = task.value
+
+        # Get task file.
+        task_file = get_task_file(task=task_name)
+
+        # Get task description.
+        description = get_task_description(task=task_name)
+
+        # Get task details.
+        task_details = get_task_detail_builder_function(task=task_name)
+
+        # Check content.
+        if not (task_file and description and task_details):
+            continue
+
+        # Get available file formats for the task.
+        file_format_map = {
+            "image": FileFormat.get_image_formats(),
+            "text": FileFormat.get_text_formats(),
+            "audio": FileFormat.get_audio_formats(),
+        }
+        file_format_list = file_format_map.get(task_file, [])
+        del task_file
+
+        # Create Task model and add to list.
+        task_model = Task(name=task, description=description, file_format_list=file_format_list)
+        available_task_list.append(task_model)
+
+    return available_task_list
 
 
 def get_valid_number_of_samples_per_file(task: str) -> int | None:
@@ -76,24 +147,24 @@ def get_valid_number_of_samples_per_file(task: str) -> int | None:
             int | None: The valid number of samples per file for the task, or None if not found.
     """
     task_samples_per_file_map = {
-        Task.OBJECT_DETECTION.value: -1,
-        Task.IMAGE_CLASSIFICATION.value: 1,
-        Task.IMAGE_CAPTION.value: -1,
-        Task.OBJECT_CAPTION.value: -1,
-        Task.TEXT_CLASSIFICATION.value: 1,
-        Task.TEXT_TAGGING.value: -1,
-        Task.AUDIO_CLASSIFICATION.value: 1,
-        Task.AUDIO_TRANSCRIPTION.value: 1,
+        TaskType.OBJECT_DETECTION.value: -1,
+        TaskType.IMAGE_CLASSIFICATION.value: 1,
+        TaskType.IMAGE_CAPTION.value: -1,
+        TaskType.OBJECT_CAPTION.value: -1,
+        TaskType.TEXT_CLASSIFICATION.value: 1,
+        TaskType.TEXT_TAGGING.value: -1,
+        TaskType.AUDIO_CLASSIFICATION.value: 1,
+        TaskType.AUDIO_TRANSCRIPTION.value: 1,
     }
     return task_samples_per_file_map.get(task)
 
 
-async def setup_task_detail(task: Task, project_id: str | PyObjectId, db: AsyncDatabase) -> dict:
+async def setup_task_detail(task: TaskType, project_id: str | PyObjectId, db: AsyncDatabase) -> dict:
     """
     Utility function to setup the task configuration based on the task type.
 
     Args:
-            task (Task): The task type.
+            task (TaskType): The task type.
             project_id (str | PyObjectId): The ID of the project to setup the task detail for.
             db (AsyncDatabase): The database instance.
 
@@ -101,7 +172,7 @@ async def setup_task_detail(task: Task, project_id: str | PyObjectId, db: AsyncD
             dict: The task configuration template.
     """
     # Fix task enum if needed.
-    if isinstance(task, Task):
+    if isinstance(task, TaskType):
         task_str = task.value
     else:
         task_str = task
@@ -130,20 +201,7 @@ async def setup_task_detail_model_schema(task: str, project_id: str | PyObjectId
             dict | None: The associated task detail model schema for the task, or None if not found.
     """
     # Get the task detail setup function.
-    task_detail_model_map = {
-        # Image Tasks.
-        Task.OBJECT_DETECTION.value: _setup_object_detection_task_detail_model_schema,
-        Task.IMAGE_CLASSIFICATION.value: None,
-        Task.IMAGE_CAPTION.value: None,
-        Task.OBJECT_CAPTION.value: None,
-        # Text Tasks.
-        Task.TEXT_CLASSIFICATION.value: _setup_text_classification_task_detail_model_schema,
-        Task.TEXT_TAGGING.value: None,
-        # Audio Tasks.
-        Task.AUDIO_CLASSIFICATION.value: None,
-        Task.AUDIO_TRANSCRIPTION.value: _setup_audio_transcription_task_detail_model_schema,
-    }
-    task_detail_setup_function = task_detail_model_map.get(task)
+    task_detail_setup_function = get_task_detail_builder_function(task=task)
     if not task_detail_setup_function:
         return None
 
