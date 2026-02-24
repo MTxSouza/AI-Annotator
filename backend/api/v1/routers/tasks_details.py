@@ -13,11 +13,11 @@ router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
 # Endpoints.
 @router.get(path="/", name="Get Tasks", response_model=list[Task], status_code=status.HTTP_200_OK)
-async def get_tasks_endpoint() -> list[Task]:
+def get_tasks_endpoint() -> list[Task]:
     """
     Endpoint to get all tasks.
 
     Returns:
             list[Task]: List of all tasks.
     """
-    return get_tasks()  # type: ignore
+    return get_tasks()
