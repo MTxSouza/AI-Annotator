@@ -1,6 +1,6 @@
 import { useState, useEffect, JSX } from 'react'
 import { fetchData, RequestMethod } from '../scripts/common'
-import { Project, triggerProjectCreation, ProjectTask, deleteProjectRequest } from '../scripts/ProjectMenuPage'
+import { Project, triggerProjectCreation, Task, deleteProjectRequest } from '../scripts/ProjectMenuPage'
 import { PopupOverlay } from '../components/PopupOverlay'
 
 import '../styles/ProjectMenuPage.css'
@@ -92,8 +92,15 @@ function ProjectMenuComponent({
 function CreateProjectPopup({ closePopup }: { closePopup: () => void }): JSX.Element {
     console.info('Opening create project popup...')
 
-    // Set up options to be displayed.
-    const projectTasks = Object.values(ProjectTask)
+    // Request project tasks from backend.
+    const [tasks, setTasks] = useState<Task[]>([])
+    useEffect(() => {
+        async function getTasks() {
+            const responseData = await fetchData('/tasks/', RequestMethod.GET)
+            setTasks(responseData)
+        }
+        getTasks()
+    }, [])
 
     const component = (
         <div className="create-project-popup-component" onClick={(event) => event.stopPropagation()}>
@@ -113,9 +120,9 @@ function CreateProjectPopup({ closePopup }: { closePopup: () => void }): JSX.Ele
             </div>
             <input id="create-project-name-input" type="text" maxLength={32} placeholder="Project Name" />
             <select name="create-project-task" id="create-project-task-input">
-                {projectTasks.map((task) => (
-                    <option key={task} value={task}>
-                        {task}
+                {tasks.map((task) => (
+                    <option key={task.name} value={task.name}>
+                        {task.name}
                     </option>
                 ))}
             </select>
