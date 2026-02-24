@@ -17,7 +17,7 @@ repos:
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
-        types_or: [jsx, tsx, tsx, css, json, html]
+        types_or: [jsx, tsx, ts, css, json, html]
   # Check project typing.
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.19.1
