@@ -121,7 +121,7 @@ function CreateProjectPopup({
     }, [])
 
     // Set up state to manage selected project task.
-    function getTaskDescription(event: React.ChangeEvent<HTMLSelectElement>): void {
+    function handleTaskChange(event: React.ChangeEvent<HTMLSelectElement>): void {
         setSelectedTask(event.target.value)
     }
     const currentTaskDescription = tasks.find((task) => task.name === selectedTask)?.description || ''
@@ -154,7 +154,7 @@ function CreateProjectPopup({
                     name="create-project-task"
                     id="create-project-task-input"
                     value={selectedTask || ''}
-                    onChange={getTaskDescription}
+                    onChange={handleTaskChange}
                 >
                     {tasks.map((task) => (
                         <option key={task.name} value={task.name}>
