@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, JSX, ReactNode } from 'react'
+import { createContext, useContext, useState, JSX, ReactNode, useRef } from 'react'
 import { ErrorDialogMessage } from '../scripts/ErrorDialog'
 
 import '../styles/ErrorDialog.css'
@@ -13,16 +13,18 @@ const ErrorDialogContext = createContext<ErrorDialogContextType | undefined>(und
 export function ErrorDialogProvider({ children }: { children: ReactNode }): JSX.Element {
     // State to store all error dialogs.
     const [errorDialogs, setErrorDialogs] = useState<ErrorDialogMessage[]>([])
+    const errorDialogsMap = useRef<Record<number, number>>({})
 
     // Function to show an error dialog.
     const showErrorDialog = (message: string, status_code: number) => {
         // Set up error dialog.
-        const id = Date.now()
+        const id = Date.now() + Math.random() // Unique ID for the dialog.
         setErrorDialogs((prevDialogs) => [...prevDialogs, { id, message: message, status_code: status_code }])
 
         // Add time to remove the dialog.
-        setTimeout(() => {
+        errorDialogsMap.current[id] = setTimeout(() => {
             setErrorDialogs((prevDialogs) => prevDialogs.filter((dialog) => dialog.id !== id))
+            delete errorDialogsMap.current[id]
         }, 5000) // Remove after 5 seconds.
     }
 
