@@ -15,7 +15,7 @@ export function ErrorDialogProvider({ children }: { children: ReactNode }): JSX.
     const [errorDialogs, setErrorDialogs] = useState<ErrorDialogMessage[]>([])
 
     // Function to show an error dialog.
-    const showErrorDialog = (message: string, status_code: number) => {
+    const showErrorDialog = (message: string, status_code: number = 500) => {
         // Set up error dialog.
         const id = Date.now()
         setErrorDialogs((prevDialogs) => [...prevDialogs, { id, message: message, status_code: status_code }])
@@ -32,7 +32,9 @@ export function ErrorDialogProvider({ children }: { children: ReactNode }): JSX.
             <div className="error-dialog-popup-container">
                 {errorDialogs.map((dialog) => (
                     <div key={dialog.id} className="error-dialog-popup-component">
-                        <p>{dialog.message}</p>
+                        <p className="error-dialog-message">
+                            {dialog.message}: {dialog.status_code}
+                        </p>
                     </div>
                 ))}
             </div>
