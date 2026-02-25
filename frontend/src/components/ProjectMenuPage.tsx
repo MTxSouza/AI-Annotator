@@ -1,5 +1,5 @@
 import { useState, useEffect, JSX } from 'react'
-import { fetchData, RequestMethod } from '../scripts/common'
+import { APIErrorResponse, fetchData, RequestMethod } from '../scripts/common'
 import { Project, createProjectRequest, Task, deleteProjectRequest } from '../scripts/ProjectMenuPage'
 import { PopupOverlay } from '../components/PopupOverlay'
 import { useErrorDialog } from '../components/ErrorDialog'
@@ -170,9 +170,14 @@ function CreateProjectPopup({
                         const project = await createProjectRequest(projectName, selectedTask)
                         if (project) refreshProjects(project)
                         closePopup()
-                    } catch (error: any) {
-                        console.error('Error creating project:', error)
-                        showErrorDialog(error.message, error.status_code)
+                    } catch (error) {
+                        if (error instanceof APIErrorResponse) {
+                            console.error('Error creating project:', error)
+                            showErrorDialog(error.message, error.status_code)
+                        } else {
+                            console.error('Unexpected error creating project:', error)
+                            showErrorDialog('An unexpected error occurred while creating the project.', 500)
+                        }
                     }
                 }}
             >
@@ -202,9 +207,14 @@ function ConfirmProjectDeletionPopup({
         try {
             await deleteProjectRequest(projectId)
             refreshProjects()
-        } catch (error: any) {
-            console.error('Error deleting project:', error)
-            showErrorDialog(error.message, error.status_code)
+        } catch (error) {
+            if (error instanceof APIErrorResponse) {
+                console.error('Error deleting project:', error)
+                showErrorDialog(error.message, error.status_code)
+            } else {
+                console.error('Unexpected error deleting project:', error)
+                showErrorDialog('An unexpected error occurred while deleting the project.', 500)
+            }
         }
     }
 
@@ -245,9 +255,14 @@ export function ProjectMenuPage(): JSX.Element {
                 console.info('Fetching projects from backend...')
                 const responseData = await fetchData('/projects/', RequestMethod.GET)
                 setProjects(responseData)
-            } catch (error: any) {
-                console.error('Error fetching projects:', error)
-                showErrorDialog(error.message, error.status_code)
+            } catch (error) {
+                if (error instanceof APIErrorResponse) {
+                    console.error('Error fetching projects:', error)
+                    showErrorDialog(error.message, error.status_code)
+                } else {
+                    console.error('Unexpected error fetching projects:', error)
+                    showErrorDialog('An unexpected error occurred while fetching projects.', 500)
+                }
             }
             setIsLoading(false)
         }
