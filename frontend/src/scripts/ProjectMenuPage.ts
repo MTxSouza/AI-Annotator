@@ -1,19 +1,19 @@
 import { fetchData, RequestMethod } from '../scripts/common'
 
 // Structures.
-export interface Project {
-    _id: string
-    name: string
-    description: string | null
-    task: string
-    created_at: string
-    updated_at: string
-}
-
 export interface Task {
     name: string
     description: string | null
     file_format_list: string[]
+}
+
+export interface Project {
+    _id: string
+    name: string
+    description: string | null
+    task: Task['name']
+    created_at: string
+    updated_at: string
 }
 
 // Functions.
