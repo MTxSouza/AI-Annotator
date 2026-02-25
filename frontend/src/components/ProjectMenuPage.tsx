@@ -1,6 +1,6 @@
 import { useState, useEffect, JSX } from 'react'
 import { fetchData, RequestMethod } from '../scripts/common'
-import { Project, triggerProjectCreation, Task, deleteProjectRequest } from '../scripts/ProjectMenuPage'
+import { Project, createProjectRequest, Task, deleteProjectRequest } from '../scripts/ProjectMenuPage'
 import { PopupOverlay } from '../components/PopupOverlay'
 
 import '../styles/ProjectMenuPage.css'
@@ -109,7 +109,8 @@ function CreateProjectPopup({
 
     // Request project tasks from backend.
     const [tasks, setTasks] = useState<Task[]>([])
-    const [selectedTask, setSelectedTask] = useState<string | null>(null)
+    const [projectName, setProjectName] = useState<string>('')
+    const [selectedTask, setSelectedTask] = useState<string>('')
     useEffect(() => {
         async function getTasks() {
             const responseData = await fetchData('/tasks/', RequestMethod.GET)
@@ -141,7 +142,13 @@ function CreateProjectPopup({
                     </svg>
                 </button>
             </div>
-            <input id="create-project-name-input" type="text" maxLength={32} placeholder="Project Name" />
+            <input
+                id="create-project-name-input"
+                type="text"
+                maxLength={32}
+                placeholder="Project Name"
+                onChange={(event) => setProjectName(event.target.value)}
+            />
             <div>
                 <select
                     name="create-project-task"
@@ -160,7 +167,7 @@ function CreateProjectPopup({
             <button
                 id="create-project-confirm-button"
                 onClick={async () => {
-                    const project = await triggerProjectCreation()
+                    const project = await createProjectRequest(projectName, selectedTask)
                     if (project) refreshProjects(project)
                     closePopup()
                 }}
