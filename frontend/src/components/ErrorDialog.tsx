@@ -15,7 +15,7 @@ export function ErrorDialogProvider({ children }: { children: ReactNode }): JSX.
     const [errorDialogs, setErrorDialogs] = useState<ErrorDialogMessage[]>([])
 
     // Function to show an error dialog.
-    const showErrorDialog = (message: string, status_code: number = 500) => {
+    const showErrorDialog = (message: string, status_code: number) => {
         // Set up error dialog.
         const id = Date.now()
         setErrorDialogs((prevDialogs) => [...prevDialogs, { id, message: message, status_code: status_code }])
