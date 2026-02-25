@@ -1,6 +1,6 @@
 import { useState, useEffect, JSX } from 'react'
 import { fetchData, RequestMethod } from '../scripts/common'
-import { Project, triggerProjectCreation, ProjectTask, deleteProjectRequest } from '../scripts/ProjectMenuPage'
+import { Project, createProjectRequest, Task, deleteProjectRequest } from '../scripts/ProjectMenuPage'
 import { PopupOverlay } from '../components/PopupOverlay'
 
 import '../styles/ProjectMenuPage.css'
@@ -50,9 +50,11 @@ function LoadProjectMenuComponent(): JSX.Element {
 
 function ProjectMenuComponent({
     projects,
+    onProjectInsert,
     onProjectDelete,
 }: {
     projects: Project[]
+    onProjectInsert: (newProject: Project) => void
     onProjectDelete: (deletedProjectId: string) => void
 }): JSX.Element {
     console.info(`Number of projects fetched: ${projects.length}`)
@@ -73,7 +75,9 @@ function ProjectMenuComponent({
                 />
             ))}
 
-            {createProjectPopup && <CreateProjectPopup closePopup={() => setCreateProjectPopup(false)} />}
+            {createProjectPopup && (
+                <CreateProjectPopup closePopup={() => setCreateProjectPopup(false)} refreshProjects={onProjectInsert} />
+            )}
 
             {projectToDelete && (
                 <ConfirmProjectDeletionPopup
@@ -89,11 +93,33 @@ function ProjectMenuComponent({
     )
 }
 
-function CreateProjectPopup({ closePopup }: { closePopup: () => void }): JSX.Element {
+function CreateProjectPopup({
+    closePopup,
+    refreshProjects,
+}: {
+    closePopup: () => void
+    refreshProjects: (project: Project) => void
+}): JSX.Element {
     console.info('Opening create project popup...')
 
-    // Set up options to be displayed.
-    const projectTasks = Object.values(ProjectTask)
+    // Request project tasks from backend.
+    const [tasks, setTasks] = useState<Task[]>([])
+    const [projectName, setProjectName] = useState<string>('')
+    const [selectedTask, setSelectedTask] = useState<string>('')
+    useEffect(() => {
+        async function getTasks() {
+            const responseData = await fetchData('/tasks/', RequestMethod.GET)
+            setTasks(responseData)
+            if (responseData.length > 0) setSelectedTask(responseData[0].name)
+        }
+        getTasks()
+    }, [])
+
+    // Set up state to manage selected project task.
+    function handleTaskChange(event: React.ChangeEvent<HTMLSelectElement>): void {
+        setSelectedTask(event.target.value)
+    }
+    const currentTaskDescription = tasks.find((task) => task.name === selectedTask)?.description || ''
 
     const component = (
         <div className="create-project-popup-component" onClick={(event) => event.stopPropagation()}>
@@ -111,15 +137,36 @@ function CreateProjectPopup({ closePopup }: { closePopup: () => void }): JSX.Ele
                     </svg>
                 </button>
             </div>
-            <input id="create-project-name-input" type="text" maxLength={32} placeholder="Project Name" />
-            <select name="create-project-task" id="create-project-task-input">
-                {projectTasks.map((task) => (
-                    <option key={task} value={task}>
-                        {task}
-                    </option>
-                ))}
-            </select>
-            <button id="create-project-confirm-button" onClick={triggerProjectCreation}>
+            <input
+                id="create-project-name-input"
+                type="text"
+                maxLength={32}
+                placeholder="Project Name"
+                onChange={(event) => setProjectName(event.target.value)}
+            />
+            <div>
+                <select
+                    name="create-project-task"
+                    id="create-project-task-input"
+                    value={selectedTask || ''}
+                    onChange={handleTaskChange}
+                >
+                    {tasks.map((task) => (
+                        <option key={task.name} value={task.name}>
+                            {task.name}
+                        </option>
+                    ))}
+                </select>
+                <p id="create-project-task-description">{currentTaskDescription}</p>
+            </div>
+            <button
+                id="create-project-confirm-button"
+                onClick={async () => {
+                    const project = await createProjectRequest(projectName, selectedTask)
+                    if (project) refreshProjects(project)
+                    closePopup()
+                }}
+            >
                 Create
             </button>
         </div>
@@ -166,7 +213,11 @@ export function ProjectMenuPage(): JSX.Element {
     const [isLoading, setIsLoading] = useState(true)
 
     // Handle deleted project by refreshing the project list.
-    const refreshProjects = (deletedProjectId: string) => {
+    const insertProject = (newProject: Project) => {
+        console.info(`Refreshing projects after creation of project with ID: ${newProject._id}`)
+        setProjects((prevProjects) => [...prevProjects, newProject])
+    }
+    const deleteProject = (deletedProjectId: string) => {
         console.info(`Refreshing projects after deletion of project with ID: ${deletedProjectId}`)
         setProjects((prevProjects) => prevProjects.filter((project) => project._id !== deletedProjectId))
     }
@@ -191,5 +242,5 @@ export function ProjectMenuPage(): JSX.Element {
         return <LoadProjectMenuComponent />
     }
 
-    return <ProjectMenuComponent projects={projects} onProjectDelete={refreshProjects} />
+    return <ProjectMenuComponent projects={projects} onProjectInsert={insertProject} onProjectDelete={deleteProject} />
 }
