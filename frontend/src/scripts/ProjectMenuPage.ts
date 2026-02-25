@@ -20,15 +20,6 @@ export interface Project {
 export async function createProjectRequest(name: string, task: string): Promise<Project> {
     // Check input validity.
     console.debug(`Creating project with name: ${name}, task: ${task}`)
-    if (!name || !task) {
-        console.error('Project name and task are required.')
-        throw new Error('Project name and task are required.')
-    }
-
-    if (name.length < 3) {
-        console.error('Project name must be at least 3 characters long.')
-        throw new Error('Project name must be at least 3 characters long.')
-    }
 
     // Create body for the request.
     const body = {
