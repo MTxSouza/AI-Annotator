@@ -9,6 +9,16 @@ export enum RequestMethod {
     DELETE = 'DELETE',
 }
 
+export class APIErrorResponse extends Error {
+    status_code: number
+
+    constructor(message: string, status_code: number) {
+        super(message)
+        this.message = message
+        this.status_code = status_code
+    }
+}
+
 // Functions.
 export async function fetchData(url: string, method: RequestMethod, params?: any, body?: any): Promise<any | void> {
     // Set up the full URL.
@@ -39,8 +49,24 @@ export async function fetchData(url: string, method: RequestMethod, params?: any
     // Request data from the API.
     const response = await fetch(fullUrl, options)
     if (!response.ok) {
-        console.error('HTTP error:', response.status, 'Response:', await response.text())
-        throw new Error(`HTTP error! status: ${response.status}`)
+        // Get status and message from the response.
+        const errorStatus = response.status
+        const errorText = await response.text()
+        let errorMessage = errorText
+        try {
+            const errorJson = JSON.parse(errorText)
+            if (errorJson.detail && errorJson.detail instanceof Array && errorJson.detail.length > 0) {
+                errorMessage = errorJson.detail[0].msg
+            } else if (errorJson.detail && typeof errorJson.detail === 'string') {
+                errorMessage = errorJson.detail
+            }
+        } catch (e) {
+            console.warn('Failed to parse error response as JSON:', e)
+        }
+        errorMessage = errorMessage || errorText || 'Unknown error occurred.'
+
+        console.error('HTTP error:', response.status, 'Response:', errorMessage)
+        throw new APIErrorResponse(errorMessage, errorStatus)
     }
     console.debug(`Fetched data from ${fullUrl} successfully.`)
 

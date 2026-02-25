@@ -1,7 +1,8 @@
 import { useState, useEffect, JSX } from 'react'
-import { fetchData, RequestMethod } from '../scripts/common'
+import { APIErrorResponse, fetchData, RequestMethod } from '../scripts/common'
 import { Project, createProjectRequest, Task, deleteProjectRequest } from '../scripts/ProjectMenuPage'
 import { PopupOverlay } from '../components/PopupOverlay'
+import { useErrorDialog } from '../components/ErrorDialog'
 
 import '../styles/ProjectMenuPage.css'
 
@@ -102,6 +103,9 @@ function CreateProjectPopup({
 }): JSX.Element {
     console.info('Opening create project popup...')
 
+    // Set up error dialog.
+    const { showErrorDialog } = useErrorDialog()
+
     // Request project tasks from backend.
     const [tasks, setTasks] = useState<Task[]>([])
     const [projectName, setProjectName] = useState<string>('')
@@ -162,9 +166,19 @@ function CreateProjectPopup({
             <button
                 id="create-project-confirm-button"
                 onClick={async () => {
-                    const project = await createProjectRequest(projectName, selectedTask)
-                    if (project) refreshProjects(project)
-                    closePopup()
+                    try {
+                        const project = await createProjectRequest(projectName, selectedTask)
+                        if (project) refreshProjects(project)
+                        closePopup()
+                    } catch (error) {
+                        if (error instanceof APIErrorResponse) {
+                            console.error('Error creating project:', error)
+                            showErrorDialog(error.message, error.status_code)
+                        } else {
+                            console.error('Unexpected error creating project:', error)
+                            showErrorDialog('An unexpected error occurred while creating the project.', 500)
+                        }
+                    }
                 }}
             >
                 Create
@@ -185,13 +199,22 @@ function ConfirmProjectDeletionPopup({
 }): JSX.Element {
     console.info('Opening confirm project deletion popup...')
 
+    // Set up error dialog.
+    const { showErrorDialog } = useErrorDialog()
+
     // Delete project function.
     async function deleteProject(projectId: string) {
         try {
             await deleteProjectRequest(projectId)
             refreshProjects()
         } catch (error) {
-            console.error('Error deleting project:', error)
+            if (error instanceof APIErrorResponse) {
+                console.error('Error deleting project:', error)
+                showErrorDialog(error.message, error.status_code)
+            } else {
+                console.error('Unexpected error deleting project:', error)
+                showErrorDialog('An unexpected error occurred while deleting the project.', 500)
+            }
         }
     }
 
@@ -208,6 +231,9 @@ function ConfirmProjectDeletionPopup({
 }
 
 export function ProjectMenuPage(): JSX.Element {
+    // Set up error dialog.
+    const { showErrorDialog } = useErrorDialog()
+
     // Set states to manage the projects.
     const [projects, setProjects] = useState<Project[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -230,7 +256,13 @@ export function ProjectMenuPage(): JSX.Element {
                 const responseData = await fetchData('/projects/', RequestMethod.GET)
                 setProjects(responseData)
             } catch (error) {
-                console.error('Error fetching projects:', error)
+                if (error instanceof APIErrorResponse) {
+                    console.error('Error fetching projects:', error)
+                    showErrorDialog(error.message, error.status_code)
+                } else {
+                    console.error('Unexpected error fetching projects:', error)
+                    showErrorDialog('An unexpected error occurred while fetching projects.', 500)
+                }
             }
             setIsLoading(false)
         }

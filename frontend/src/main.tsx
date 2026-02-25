@@ -4,6 +4,7 @@ import { TopMenuBar } from './components/TopMenuBar'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { BottomMenuBar } from './components/BottomMenuBar'
 import { ProjectMenuPage } from './components/ProjectMenuPage'
+import { ErrorDialogProvider } from './components/ErrorDialog'
 
 import './main.css'
 
@@ -16,12 +17,14 @@ if (!rootElement) {
 }
 createRoot(rootElement).render(
     <StrictMode>
-        <BrowserRouter>
-            <TopMenuBar />
-            <Routes>
-                <Route path="/" element={<ProjectMenuPage />} />
-            </Routes>
-            <BottomMenuBar />
-        </BrowserRouter>
+        <ErrorDialogProvider>
+            <BrowserRouter>
+                <TopMenuBar />
+                <Routes>
+                    <Route path="/" element={<ProjectMenuPage />} />
+                </Routes>
+                <BottomMenuBar />
+            </BrowserRouter>
+        </ErrorDialogProvider>
     </StrictMode>,
 )
