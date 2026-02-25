@@ -76,12 +76,7 @@ function ProjectMenuComponent({
             ))}
 
             {createProjectPopup && (
-                <CreateProjectPopup
-                    closePopup={() => setCreateProjectPopup(false)}
-                    refreshProjects={(newProject) => {
-                        onProjectInsert(newProject)
-                    }}
-                />
+                <CreateProjectPopup closePopup={() => setCreateProjectPopup(false)} refreshProjects={onProjectInsert} />
             )}
 
             {projectToDelete && (
