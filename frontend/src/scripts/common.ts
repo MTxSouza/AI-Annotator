@@ -9,6 +9,16 @@ export enum RequestMethod {
     DELETE = 'DELETE',
 }
 
+export class APIErrorResponse extends Error {
+    status_code: number
+
+    constructor(message: string, status_code: number) {
+        super(message)
+        this.message = message
+        this.status_code = status_code
+    }
+}
+
 // Functions.
 export async function fetchData(url: string, method: RequestMethod, params?: any, body?: any): Promise<any | void> {
     // Set up the full URL.
@@ -39,8 +49,10 @@ export async function fetchData(url: string, method: RequestMethod, params?: any
     // Request data from the API.
     const response = await fetch(fullUrl, options)
     if (!response.ok) {
-        console.error('HTTP error:', response.status, 'Response:', await response.text())
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorMessage = response.statusText || 'Unknown error occurred.'
+        const errorStatus = response.status
+        console.error('HTTP error:', response.status, 'Response:', errorMessage)
+        throw new APIErrorResponse(errorMessage, errorStatus)
     }
     console.debug(`Fetched data from ${fullUrl} successfully.`)
 
