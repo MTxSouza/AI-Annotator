@@ -17,25 +17,7 @@ export interface Task {
 }
 
 // Functions.
-export async function triggerProjectCreation(): Promise<Project> {
-    // Get input values.
-    console.debug('Collecting input values for project creation...')
-    const createProjectNameInput = document.getElementById('create-project-name-input')
-    const createProjectTaskInput = document.getElementById('create-project-task-input')
-    if (!createProjectNameInput || !createProjectTaskInput) {
-        console.error('Input elements not found.')
-        throw new Error('Input elements not found.')
-    }
-
-    const projectName = (createProjectNameInput as HTMLInputElement).value
-    const projectTask = (createProjectTaskInput as HTMLSelectElement).value
-    console.debug(`Collected input values - Name: ${projectName}, Task: ${projectTask}`)
-
-    // Create project.
-    return await createProjectRequest(projectName, projectTask)
-}
-
-async function createProjectRequest(name: string, task: string): Promise<Project> {
+export async function createProjectRequest(name: string, task: string): Promise<Project> {
     // Check input validity.
     console.debug(`Creating project with name: ${name}, task: ${task}`)
     if (!name || !task) {
