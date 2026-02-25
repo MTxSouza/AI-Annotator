@@ -49,8 +49,18 @@ export async function fetchData(url: string, method: RequestMethod, params?: any
     // Request data from the API.
     const response = await fetch(fullUrl, options)
     if (!response.ok) {
-        const errorMessage = response.statusText || 'Unknown error occurred.'
+        // Get status and message from the response.
+        const errorText = await response.text()
         const errorStatus = response.status
+        let errorMessage = errorText
+        try {
+            const errorJson = JSON.parse(errorText)
+            errorMessage = errorJson.detail || errorText
+        } catch (e) {
+            console.warn('Failed to parse error response as JSON:', e)
+        }
+        errorMessage = errorMessage || errorText || 'Unknown error occurred.'
+
         console.error('HTTP error:', response.status, 'Response:', errorMessage)
         throw new APIErrorResponse(errorMessage, errorStatus)
     }
