@@ -4,12 +4,13 @@ Module used to configure the Celery worker for the backend.
 
 import asyncio
 import os
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, BinaryIO
 
 from asgiref.sync import async_to_sync
-from celery import Celery
+from celery import Celery, Task, states
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.configs import BackendSettings
@@ -21,7 +22,7 @@ __CELERY_BROKER_URL__ = f"{BackendSettings.redis_uri}:{BackendSettings.redis_por
 app = Celery(main="ai_annotator_worker", broker=__CELERY_BROKER_URL__, backend=__CELERY_BROKER_URL__)
 
 
-# Schemas.
+# Classes.
 class WorkerUploadFile:
     """
     Class to represent the UploadFile schema from FastAPI in the Celery worker.
@@ -111,6 +112,49 @@ class WorkerUploadFile:
         self.file_path = ""  # Clear the file path to prevent further access.
 
 
+class UpdateTaskState(ABC):
+    """
+    Abstract base class to represent the state of a Celery task for processing uploaded files. This class is used to
+    update the task state and progress during the file processing.
+    """
+
+    # Special methods.
+    def __init__(self, task: Task) -> None:
+        self.__task = task
+
+    # Abstract methods.
+    @abstractmethod
+    def update_state(self, state: str, message: str, *args, **kwargs):
+        pass
+
+
+class UpdateProcessUploadedFileTaskState(UpdateTaskState):
+    """
+    Class to represent the state of the Celery task for processing uploaded files. This class is used to update the
+    task state and progress during the file processing.
+    """
+
+    def update_state(
+        self,
+        state: str = states.STARTED,
+        message: str = "Processing uploaded files...",
+        number_processed_files: int = 0,
+        total_number_of_files: int = 0,
+        number_of_successfully_processed_files: int = 0,
+        number_of_failed_files: int = 0,
+    ) -> None:
+        self.__task.update_state(
+            state=state,
+            meta={
+                "current": number_processed_files,
+                "total": total_number_of_files,
+                "number_of_successfully_processed_files": number_of_successfully_processed_files,
+                "number_of_failed_files": number_of_failed_files,
+                "message": message,
+            },
+        )
+
+
 # Functions.
 def _run_worker_in_threading(wrapper_func: Callable) -> Any:
     """
@@ -157,12 +201,21 @@ def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str
         # Instantiate the WorkerUploadFile objects.
         worker_file_list = [WorkerUploadFile(**temp_file) for temp_file in temp_file_list]
 
+        # Instantiate the task state updater.
+        state_updater: UpdateProcessUploadedFileTaskState = UpdateProcessUploadedFileTaskState(task=self)
+
         # Process the files and create the file records in the database.
         try:
-            created_file_records = await create_file_records(file_list=worker_file_list, project_id=project_id, db=db)  # type: ignore
+            created_file_records = await create_file_records(
+                file_list=worker_file_list, project_id=project_id, db=db, state_updater=state_updater
+            )  # type: ignore
             return created_file_records
+        except Exception as e:
+            state_updater.update_state(state=states.FAILURE, message=f"Failed to process uploaded files. {str(e)}")
+            raise e
         finally:
             await db.client.close()  # type: ignore  # Close the database client after processing to avoid sharing the same client instance across multiple worker processes.
+            state_updater.update_state(state=states.SUCCESS, message="Finished processing uploaded files.")
 
     # Check if the task is running in eager mode (i.e., during tests) and execute the wrapper function accordingly.
     if self.request.is_eager:
