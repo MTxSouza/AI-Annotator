@@ -26,7 +26,7 @@ from backend.api.v1.utils.task_details import get_task_file
 from backend.configs import BackendSettings
 from backend.database.configs import Collections
 from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId
-from backend.worker import WorkerUploadFile, process_uploaded_file_task
+from backend.worker import UpdateTaskState, WorkerUploadFile, process_uploaded_file_task
 
 # Global variables.
 FILE_CHUNK_SIZE = 64 * 1024  # 64 KB
@@ -634,6 +634,7 @@ async def create_file_records(
     file_list: WorkerUploadFile | list[WorkerUploadFile],
     project_id: str | PyObjectId,
     db: AsyncDatabase,
+    state_updater: UpdateTaskState | None = None,
 ) -> list[dict]:
     """
     Utility function to create file records in the database.
@@ -643,6 +644,7 @@ async def create_file_records(
             records for.
             project_id (str | PyObjectId): The project ID associated with the files.
             db (AsyncDatabase): The database instance.
+            state_updater (UpdateTaskState | None): The task state updater instance. (Default: None)
 
     Returns:
             list[dict]: List of created file records.
@@ -650,6 +652,7 @@ async def create_file_records(
     # Check if single file is provided.
     if isinstance(file_list, WorkerUploadFile):
         file_list = [file_list]
+    total_number_of_files = len(file_list)
 
     # Get project task.
     project_collection = db.get_collection(name=Collections.PROJECTS.value.name)
@@ -696,8 +699,20 @@ async def create_file_records(
 
     # Process each file.
     processed_file_records = []
+    number_of_processed_files = 0
+    number_of_successfully_processed_files = 0
+    number_of_failed_files = 0
+    update_state_args = {
+        "number_processed_files": number_of_processed_files,
+        "total_number_of_files": total_number_of_files,
+        "number_of_successfully_processed_files": number_of_successfully_processed_files,
+        "number_of_failed_files": number_of_failed_files,
+    }
+    if state_updater:
+        state_updater.update_state()  # type: ignore
     for file in file_list:
         # Get file hash.
+        number_of_processed_files += 1
         file_hash = await run_in_threadpool(func=get_upload_file_hash, file=file)
 
         # Check if file already exists.
@@ -709,6 +724,12 @@ async def create_file_records(
                 status=FileUploadStatus.SKIPPED, message=f"File '{file.filename}' already exists."
             )
             processed_file_records.append(file_record.model_dump())
+            number_of_successfully_processed_files += 1
+            if state_updater:
+                state_updater.update_state(  # type: ignore
+                    **update_state_args,  # type: ignore
+                    message=f"File '{file.filename}' already exists. Skipping upload and using existing file record.",
+                )
             del file  # Delete buffer file from disk.
             continue
 
@@ -722,6 +743,13 @@ async def create_file_records(
                 message=f"Invalid file format: {file.content_type}. This file format is not supported at all.",
             )
             processed_file_records.append(file_record.model_dump())
+            number_of_failed_files += 1
+            if state_updater:
+                state_updater.update_state(  # type: ignore
+                    **update_state_args,  # type: ignore
+                    message=f"Invalid file format for '{file.filename}': {file.content_type}. This file format is not "
+                    "supported at all.",
+                )
             del file  # Delete buffer file from disk.
             continue
 
@@ -730,6 +758,12 @@ async def create_file_records(
                 status=FileUploadStatus.FAILED, message=f"Invalid file format for this project: {file_format.value}."
             )
             processed_file_records.append(file_record.model_dump())
+            number_of_failed_files += 1
+            if state_updater:
+                state_updater.update_state(  # type: ignore
+                    **update_state_args,  # type: ignore
+                    message=f"{file_format.value} has an invalid file format.",
+                )
             del file  # Delete buffer file from disk.
             continue
 
@@ -740,6 +774,12 @@ async def create_file_records(
                 status=FileUploadStatus.FAILED, message=f"Corrupted file: {file.filename}."
             )
             processed_file_records.append(file_record.model_dump())
+            number_of_failed_files += 1
+            if state_updater:
+                state_updater.update_state(  # type: ignore
+                    **update_state_args,  # type: ignore
+                    message=f"File '{file.filename}' is corrupted.",
+                )
             del file  # Delete buffer file from disk.
             continue
 
@@ -760,6 +800,12 @@ async def create_file_records(
         processed_file_records.append(file_record.model_dump(mode="json"))
 
         # Delete buffer file from disk.
+        number_of_successfully_processed_files += 1
+        if state_updater:
+            state_updater.update_state(  # type: ignore
+                **update_state_args,  # type: ignore
+                message=f"File '{file.filename}' uploaded successfully.",
+            )
         del file
 
     return processed_file_records
