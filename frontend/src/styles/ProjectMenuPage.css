@@ -133,15 +133,48 @@
         padding: 5px 10px 5px 10px;
         font-size: 16px;
     }
-    div:last-child {
-        display: flex;
-        flex-direction: column;
-    }
     #create-project-task-description {
         user-select: none;
         margin-top: 5px;
         font-style: italic;
-        min-height: 50px;
+        height: 80px;
+        padding: 5px;
+        overflow: hidden;
+        overflow-y: scroll;
+        border: 1px solid var(--tertiary-text-color);
+        border-radius: 10px;
+    }
+}
+
+.create-project-task-input-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.create-project-task-file-format-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+    gap: 2px;
+    p {
+        user-select: none;
+    }
+    div {
+        gap: 5px;
+        display: flex;
+        flex-direction: row;
+        background-color: var(--secondary-background-color);
+        border-radius: 10px;
+        padding: 8px;
+    }
+    div p {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--secondary-text-color);
+        border-radius: 10px;
+        padding: 3px 8px 3px 8px;
     }
 }
 
