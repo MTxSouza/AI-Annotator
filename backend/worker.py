@@ -155,7 +155,6 @@ class UpdateProcessUploadedFileTaskState(UpdateTaskState):
         number_of_failed_files: int = 0,
     ) -> None:
         self.task.update_state(
-            task_id=self.task.request.id,
             state=state,
             meta={
                 "current": number_processed_files,
@@ -168,7 +167,7 @@ class UpdateProcessUploadedFileTaskState(UpdateTaskState):
 
 
 # Functions.
-def _run_worker_in_threading(wrapper_func: Callable) -> Any:
+def _run_worker_in_threading(wrapper_func: Callable, *args, **kwargs) -> Any:
     """
     Utility function to run the Celery worker in a separate thread. This is used to execute the worker tasks
     during tests without blocking the main test thread and event loop.
@@ -181,7 +180,7 @@ def _run_worker_in_threading(wrapper_func: Callable) -> Any:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop=loop)
         try:
-            return loop.run_until_complete(future=wrapper_func())
+            return loop.run_until_complete(future=wrapper_func(*args, **kwargs))
         finally:
             loop.close()
 
@@ -202,7 +201,7 @@ def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str
     """
 
     # Async function to process the uploaded file.
-    async def wrapper() -> list[dict]:
+    async def wrapper(is_eager: bool = False) -> list[dict]:
 
         # Import function inside the task.
         from backend.api.v1.utils.files import create_file_records
@@ -214,7 +213,9 @@ def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str
         worker_file_list = [WorkerUploadFile(**temp_file) for temp_file in temp_file_list]
 
         # Instantiate the task state updater.
-        state_updater: UpdateProcessUploadedFileTaskState = UpdateProcessUploadedFileTaskState(task=self)
+        state_updater: UpdateProcessUploadedFileTaskState | None = None
+        if is_eager:
+            state_updater: UpdateProcessUploadedFileTaskState = UpdateProcessUploadedFileTaskState(task=self)  # type: ignore
 
         # Process the files and create the file records in the database.
         try:
@@ -223,13 +224,15 @@ def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str
             )  # type: ignore
             return created_file_records
         except Exception as e:
-            state_updater.update_state(state=states.FAILURE, message=f"Failed to process uploaded files. {str(e)}")
+            if state_updater is not None:
+                state_updater.update_state(state=states.FAILURE, message=f"Failed to process uploaded files. {str(e)}")
             raise e
         finally:
             await db.client.close()  # type: ignore  # Close the database client after processing to avoid sharing the same client instance across multiple worker processes.
-            state_updater.update_state(state=states.SUCCESS, message="Finished processing uploaded files.")
+            if state_updater is not None:
+                state_updater.update_state(state=states.SUCCESS, message="Finished processing uploaded files.")
 
     # Check if the task is running in eager mode (i.e., during tests) and execute the wrapper function accordingly.
     if self.request.is_eager:
-        return _run_worker_in_threading(wrapper_func=wrapper)
+        return _run_worker_in_threading(wrapper_func=wrapper, is_eager=True)
     return async_to_sync(wrapper)()
