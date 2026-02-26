@@ -124,6 +124,7 @@ function CreateProjectPopup({
         setSelectedTask(event.target.value)
     }
     const currentTaskDescription = tasks.find((task) => task.name === selectedTask)?.description || ''
+    const currentTaskFileFormat = tasks.find((task) => task.name === selectedTask)?.file_format_list || ''
 
     const component = (
         <div className="create-project-popup-component" onClick={(event) => event.stopPropagation()}>
@@ -148,7 +149,7 @@ function CreateProjectPopup({
                 placeholder="Project Name"
                 onChange={(event) => setProjectName(event.target.value)}
             />
-            <div>
+            <div className="create-project-task-input-container">
                 <select
                     name="create-project-task"
                     id="create-project-task-input"
@@ -162,6 +163,13 @@ function CreateProjectPopup({
                     ))}
                 </select>
                 <p id="create-project-task-description">{currentTaskDescription}</p>
+                <div className="create-project-task-file-format-container">
+                    <p>Allowed file formats:</p>
+                    <div>
+                        {currentTaskFileFormat &&
+                            currentTaskFileFormat.map((fileFormat: string) => <p key={fileFormat}>{fileFormat}</p>)}
+                    </div>
+                </div>
             </div>
             <button
                 id="create-project-confirm-button"
