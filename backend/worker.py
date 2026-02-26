@@ -223,15 +223,15 @@ def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str
             created_file_records = await create_file_records(
                 file_list=worker_file_list, project_id=project_id, db=db, state_updater=state_updater
             )  # type: ignore
+            if state_updater:
+                state_updater.update_state(state=states.SUCCESS, message="Finished processing uploaded files.")
             return created_file_records
         except Exception as e:
-            if state_updater is not None:
+            if state_updater:
                 state_updater.update_state(state=states.FAILURE, message=f"Failed to process uploaded files. {str(e)}")
             raise e
         finally:
             await db.client.close()  # type: ignore  # Close the database client after processing to avoid sharing the same client instance across multiple worker processes.
-            if state_updater is not None:
-                state_updater.update_state(state=states.SUCCESS, message="Finished processing uploaded files.")
 
     # Check if the task is running in eager mode (i.e., during tests) and execute the wrapper function accordingly.
     if self.request.is_eager:
