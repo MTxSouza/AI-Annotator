@@ -213,8 +213,9 @@ def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str
         worker_file_list = [WorkerUploadFile(**temp_file) for temp_file in temp_file_list]
 
         # Instantiate the task state updater.
-        state_updater: UpdateProcessUploadedFileTaskState | None = None
-        if not is_eager:
+        if is_eager:
+            state_updater: UpdateProcessUploadedFileTaskState | None = None
+        else:
             state_updater: UpdateProcessUploadedFileTaskState = UpdateProcessUploadedFileTaskState(task=self)  # type: ignore
 
         # Process the files and create the file records in the database.
