@@ -702,6 +702,12 @@ async def create_file_records(
     number_of_processed_files = 0
     number_of_successfully_processed_files = 0
     number_of_failed_files = 0
+    update_state_args = {
+        "number_processed_files": number_of_processed_files,
+        "total_number_of_files": total_number_of_files,
+        "number_of_successfully_processed_files": number_of_successfully_processed_files,
+        "number_of_failed_files": number_of_failed_files,
+    }
     if state_updater:
         state_updater.update_state()  # type: ignore
     for file in file_list:
@@ -721,10 +727,7 @@ async def create_file_records(
             number_of_successfully_processed_files += 1
             if state_updater:
                 state_updater.update_state(  # type: ignore
-                    number_processed_files=number_of_processed_files,
-                    total_number_of_files=total_number_of_files,
-                    number_of_successfully_processed_files=number_of_successfully_processed_files,
-                    number_of_failed_files=number_of_failed_files,
+                    **update_state_args,  # type: ignore
                     message=f"File '{file.filename}' already exists. Skipping upload and using existing file record.",
                 )
             del file  # Delete buffer file from disk.
@@ -743,10 +746,7 @@ async def create_file_records(
             number_of_failed_files += 1
             if state_updater:
                 state_updater.update_state(  # type: ignore
-                    number_processed_files=number_of_processed_files,
-                    total_number_of_files=total_number_of_files,
-                    number_of_successfully_processed_files=number_of_successfully_processed_files,
-                    number_of_failed_files=number_of_failed_files,
+                    **update_state_args,  # type: ignore
                     message=f"Invalid file format for '{file.filename}': {file.content_type}. This file format is not "
                     "supported at all.",
                 )
@@ -761,10 +761,7 @@ async def create_file_records(
             number_of_failed_files += 1
             if state_updater:
                 state_updater.update_state(  # type: ignore
-                    number_processed_files=number_of_processed_files,
-                    total_number_of_files=total_number_of_files,
-                    number_of_successfully_processed_files=number_of_successfully_processed_files,
-                    number_of_failed_files=number_of_failed_files,
+                    **update_state_args,  # type: ignore
                     message=f"{file_format.value} has an invalid file format.",
                 )
             del file  # Delete buffer file from disk.
@@ -780,10 +777,7 @@ async def create_file_records(
             number_of_failed_files += 1
             if state_updater:
                 state_updater.update_state(  # type: ignore
-                    number_processed_files=number_of_processed_files,
-                    total_number_of_files=total_number_of_files,
-                    number_of_successfully_processed_files=number_of_successfully_processed_files,
-                    number_of_failed_files=number_of_failed_files,
+                    **update_state_args,  # type: ignore
                     message=f"File '{file.filename}' is corrupted.",
                 )
             del file  # Delete buffer file from disk.
@@ -809,10 +803,7 @@ async def create_file_records(
         number_of_successfully_processed_files += 1
         if state_updater:
             state_updater.update_state(  # type: ignore
-                number_processed_files=number_of_processed_files,
-                total_number_of_files=total_number_of_files,
-                number_of_successfully_processed_files=number_of_successfully_processed_files,
-                number_of_failed_files=number_of_failed_files,
+                **update_state_args,  # type: ignore
                 message=f"File '{file.filename}' uploaded successfully.",
             )
         del file
