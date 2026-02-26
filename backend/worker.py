@@ -127,6 +127,17 @@ class UpdateTaskState(ABC):
     def update_state(self, state: str, message: str, *args, **kwargs):
         pass
 
+    # Properties.
+    @property
+    def task(self) -> Task:
+        """
+        Property to get the Celery task instance.
+
+        Returns:
+            Task: The Celery task instance.
+        """
+        return self.__task
+
 
 class UpdateProcessUploadedFileTaskState(UpdateTaskState):
     """
@@ -143,7 +154,7 @@ class UpdateProcessUploadedFileTaskState(UpdateTaskState):
         number_of_successfully_processed_files: int = 0,
         number_of_failed_files: int = 0,
     ) -> None:
-        self.__task.update_state(
+        self.task.update_state(
             state=state,
             meta={
                 "current": number_processed_files,
