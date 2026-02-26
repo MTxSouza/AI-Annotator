@@ -214,7 +214,7 @@ def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str
 
         # Instantiate the task state updater.
         state_updater: UpdateProcessUploadedFileTaskState | None = None
-        if is_eager:
+        if not is_eager:
             state_updater: UpdateProcessUploadedFileTaskState = UpdateProcessUploadedFileTaskState(task=self)  # type: ignore
 
         # Process the files and create the file records in the database.
