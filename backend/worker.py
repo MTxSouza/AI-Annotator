@@ -155,6 +155,7 @@ class UpdateProcessUploadedFileTaskState(UpdateTaskState):
         number_of_failed_files: int = 0,
     ) -> None:
         self.task.update_state(
+            task_id=self.task.request.id,
             state=state,
             meta={
                 "current": number_processed_files,
