@@ -137,7 +137,12 @@
         user-select: none;
         margin-top: 5px;
         font-style: italic;
-        min-height: 50px;
+        height: 80px;
+        padding: 5px;
+        overflow: hidden;
+        overflow-y: scroll;
+        border: 1px solid var(--tertiary-text-color);
+        border-radius: 10px;
     }
 }
 
@@ -150,7 +155,7 @@
 .create-project-task-file-format-container {
     display: flex;
     flex-direction: column;
-    margin-top: 30px;
+    margin-top: 10px;
     gap: 2px;
     p {
         user-select: none;
