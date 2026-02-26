@@ -124,7 +124,7 @@ function CreateProjectPopup({
         setSelectedTask(event.target.value)
     }
     const currentTaskDescription = tasks.find((task) => task.name === selectedTask)?.description || ''
-    const currentTaskFileFormat = tasks.find((task) => task.name === selectedTask)?.file_format_list || ''
+    const currentTaskFileFormat = tasks.find((task) => task.name === selectedTask)?.file_format_list || []
 
     const component = (
         <div className="create-project-popup-component" onClick={(event) => event.stopPropagation()}>
