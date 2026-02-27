@@ -12,6 +12,7 @@ export interface Project {
     name: string
     description: string | null
     task: Task['name']
+    is_private: boolean
     created_at: string
     updated_at: string
 }
