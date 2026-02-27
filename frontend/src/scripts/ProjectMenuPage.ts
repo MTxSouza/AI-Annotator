@@ -17,14 +17,37 @@ export interface Project {
 }
 
 // Functions.
-export async function createProjectRequest(name: string, task: string): Promise<Project> {
+function validateProjectName(name: string): void {
+    // Check if the name is empty.
+    if (!name) {
+        console.error('Project name cannot be empty.')
+        throw new Error('Project name cannot be empty.')
+    }
+
+    // Check characters.
+    const invalidChars = /[.<>:"/\\|?*]/g
+    if (invalidChars.test(name)) {
+        console.error('Project name contains invalid characters: . < > : " / \\ | ? *')
+        throw new Error('Project name contains invalid characters: . < > : " / \\ | ? *')
+    }
+}
+
+export async function createProjectRequest(
+    name: string,
+    task: string,
+    password: string | null = null,
+): Promise<Project> {
     // Check input validity.
     console.debug(`Creating project with name: ${name}, task: ${task}`)
+
+    // Validate fields.
+    validateProjectName(name.trim())
 
     // Create body for the request.
     const body = {
         name: name,
         task: task,
+        password: password,
     }
     console.debug('Project body:', body)
 
