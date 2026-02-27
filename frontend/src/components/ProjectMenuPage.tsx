@@ -221,9 +221,6 @@ function CreateProjectPopup({
                         if (error instanceof APIErrorResponse) {
                             console.error('Error creating project:', error)
                             showErrorDialog(error.message, error.status_code)
-                        } else if (error instanceof Error) {
-                            console.error('Error creating project:', error)
-                            showErrorDialog(error.message, 500)
                         } else {
                             console.error('Unexpected error creating project:', error)
                             showErrorDialog('An unexpected error occurred while creating the project.', 500)

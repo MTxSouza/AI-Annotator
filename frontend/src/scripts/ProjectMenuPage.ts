@@ -1,4 +1,4 @@
-import { fetchData, RequestMethod } from '../scripts/common'
+import { fetchData, RequestMethod, APIErrorResponse } from '../scripts/common'
 
 // Structures.
 export interface Task {
@@ -21,14 +21,14 @@ function validateProjectName(name: string): void {
     // Check if the name is empty.
     if (!name) {
         console.error('Project name cannot be empty.')
-        throw new Error('Project name cannot be empty.')
+        throw new APIErrorResponse('Project name cannot be empty.', 400)
     }
 
     // Check characters.
     const invalidChars = /[.<>:"/\\|?*]/g
     if (invalidChars.test(name)) {
         console.error('Project name contains invalid characters: . < > : " / \\ | ? *')
-        throw new Error('Project name contains invalid characters: . < > : " / \\ | ? *')
+        throw new APIErrorResponse('Project name contains invalid characters: . < > : " / \\ | ? *', 400)
     }
 }
 
@@ -61,7 +61,7 @@ export async function deleteProjectRequest(projectId: string): Promise<void> {
     console.debug(`Deleting project with ID: ${projectId}`)
     if (!projectId) {
         console.error('Project ID is required for deletion.')
-        throw new Error('Project ID is required for deletion.')
+        throw new APIErrorResponse('Project ID is required for deletion.', 400)
     }
 
     await fetchData(`/projects/${projectId}/`, RequestMethod.DELETE)
