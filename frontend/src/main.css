@@ -49,6 +49,7 @@ svg {
 }
 
 input[type='text'],
+input[type='password'],
 select {
     background: none;
     border: none;
