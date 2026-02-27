@@ -19,6 +19,7 @@
     z-index: 1000;
     padding: 0px 10px 0px 10px;
     mask-image: linear-gradient(to bottom, transparent 0%, rgb(0, 0, 0) 30%);
+    pointer-events: none;
 }
 
 .error-dialog-popup-component {
@@ -28,4 +29,8 @@
     border: 1px solid var(--error-dialog-border-color);
     border-radius: 10px;
     padding: 10px 20px 10px 20px;
+    max-width: 450px;
+    word-wrap: break-word;
+    pointer-events: auto;
+    user-select: none;
 }
