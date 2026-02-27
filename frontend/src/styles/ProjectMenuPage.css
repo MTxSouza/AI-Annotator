@@ -63,21 +63,45 @@
         width: 100%;
     }
     div {
+        position: relative;
         display: flex;
         flex-direction: row;
         align-items: flex-start;
         justify-content: flex-end;
         height: 80%;
     }
+    div > label {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        height: fit-content;
+        width: fit-content;
+    }
+    div > label > svg {
+        position: absolute;
+        height: 20px;
+        width: 20px;
+    }
+    div > label:hover::after {
+        content: 'Private';
+        position: absolute;
+        top: 5px;
+        left: 25px;
+        font-size: 0.8em;
+        color: var(--primary-text-color);
+        background-color: var(--secondary-background-color);
+        padding: 5px;
+        border-radius: 5px;
+    }
     button {
         display: flex;
         height: fit-content;
         width: fit-content;
     }
-    button svg {
+    button > svg {
         fill: var(--tertiary-text-color);
     }
-    button:hover svg {
+    button:hover > svg {
         fill: var(--primary-text-color);
     }
     h3 {
