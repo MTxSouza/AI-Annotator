@@ -110,6 +110,7 @@ function CreateProjectPopup({
     const [tasks, setTasks] = useState<Task[]>([])
     const [projectName, setProjectName] = useState<string>('')
     const [selectedTask, setSelectedTask] = useState<string>('')
+    const [projectPassword, setProjectPassword] = useState<string | null>(null)
     const [hidePassword, setHidePassword] = useState<boolean>(true)
     useEffect(() => {
         async function getTasks() {
@@ -155,6 +156,7 @@ function CreateProjectPopup({
                     id="create-project-password-input"
                     type={hidePassword ? 'password' : 'text'}
                     placeholder="Password (optional)"
+                    onChange={(event) => setProjectPassword(event.target.value || null)}
                 />
                 <label
                     id="create-project-password-visibility-label"
@@ -212,13 +214,16 @@ function CreateProjectPopup({
                 id="create-project-confirm-button"
                 onClick={async () => {
                     try {
-                        const project = await createProjectRequest(projectName, selectedTask)
+                        const project = await createProjectRequest(projectName, selectedTask, null) // No way to delete it from UI, so we set it to null if it's empty.
                         if (project) refreshProjects(project)
                         closePopup()
                     } catch (error) {
                         if (error instanceof APIErrorResponse) {
                             console.error('Error creating project:', error)
                             showErrorDialog(error.message, error.status_code)
+                        } else if (error instanceof Error) {
+                            console.error('Error creating project:', error)
+                            showErrorDialog(error.message, 500)
                         } else {
                             console.error('Unexpected error creating project:', error)
                             showErrorDialog('An unexpected error occurred while creating the project.', 500)
