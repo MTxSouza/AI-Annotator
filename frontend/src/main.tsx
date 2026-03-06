@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { TopMenuBar } from './components/TopMenuBar'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { BottomMenuBar } from './components/BottomMenuBar'
-import { ProjectMenuPage } from './components/ProjectMenuPage'
 import { ErrorDialogProvider } from './components/ErrorDialog'
+import { ProjectMenu } from './pages/ProjectMenu'
 
 import './main.css'
 
@@ -21,7 +21,7 @@ createRoot(rootElement).render(
             <BrowserRouter>
                 <TopMenuBar />
                 <Routes>
-                    <Route path="/" element={<ProjectMenuPage />} />
+                    <Route path="/" element={<ProjectMenu />} />
                 </Routes>
                 <BottomMenuBar />
             </BrowserRouter>

@@ -1,0 +1,109 @@
+.load-create-project-card-component,
+.create-project-card-component,
+.project-card-component {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed var(--tertiary-text-color);
+    border-radius: 16px;
+    background-color: var(--primary-background-color);
+    padding: 20px;
+    user-select: none;
+    min-height: 140px;
+    max-height: 140px;
+    min-width: 300px;
+    max-width: 300px;
+    * {
+        color: var(--tertiary-text-color);
+    }
+    span {
+        font-size: 1.6em;
+    }
+}
+
+.load-create-project-card-component {
+    position: relative;
+}
+.load-create-project-card-component::before {
+    content: '...';
+    position: absolute;
+    font-size: 1.6em;
+    color: var(--tertiary-text-color);
+}
+
+.create-project-card-component {
+    position: relative;
+}
+.create-project-card-component:hover {
+    cursor: pointer;
+    border: 2px dashed var(--secondary-text-color);
+}
+.create-project-card-component::before {
+    content: 'New Project';
+    position: absolute;
+    font-size: 1.6em;
+    color: var(--tertiary-text-color);
+}
+.create-project-card-component:hover::before {
+    color: var(--secondary-text-color);
+}
+
+.project-card-component {
+    flex-direction: column;
+    border: 2px solid var(--secondary-text-color);
+    padding: 10px;
+    * {
+        width: 100%;
+    }
+    div {
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: flex-end;
+        height: 80%;
+    }
+    div > label {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        height: fit-content;
+        width: fit-content;
+    }
+    div > label > svg {
+        position: absolute;
+        height: 20px;
+        width: 20px;
+    }
+    div > label:hover::after {
+        content: 'Private';
+        position: absolute;
+        top: 5px;
+        left: 25px;
+        font-size: 0.8em;
+        color: var(--primary-text-color);
+        background-color: var(--secondary-background-color);
+        padding: 5px;
+        border-radius: 5px;
+    }
+    button {
+        display: flex;
+        height: fit-content;
+        width: fit-content;
+    }
+    button > svg {
+        fill: var(--tertiary-text-color);
+    }
+    button:hover > svg {
+        fill: var(--primary-text-color);
+    }
+    h3 {
+        position: relative;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        line-clamp: 3;
+        overflow: hidden;
+        max-height: 50px;
+        color: var(--primary-text-color);
+    }
+}

@@ -1,0 +1,132 @@
+.create-project-popup-component {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    border: 2px solid var(--secondary-text-color);
+    border-radius: 20px;
+    background-color: var(--primary-background-color);
+    padding: 10px 30px 30px 30px;
+    width: 700px;
+    gap: 8px;
+    box-shadow: 0px 0px 20px 1px var(--primary-shadow-color);
+    div:first-child {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 50px;
+    }
+    button {
+        margin-left: auto;
+    }
+    button svg {
+        fill: var(--secondary-text-color);
+    }
+    button:hover svg {
+        fill: var(--primary-text-color);
+    }
+    h1 {
+        align-items: flex-start;
+        user-select: none;
+    }
+    input[type='text'],
+    input[type='password'],
+    select {
+        width: 100%;
+        border: 1px solid var(--secondary-text-color);
+        border-radius: 12px;
+        padding: 5px 10px 5px 10px;
+        font-size: 16px;
+    }
+    #create-project-task-description {
+        user-select: none;
+        margin-top: 5px;
+        font-style: italic;
+        height: 80px;
+        padding: 5px;
+        overflow: hidden;
+        overflow-y: scroll;
+        border: 1px solid var(--tertiary-text-color);
+        border-radius: 10px;
+    }
+}
+
+.create-project-password-input-container {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+#create-project-password-visibility-label {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 17px;
+    right: 22px;
+}
+#create-project-password-visibility-label > input[type='checkbox'],
+#create-project-password-visibility-label > svg {
+    position: absolute;
+    cursor: pointer;
+    height: 20px;
+    width: 20px;
+    fill: var(--secondary-text-color);
+}
+#create-project-password-visibility-label > input[type='checkbox'] {
+    opacity: 0;
+    z-index: 2;
+}
+#create-project-password-visibility-label > input[type='checkbox']:checked + svg:first-of-type {
+    display: block;
+}
+#create-project-password-visibility-label > input[type='checkbox']:checked + svg:last-of-type {
+    display: none;
+}
+#create-project-password-visibility-label > svg:first-of-type {
+    display: none;
+}
+
+.create-project-task-input-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.create-project-task-file-format-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+    gap: 2px;
+    p {
+        user-select: none;
+    }
+    div {
+        gap: 5px;
+        display: flex;
+        flex-direction: row;
+        background-color: var(--secondary-background-color);
+        border-radius: 10px;
+        padding: 8px;
+    }
+    div p {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--secondary-text-color);
+        border-radius: 10px;
+        padding: 3px 8px 3px 8px;
+    }
+}
+
+#create-project-confirm-button {
+    border: 1px solid var(--tertiary-text-color);
+    border-radius: 20px;
+    padding: 10px;
+    margin-top: 30px;
+}
+#create-project-confirm-button:hover {
+    border: 1px solid var(--secondary-text-color);
+}
