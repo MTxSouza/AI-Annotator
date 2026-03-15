@@ -54,41 +54,6 @@
     }
 }
 
-.create-project-password-input-container {
-    margin-bottom: 20px;
-    position: relative;
-}
-
-#create-project-password-visibility-label {
-    position: absolute;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    top: 17px;
-    right: 22px;
-}
-#create-project-password-visibility-label > input[type='checkbox'],
-#create-project-password-visibility-label > svg {
-    position: absolute;
-    cursor: pointer;
-    height: 20px;
-    width: 20px;
-    fill: var(--secondary-text-color);
-}
-#create-project-password-visibility-label > input[type='checkbox'] {
-    opacity: 0;
-    z-index: 2;
-}
-#create-project-password-visibility-label > input[type='checkbox']:checked + svg:first-of-type {
-    display: block;
-}
-#create-project-password-visibility-label > input[type='checkbox']:checked + svg:last-of-type {
-    display: none;
-}
-#create-project-password-visibility-label > svg:first-of-type {
-    display: none;
-}
-
 .create-project-task-input-container {
     position: relative;
     display: flex;
