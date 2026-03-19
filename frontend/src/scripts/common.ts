@@ -20,11 +20,17 @@ export class APIErrorResponse extends Error {
 }
 
 // Functions.
-export async function fetchData(url: string, method: RequestMethod, params?: any, body?: any): Promise<any | void> {
+export async function fetchData(
+    url: string,
+    method: RequestMethod,
+    params?: any,
+    body?: any,
+    headers?: any,
+): Promise<any | void> {
     // Set up the full URL.
     let fullUrl: string = new URL(url, API_BASE_URL).toString()
     console.debug(
-        `Fetching data from ${fullUrl} with method ${method}, params: ${JSON.stringify(params)}, body: ${JSON.stringify(body)}`,
+        `Fetching data from ${fullUrl} with method ${method}, params: ${JSON.stringify(params)}, body: ${JSON.stringify(body)}, headers: ${JSON.stringify(headers)}`,
     )
 
     // Set up the request options.
@@ -32,6 +38,7 @@ export async function fetchData(url: string, method: RequestMethod, params?: any
         method: method,
         headers: {
             'Content-Type': 'application/json',
+            ...headers,
         },
     }
 
