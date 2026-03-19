@@ -58,7 +58,7 @@ export async function createProjectRequest(
     return await responseData
 }
 
-export async function getProject(projectId: string, password: string | null = null): Promise<Project> {
+export async function getProjectRequest(projectId: string, password: string | null = null): Promise<Project> {
     console.debug(`Fetching project with ID: ${projectId}`)
 
     // Check if project ID is provided.
