@@ -90,7 +90,7 @@ export function CreateProjectPopup({
                 id="create-project-confirm-button"
                 onClick={async () => {
                     try {
-                        const project = await createProjectRequest(projectName, selectedTask, null) // No way to delete it from UI, so we set it to null.
+                        const project = await createProjectRequest(projectName, selectedTask, projectPassword)
                         if (project) refreshProjects(project)
                         closePopup()
                     } catch (error) {
