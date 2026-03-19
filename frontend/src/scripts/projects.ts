@@ -58,6 +58,28 @@ export async function createProjectRequest(
     return await responseData
 }
 
+export async function getProject(projectId: string, password: string | null = null): Promise<Project> {
+    console.debug(`Fetching project with ID: ${projectId}`)
+
+    // Check if project ID is provided.
+    if (!projectId) {
+        console.error('Project ID is required for fetching.')
+        throw new APIErrorResponse('Project ID is required for fetching.', 400)
+    }
+
+    // Check if password is provided.
+    if (password === null) {
+        console.debug('No password provided. Trying to fetch project without password...')
+        return await fetchData(`/projects/${projectId}/`, RequestMethod.GET)
+    }
+
+    // Authenticate with password and fetch project.
+    console.debug('Password provided. Trying to fetch project with authentication...')
+    return await fetchData(`/projects/${projectId}/`, RequestMethod.GET, undefined, undefined, {
+        Authorization: `Bearer ${password}`,
+    })
+}
+
 export async function deleteProjectRequest(projectId: string): Promise<void> {
     console.debug(`Deleting project with ID: ${projectId}`)
     if (!projectId) {
