@@ -1,5 +1,8 @@
 import { fetchData, RequestMethod, APIErrorResponse } from '../scripts/common'
 
+// Constants.
+const ACCESS_TOKEN_KEY = 'current_project_access_token'
+
 // Structures.
 export interface Task {
     name: string
@@ -58,6 +61,42 @@ export async function createProjectRequest(
     return await responseData
 }
 
+export async function authenticateProjectRequest(projectId: string, password: string): Promise<void> {
+    console.debug(`Authenticating project with ID: ${projectId}`)
+
+    // Check if project ID and password are provided.
+    if (!projectId) {
+        console.error('Project ID is required for authentication.')
+        throw new APIErrorResponse('Project ID is required for authentication.', 400)
+    }
+    if (!password) {
+        console.error('Password is required for authentication.')
+        throw new APIErrorResponse('Password is required for authentication.', 400)
+    }
+
+    // Authenticate to fetch the access token.
+    const tokenResponse = await fetchData('/auth/token/', RequestMethod.POST, undefined, {
+        project_id: projectId,
+        password: password,
+    })
+    localStorage.setItem(ACCESS_TOKEN_KEY, tokenResponse.access_token)
+    console.debug('Project authenticated successfully. Access token stored.')
+}
+
+export function getCurrentProjectAccessToken(): string | null {
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY)
+    console.debug('Retrieved current project access token')
+    if (token === null) {
+        console.warn('No current project access token found.')
+    }
+    return token
+}
+
+export function removeCurrentProjectAccessToken(): void {
+    localStorage.removeItem(ACCESS_TOKEN_KEY)
+    console.debug('Removed current project access token.')
+}
+
 export async function getProjectRequest(projectId: string, password: string | null = null): Promise<Project> {
     console.debug(`Fetching project with ID: ${projectId}`)
 
@@ -73,10 +112,14 @@ export async function getProjectRequest(projectId: string, password: string | nu
         return await fetchData(`/projects/${projectId}/`, RequestMethod.GET)
     }
 
+    // Authenticate to fetch the access token.
+    authenticateProjectRequest(projectId, password)
+    const accessToken = getCurrentProjectAccessToken()
+
     // Authenticate with password and fetch project.
     console.debug('Password provided. Trying to fetch project with authentication...')
     return await fetchData(`/projects/${projectId}/`, RequestMethod.GET, undefined, undefined, {
-        Authorization: `Bearer ${password}`,
+        Authorization: `Bearer ${accessToken}`,
     })
 }
 
