@@ -31,7 +31,7 @@ export async function fetchData(
     // Set up the full URL.
     let fullUrl: string = new URL(url, API_BASE_URL).toString()
     console.debug(
-        `Fetching data from ${fullUrl} with method ${method}, params: ${JSON.stringify(params)}, body: ${JSON.stringify(body)}, headers: ${JSON.stringify(headers)}`,
+        `Fetching data from ${fullUrl} with method ${method}, params: ${JSON.stringify(params)}, body: ${JSON.stringify(body)}, headers: ${JSON.stringify(headers)}, Content-Type: ${contentType}`,
     )
 
     // Set up the request options.
@@ -45,16 +45,25 @@ export async function fetchData(
 
     // Add body if provided.
     if (body) {
-        options.body = JSON.stringify(body)
+        console.trace('Adding body to the request.')
+        if (contentType === 'application/x-www-form-urlencoded') {
+            console.trace('Encoding body as URL-encoded form data.')
+            options.body = new URLSearchParams(body).toString()
+        } else {
+            console.trace('Encoding body as JSON.')
+            options.body = JSON.stringify(body)
+        }
     }
 
     // Add params to the URL if provided.
     if (params) {
+        console.trace('Adding query parameters to the URL.')
         const queryParams = new URLSearchParams(params).toString()
         fullUrl += `?${queryParams}`
     }
 
     // Request data from the API.
+    console.debug(`Final options for fetch: ${JSON.stringify(options)}`)
     const response = await fetch(fullUrl, options)
     if (!response.ok) {
         // Get status and message from the response.
