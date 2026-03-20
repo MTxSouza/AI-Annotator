@@ -8,12 +8,10 @@ import '../styles/ConfirmProjectPasswordPopup.css'
 
 export function ConfirmProjectPasswordPopup({
     projectId,
-    password,
     closePopup,
     onSuccess,
 }: {
     projectId: string
-    password: string
     closePopup: () => void
     onSuccess: () => void
 }): JSX.Element {
