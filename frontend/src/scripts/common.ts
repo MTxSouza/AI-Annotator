@@ -26,6 +26,7 @@ export async function fetchData(
     params?: any,
     body?: any,
     headers?: any,
+    contentType: string = 'application/json',
 ): Promise<any | void> {
     // Set up the full URL.
     let fullUrl: string = new URL(url, API_BASE_URL).toString()
@@ -37,7 +38,7 @@ export async function fetchData(
     const options: RequestInit = {
         method: method,
         headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': contentType,
             ...headers,
         },
     }
