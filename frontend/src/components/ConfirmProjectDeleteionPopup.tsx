@@ -1,4 +1,4 @@
-import { JSX } from 'react'
+import { JSX, useState } from 'react'
 import { APIErrorResponse } from '../scripts/common'
 import { PopupOverlay } from '../components/PopupOverlay'
 import { useErrorDialog } from '../components/ErrorDialog'
@@ -23,6 +23,9 @@ export function ConfirmProjectDeletionPopup({
     // Set up error dialog.
     const { showErrorDialog } = useErrorDialog()
 
+    // Set up state to manage project password input.
+    const [showPasswordPopup, setShowPasswordPopup] = useState<boolean>(false)
+
     // Delete project function.
     async function deleteProject(projectId: string) {
         try {
@@ -39,6 +42,19 @@ export function ConfirmProjectDeletionPopup({
         }
     }
 
+    if (showPasswordPopup) {
+        return (
+            <ConfirmProjectPasswordPopup
+                projectId={projectId}
+                closePopup={closePopup}
+                onSuccess={() => {
+                    deleteProject(projectId)
+                    setShowPasswordPopup(false)
+                }}
+            />
+        )
+    }
+
     const component = (
         <div className="confirm-project-deletion-popup-component" onClick={(event) => event.stopPropagation()}>
             <h4>Are you sure you want to delete this project?</h4>
@@ -46,13 +62,8 @@ export function ConfirmProjectDeletionPopup({
                 <button
                     onClick={() => {
                         if (isPrivate) {
-                            return (
-                                <ConfirmProjectPasswordPopup
-                                    projectId={projectId}
-                                    closePopup={closePopup}
-                                    onSuccess={() => deleteProject(projectId)}
-                                />
-                            )
+                            setShowPasswordPopup(true)
+                            return
                         }
                         deleteProject(projectId)
                     }}
