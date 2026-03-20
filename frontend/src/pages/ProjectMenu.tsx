@@ -30,6 +30,7 @@ function ProjectMenuComponent({
     // Set up popup states.
     const [createProjectPopup, setCreateProjectPopup] = useState(false)
     const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
+    const [isProjectPrivate, setIsProjectPrivate] = useState(false)
 
     return (
         <div className="main-page-component">
@@ -39,7 +40,10 @@ function ProjectMenuComponent({
                 <ProjectCard
                     key={project._id}
                     project={project}
-                    confirmProjectDeletion={() => setProjectToDelete(project._id)}
+                    confirmProjectDeletion={() => {
+                        setProjectToDelete(project._id)
+                        setIsProjectPrivate(project.is_private)
+                    }}
                 />
             ))}
 
@@ -50,6 +54,7 @@ function ProjectMenuComponent({
             {projectToDelete && (
                 <ConfirmProjectDeletionPopup
                     projectId={projectToDelete}
+                    isPrivate={isProjectPrivate}
                     closePopup={() => setProjectToDelete(null)}
                     refreshProjects={() => {
                         onProjectDelete(projectToDelete)
