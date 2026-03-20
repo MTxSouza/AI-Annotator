@@ -75,10 +75,17 @@ export async function authenticateProjectRequest(projectId: string, password: st
     }
 
     // Authenticate to fetch the access token.
-    const tokenResponse = await fetchData('/auth/token/', RequestMethod.POST, undefined, {
-        project_id: projectId,
-        password: password,
-    })
+    const tokenResponse = await fetchData(
+        '/auth/token/',
+        RequestMethod.POST,
+        undefined,
+        {
+            username: projectId,
+            password: password,
+        },
+        undefined,
+        'application/x-www-form-urlencoded',
+    )
     localStorage.setItem(ACCESS_TOKEN_KEY, tokenResponse.access_token)
     console.debug('Project authenticated successfully. Access token stored.')
 }
@@ -130,6 +137,15 @@ export async function deleteProjectRequest(projectId: string): Promise<void> {
         throw new APIErrorResponse('Project ID is required for deletion.', 400)
     }
 
-    await fetchData(`/projects/${projectId}/`, RequestMethod.DELETE)
+    // Check if access token exists for the project. If it does, include it in the request to allow deletion of private projects.
+    const accessToken = getCurrentProjectAccessToken()
+    let headers = undefined
+    if (accessToken) {
+        headers = {
+            Authorization: `Bearer ${accessToken}`,
+        }
+    }
+
+    await fetchData(`/projects/${projectId}/`, RequestMethod.DELETE, undefined, undefined, headers)
     console.debug(`Project with ID: ${projectId} deleted successfully.`)
 }
