@@ -3,15 +3,18 @@ import { APIErrorResponse } from '../scripts/common'
 import { PopupOverlay } from '../components/PopupOverlay'
 import { useErrorDialog } from '../components/ErrorDialog'
 import { deleteProjectRequest } from '../scripts/projects'
+import { ConfirmProjectPasswordPopup } from './ConfirmProjectPasswordPopup'
 
 import '../styles/ConfirmProjectDeletionPopup.css'
 
 export function ConfirmProjectDeletionPopup({
     projectId,
+    isPrivate,
     closePopup,
     refreshProjects,
 }: {
     projectId: string
+    isPrivate: boolean
     closePopup: () => void
     refreshProjects: () => void
 }): JSX.Element {
@@ -40,7 +43,22 @@ export function ConfirmProjectDeletionPopup({
         <div className="confirm-project-deletion-popup-component" onClick={(event) => event.stopPropagation()}>
             <h4>Are you sure you want to delete this project?</h4>
             <div>
-                <button onClick={() => deleteProject(projectId)}>Yes</button>
+                <button
+                    onClick={() => {
+                        if (isPrivate) {
+                            return (
+                                <ConfirmProjectPasswordPopup
+                                    projectId={projectId}
+                                    closePopup={closePopup}
+                                    onSuccess={() => deleteProject(projectId)}
+                                />
+                            )
+                        }
+                        deleteProject(projectId)
+                    }}
+                >
+                    Yes
+                </button>
                 <button onClick={closePopup}>No</button>
             </div>
         </div>
