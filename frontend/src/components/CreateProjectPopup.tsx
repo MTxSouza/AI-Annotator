@@ -4,6 +4,7 @@ import { useErrorDialog } from '../components/ErrorDialog'
 import { Project, Task, createProjectRequest } from '../scripts/projects'
 import { APIErrorResponse, fetchData, RequestMethod } from '../scripts/common'
 import { ProjectPassword } from '../components/input/ProjectPassword'
+import { SimpleConfirmButton } from '../components/button/SimpleConfirmButton'
 
 import '../styles/CreateProjectPopup.css'
 
@@ -86,9 +87,9 @@ export function CreateProjectPopup({
                     </div>
                 </div>
             </div>
-            <button
-                id="create-project-confirm-button"
-                onClick={async () => {
+            <SimpleConfirmButton
+                message={'Create'}
+                onConfirm={async () => {
                     try {
                         const project = await createProjectRequest(projectName, selectedTask, projectPassword)
                         if (project) refreshProjects(project)
@@ -103,9 +104,7 @@ export function CreateProjectPopup({
                         }
                     }
                 }}
-            >
-                Create
-            </button>
+            />
         </div>
     )
     return <PopupOverlay children={component} />
