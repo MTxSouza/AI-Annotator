@@ -1,4 +1,4 @@
-import { JSX } from 'react'
+import { JSX, useState } from 'react'
 import { APIErrorResponse } from '../scripts/common'
 import { PopupOverlay } from '../components/PopupOverlay'
 import { useErrorDialog } from '../components/ErrorDialog'
@@ -19,6 +19,9 @@ export function ConfirmProjectPasswordPopup({
 
     // Set up error dialog.
     const { showErrorDialog } = useErrorDialog()
+
+    // Set up state to manage project password input.
+    const [projectPassword, setProjectPassword] = useState<string | null>(null)
 
     // Authenticate project function.
     async function authenticateProject(projectId: string, password: string) {
