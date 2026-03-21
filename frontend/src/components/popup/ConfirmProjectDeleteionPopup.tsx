@@ -4,6 +4,7 @@ import { PopupOverlay } from '../../components/PopupOverlay'
 import { useErrorDialog } from '../../components/ErrorDialog'
 import { deleteProjectRequest } from '../../scripts/projects'
 import { ConfirmProjectPasswordPopup } from './ConfirmProjectPasswordPopup'
+import { Popup } from './Popup'
 
 import '../../styles/popup/ConfirmProjectDeletionPopup.css'
 
@@ -43,7 +44,7 @@ export function ConfirmProjectDeletionPopup({
     }
 
     if (showPasswordPopup) {
-        const component = (
+        const children = (
             <ConfirmProjectPasswordPopup
                 projectId={projectId}
                 closePopup={closePopup}
@@ -53,11 +54,12 @@ export function ConfirmProjectDeletionPopup({
                 }}
             />
         )
+        const component = <Popup children={children} />
 
         return <PopupOverlay children={component} />
     }
 
-    const component = (
+    const children = (
         <div className="confirm-project-deletion-popup-component" onClick={(event) => event.stopPropagation()}>
             <h4>Are you sure you want to delete this project?</h4>
             <div>
@@ -76,5 +78,7 @@ export function ConfirmProjectDeletionPopup({
             </div>
         </div>
     )
+    const component = <Popup children={children} />
+
     return <PopupOverlay children={component} />
 }

@@ -1,17 +1,9 @@
 .create-project-popup-component {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     display: flex;
     flex-direction: column;
-    border: 2px solid var(--secondary-text-color);
-    border-radius: 20px;
-    background-color: var(--primary-background-color);
     padding: 10px 30px 30px 30px;
     width: 700px;
     gap: 8px;
-    box-shadow: 0px 0px 20px 1px var(--primary-shadow-color);
     div:first-child {
         display: flex;
         flex-direction: row;

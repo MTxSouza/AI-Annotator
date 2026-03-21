@@ -5,6 +5,7 @@ import { Project, Task, createProjectRequest } from '../../scripts/projects'
 import { APIErrorResponse, fetchData, RequestMethod } from '../../scripts/common'
 import { ProjectPassword } from '../input/ProjectPassword'
 import { SimpleConfirmButton } from '../button/SimpleConfirmButton'
+import { Popup } from './Popup'
 
 import '../../styles/popup/CreateProjectPopup.css'
 
@@ -41,8 +42,8 @@ export function CreateProjectPopup({
     const currentTaskDescription = tasks.find((task) => task.name === selectedTask)?.description || ''
     const currentTaskFileFormat = tasks.find((task) => task.name === selectedTask)?.file_format_list || []
 
-    const component = (
-        <div className="create-project-popup-component" onClick={(event) => event.stopPropagation()}>
+    const children = (
+        <div className="create-project-popup-component">
             <div>
                 <h1>Create Project</h1>
                 <button onClick={closePopup}>
@@ -107,5 +108,7 @@ export function CreateProjectPopup({
             />
         </div>
     )
+    const component = <Popup children={children} />
+
     return <PopupOverlay children={component} />
 }

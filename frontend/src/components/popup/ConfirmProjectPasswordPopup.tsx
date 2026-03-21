@@ -5,6 +5,7 @@ import { useErrorDialog } from '../ErrorDialog'
 import { authenticateProjectRequest } from '../../scripts/projects'
 import { ProjectPassword } from '../input/ProjectPassword'
 import { SimpleConfirmButton } from '../button/SimpleConfirmButton'
+import { Popup } from './Popup'
 
 import '../../styles/popup/ConfirmProjectPasswordPopup.css'
 
@@ -41,7 +42,7 @@ export function ConfirmProjectPasswordPopup({
         }
     }
 
-    const component = (
+    const children = (
         <div className="confirm-project-password-popup-component">
             <div>
                 <h2>Project Password</h2>
@@ -72,6 +73,7 @@ export function ConfirmProjectPasswordPopup({
             </div>
         </div>
     )
+    const component = <Popup children={children} />
 
     return <PopupOverlay children={component} />
 }
