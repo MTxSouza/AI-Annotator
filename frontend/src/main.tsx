@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { TopMenuBar } from './components/TopMenuBar'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { BottomMenuBar } from './components/BottomMenuBar'
-import { ErrorDialogProvider } from './components/ErrorDialog'
+import { ErrorDialogProvider } from './components/dialog/ErrorDialog'
 import { ProjectMenu } from './pages/ProjectMenu'
 import { PROJECT_MENU_URL } from './scripts/common'
 

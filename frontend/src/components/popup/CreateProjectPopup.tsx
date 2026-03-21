@@ -1,6 +1,6 @@
 import { useState, useEffect, JSX } from 'react'
 import { PopupOverlay } from '../PopupOverlay'
-import { useErrorDialog } from '../ErrorDialog'
+import { useErrorDialog } from '../dialog/ErrorDialog'
 import { Project, Task, createProjectRequest } from '../../scripts/projects'
 import { APIErrorResponse, fetchData, RequestMethod } from '../../scripts/common'
 import { ProjectPassword } from '../input/ProjectPassword'

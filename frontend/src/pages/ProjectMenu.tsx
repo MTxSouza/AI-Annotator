@@ -1,6 +1,6 @@
 import { Project } from '../scripts/projects'
 import { useState, useEffect, JSX } from 'react'
-import { useErrorDialog } from '../components/ErrorDialog'
+import { useErrorDialog } from '../components/dialog/ErrorDialog'
 import { CreateProjectPopup } from '../components/popup/CreateProjectPopup'
 import { APIErrorResponse, fetchData, RequestMethod } from '../scripts/common'
 import { ConfirmProjectDeletionPopup } from '../components/popup/ConfirmProjectDeleteionPopup'

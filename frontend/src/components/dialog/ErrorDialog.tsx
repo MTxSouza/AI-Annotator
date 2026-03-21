@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, JSX, ReactNode, useRef } from 'react'
-import { ErrorDialogMessage } from '../scripts/ErrorDialog'
+import { ErrorDialogMessage } from '../../scripts/ErrorDialog'
 
-import '../styles/ErrorDialog.css'
+import '../../styles/dialog/ErrorDialog.css'
 
 // Create the context.
 interface ErrorDialogContextType {
