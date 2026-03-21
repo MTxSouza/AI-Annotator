@@ -33,7 +33,6 @@
         user-select: none;
     }
     input[type='text'],
-    input[type='password'],
     select {
         width: 100%;
         border: 1px solid var(--secondary-text-color);
@@ -52,6 +51,9 @@
         border: 1px solid var(--tertiary-text-color);
         border-radius: 10px;
     }
+}
+.create-project-popup-component > button {
+    margin-top: 40px;
 }
 
 .create-project-task-input-container {
@@ -84,14 +86,4 @@
         border-radius: 10px;
         padding: 3px 8px 3px 8px;
     }
-}
-
-#create-project-confirm-button {
-    border: 1px solid var(--tertiary-text-color);
-    border-radius: 20px;
-    padding: 10px;
-    margin-top: 30px;
-}
-#create-project-confirm-button:hover {
-    border: 1px solid var(--secondary-text-color);
 }
