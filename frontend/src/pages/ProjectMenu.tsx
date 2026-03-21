@@ -1,9 +1,9 @@
 import { Project } from '../scripts/projects'
 import { useState, useEffect, JSX } from 'react'
 import { useErrorDialog } from '../components/ErrorDialog'
-import { CreateProjectPopup } from '../components/CreateProjectPopup'
+import { CreateProjectPopup } from '../components/popup/CreateProjectPopup'
 import { APIErrorResponse, fetchData, RequestMethod } from '../scripts/common'
-import { ConfirmProjectDeletionPopup } from '../components/ConfirmProjectDeleteionPopup'
+import { ConfirmProjectDeletionPopup } from '../components/popup/ConfirmProjectDeleteionPopup'
 import { CreateProjectCard, LoadCreateProjectCard, ProjectCard } from '../components/ProjectCard'
 
 import '../styles/ProjectMenu.css'

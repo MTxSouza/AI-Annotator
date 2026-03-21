@@ -1,11 +1,11 @@
 import { JSX, useState } from 'react'
-import { APIErrorResponse } from '../scripts/common'
-import { PopupOverlay } from '../components/PopupOverlay'
-import { useErrorDialog } from '../components/ErrorDialog'
-import { deleteProjectRequest } from '../scripts/projects'
+import { APIErrorResponse } from '../../scripts/common'
+import { PopupOverlay } from '../../components/PopupOverlay'
+import { useErrorDialog } from '../../components/ErrorDialog'
+import { deleteProjectRequest } from '../../scripts/projects'
 import { ConfirmProjectPasswordPopup } from './ConfirmProjectPasswordPopup'
 
-import '../styles/ConfirmProjectDeletionPopup.css'
+import '../../styles/popup/ConfirmProjectDeletionPopup.css'
 
 export function ConfirmProjectDeletionPopup({
     projectId,

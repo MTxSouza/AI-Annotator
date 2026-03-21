@@ -1,12 +1,12 @@
 import { JSX, useState } from 'react'
-import { APIErrorResponse } from '../scripts/common'
-import { PopupOverlay } from '../components/PopupOverlay'
-import { useErrorDialog } from '../components/ErrorDialog'
-import { authenticateProjectRequest } from '../scripts/projects'
-import { ProjectPassword } from '../components/input/ProjectPassword'
-import { SimpleConfirmButton } from '../components/button/SimpleConfirmButton'
+import { APIErrorResponse } from '../../scripts/common'
+import { PopupOverlay } from '../PopupOverlay'
+import { useErrorDialog } from '../ErrorDialog'
+import { authenticateProjectRequest } from '../../scripts/projects'
+import { ProjectPassword } from '../input/ProjectPassword'
+import { SimpleConfirmButton } from '../button/SimpleConfirmButton'
 
-import '../styles/ConfirmProjectPasswordPopup.css'
+import '../../styles/popup/ConfirmProjectPasswordPopup.css'
 
 export function ConfirmProjectPasswordPopup({
     projectId,
