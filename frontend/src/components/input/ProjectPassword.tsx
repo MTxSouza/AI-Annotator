@@ -3,19 +3,27 @@ import { JSX, useState } from 'react'
 import '../../styles/input/ProjectPassword.css'
 
 export function ProjectPassword({
+    isOpcional,
     setProjectPassword,
 }: {
+    isOpcional?: boolean
     setProjectPassword: (password: string | null) => void
 }): JSX.Element {
     // Set up state to manage the visibility of the project password input.
     const [hidePassword, setHidePassword] = useState<boolean>(true)
+
+    // Set placeholder message.
+    let placeholderMessage = 'Password'
+    if (isOpcional) {
+        placeholderMessage += ' (optional)'
+    }
 
     const component = (
         <div className="project-password-input-container">
             <input
                 id="project-password-input"
                 type={hidePassword ? 'password' : 'text'}
-                placeholder="Password (optional)"
+                placeholder={placeholderMessage}
                 onChange={(event) => setProjectPassword(event.target.value || null)}
             />
             <label id="project-password-visibility-label" htmlFor="change-project-password-visibilty-btn">
