@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { BottomMenuBar } from './components/BottomMenuBar'
 import { ErrorDialogProvider } from './components/ErrorDialog'
 import { ProjectMenu } from './pages/ProjectMenu'
+import { PROJECT_MENU_URL } from './scripts/common'
 
 import './main.css'
 
@@ -21,7 +22,7 @@ createRoot(rootElement).render(
             <BrowserRouter>
                 <TopMenuBar />
                 <Routes>
-                    <Route path="/" element={<ProjectMenu />} />
+                    <Route path={PROJECT_MENU_URL} element={<ProjectMenu />} />
                 </Routes>
                 <BottomMenuBar />
             </BrowserRouter>
