@@ -148,4 +148,7 @@ export async function deleteProjectRequest(projectId: string): Promise<void> {
 
     await fetchData(`/projects/${projectId}/`, RequestMethod.DELETE, undefined, undefined, headers)
     console.debug(`Project with ID: ${projectId} deleted successfully.`)
+
+    // Remove access token from local storage after project deletion.
+    removeCurrentProjectAccessToken()
 }
