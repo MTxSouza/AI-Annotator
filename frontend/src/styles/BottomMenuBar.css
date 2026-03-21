@@ -51,6 +51,7 @@
     border: 2px solid var(--tertiary-text-color);
     border-radius: 10px;
     padding: 8px;
+    gap: 5px;
     * {
         color: var(--secondary-text-color);
         user-select: none;

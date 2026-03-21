@@ -57,6 +57,9 @@ export function BottomMenuBar(): JSX.Element {
                         <p>
                             <span className="shortcut-key">F11</span>Full Screen (Recommended)
                         </p>
+                        <p>
+                            <span className="shortcut-key">SHIFT + T</span>Switch theme
+                        </p>
                     </div>
                 </button>
             </div>

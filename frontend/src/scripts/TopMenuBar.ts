@@ -42,3 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentTheme = getCurrentApplicationTheme()
     applyCurrentApplicationTheme(currentTheme)
 })
+
+document.addEventListener('keydown', (event) => {
+    // Listen for the "SHIFT + T" keyboard shortcut to switch the theme of the application.
+    if (event.shiftKey && event.code === 'KeyT') {
+        console.info('SHIFT + T keyboard shortcut pressed. Switching theme of the application...')
+        switchApplicationTheme()
+    }
+})
