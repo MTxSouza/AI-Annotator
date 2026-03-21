@@ -3,6 +3,8 @@ import { APIErrorResponse } from '../scripts/common'
 import { PopupOverlay } from '../components/PopupOverlay'
 import { useErrorDialog } from '../components/ErrorDialog'
 import { authenticateProjectRequest } from '../scripts/projects'
+import { ProjectPassword } from '../components/input/ProjectPassword'
+import { SimpleConfirmButton } from '../components/button/SimpleConfirmButton'
 
 import '../styles/ConfirmProjectPasswordPopup.css'
 
@@ -39,7 +41,37 @@ export function ConfirmProjectPasswordPopup({
         }
     }
 
-    const component = <div className="confirm-project-password-popup-component"></div>
+    const component = (
+        <div className="confirm-project-password-popup-component">
+            <div>
+                <h2>Project Password</h2>
+                <button onClick={closePopup}>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        height="24px"
+                        viewBox="0 -960 960 960"
+                        width="24px"
+                        fill="#FFFFFF"
+                    >
+                        <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" />
+                    </svg>
+                </button>
+            </div>
+            <ProjectPassword isOpcional={false} setProjectPassword={setProjectPassword} />
+            <div>
+                <SimpleConfirmButton
+                    message={'Confirm'}
+                    onConfirm={() => {
+                        if (projectPassword === null) {
+                            showErrorDialog('Please enter the project password.', 400)
+                            return
+                        }
+                        authenticateProject(projectId, projectPassword)
+                    }}
+                />
+            </div>
+        </div>
+    )
 
     return <PopupOverlay children={component} />
 }
