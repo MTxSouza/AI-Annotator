@@ -43,7 +43,7 @@ export function ConfirmProjectDeletionPopup({
     }
 
     if (showPasswordPopup) {
-        return (
+        const component = (
             <ConfirmProjectPasswordPopup
                 projectId={projectId}
                 closePopup={closePopup}
@@ -53,6 +53,8 @@ export function ConfirmProjectDeletionPopup({
                 }}
             />
         )
+
+        return <PopupOverlay children={component} />
     }
 
     const component = (
