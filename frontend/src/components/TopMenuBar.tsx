@@ -6,7 +6,9 @@ import '../styles/TopMenuBar.css'
 export function TopMenuBar(): JSX.Element {
     return (
         <div className="top-menu-bar-component">
-            <div className="project-logo-image-container"></div>
+            <div className="project-logo-image-container">
+                <button id="redirect-project-menu-btn"></button>
+            </div>
             <div className="switch-theme-btn-container">
                 <button id="switch-dark-theme-btn" onClick={switchApplicationTheme}>
                     <svg
