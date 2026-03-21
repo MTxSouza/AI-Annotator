@@ -1,5 +1,5 @@
 :root {
-    --popup-overlay-background: rgba(230, 230, 230, 0.5);
+    --popup-overlay-background: rgba(220, 220, 220, 0.5);
 }
 .darkmode {
     --popup-overlay-background: rgba(200, 200, 200, 0.1);
