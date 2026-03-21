@@ -64,7 +64,7 @@ export function CreateProjectPopup({
                 placeholder="Project Name"
                 onChange={(event) => setProjectName(event.target.value)}
             />
-            <ProjectPassword setProjectPassword={setProjectPassword} />
+            <ProjectPassword isOpcional={true} setProjectPassword={setProjectPassword} />
             <div className="create-project-task-input-container">
                 <select
                     name="create-project-task"
