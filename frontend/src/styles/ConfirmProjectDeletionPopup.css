@@ -9,7 +9,7 @@
     border: 2px solid var(--secondary-text-color);
     border-radius: 20px;
     background-color: var(--primary-background-color);
-    padding: 20px 30px 30px 20px;
+    padding: 20px 30px 10px 20px;
     min-width: 500px;
     gap: 12px;
     box-shadow: 0px 0px 20px 1px var(--primary-shadow-color);
