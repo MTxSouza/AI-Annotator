@@ -1,6 +1,6 @@
 import { JSX, useState } from 'react'
 import { APIErrorResponse } from '../../scripts/common'
-import { PopupOverlay } from '../../components/PopupOverlay'
+import { PopupOverlay } from '../PopupOverlay'
 import { useDialog } from '../dialog/Dialog'
 import { deleteProjectRequest } from '../../scripts/projects'
 import { ConfirmProjectPasswordPopup } from './ConfirmProjectPasswordPopup'
