@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { TopMenuBar } from './components/TopMenuBar'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { BottomMenuBar } from './components/BottomMenuBar'
-import { ErrorDialogProvider } from './components/dialog/ErrorDialog'
+import { DialogProvider } from './components/dialog/Dialog'
 import { ProjectMenu } from './pages/ProjectMenu'
 import { PROJECT_MENU_URL } from './scripts/common'
 
@@ -18,7 +18,7 @@ if (!rootElement) {
 }
 createRoot(rootElement).render(
     <StrictMode>
-        <ErrorDialogProvider>
+        <DialogProvider>
             <BrowserRouter>
                 <TopMenuBar />
                 <Routes>
@@ -26,6 +26,6 @@ createRoot(rootElement).render(
                 </Routes>
                 <BottomMenuBar />
             </BrowserRouter>
-        </ErrorDialogProvider>
+        </DialogProvider>
     </StrictMode>,
 )
