@@ -25,8 +25,8 @@ export function Dialog({
     return <div className={`dialog-component ${variant ? `dialog-component--${variant}` : ''}`}>{children}</div>
 }
 
-export function DialogContainer({ childrens }: { childrens: JSX.Element | JSX.Element[] }): JSX.Element {
-    return <div className="dialog-container">{childrens}</div>
+export function DialogContainer({ children }: { children: JSX.Element | JSX.Element[] }): JSX.Element {
+    return <div className="dialog-container">{children}</div>
 }
 
 // Create the provider component.
@@ -56,7 +56,7 @@ export function DialogProvider({ children }: { children: ReactNode }): JSX.Eleme
             </div>
         )
     })
-    const dialogContainer = <DialogContainer childrens={dialogList.length > 0 ? dialogList : []} />
+    const dialogContainer = <DialogContainer children={dialogList.length > 0 ? dialogList : []} />
 
     return (
         <dialogContext.Provider value={{ showDialog }}>
