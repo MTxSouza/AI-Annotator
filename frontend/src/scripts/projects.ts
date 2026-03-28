@@ -21,7 +21,10 @@ export interface Project {
 }
 
 // Functions.
-function validateProjectName(name: string): void {
+function validateProjectName(name: string): string {
+    // Trim whitespace from the name.
+    name = name.trim()
+
     // Check if the name is empty.
     if (!name) {
         console.error('Project name cannot be empty.')
@@ -34,6 +37,8 @@ function validateProjectName(name: string): void {
         console.error('Project name contains invalid characters: . < > : " / \\ | ? *')
         throw new APIErrorResponse('Project name contains invalid characters: . < > : " / \\ | ? *', 400)
     }
+
+    return name
 }
 
 export async function createProjectRequest(
@@ -45,7 +50,7 @@ export async function createProjectRequest(
     console.debug(`Creating project with name: ${name}, task: ${task}`)
 
     // Validate fields.
-    validateProjectName(name.trim())
+    name = validateProjectName(name)
 
     // Create body for the request.
     const body = {
