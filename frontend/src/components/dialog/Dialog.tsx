@@ -2,7 +2,7 @@
 Main component for the dialog system.
 */
 import { createContext, JSX, ReactNode, useContext, useRef, useState } from 'react'
-import { dialogMessage } from '../../scripts/Dialog'
+import { DialogMessage } from '../../scripts/Dialog'
 import { DialogType } from '../../scripts/Dialog'
 
 // Styles.
@@ -22,7 +22,7 @@ export function DialogContainer({ children }: { children: JSX.Element | JSX.Elem
 // Create the provider component.
 export function DialogProvider({ children }: { children: ReactNode }): JSX.Element {
     // State to store all error dialogs.
-    const [dialogs, setDialogs] = useState<dialogMessage[]>([])
+    const [dialogs, setDialogs] = useState<DialogMessage[]>([])
     const errorDialogsMap = useRef<Record<number, number>>({})
 
     // Function to show an error dialog.

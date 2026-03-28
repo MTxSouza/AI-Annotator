@@ -2,7 +2,7 @@
 export type DialogType = 'error' | 'info' | 'warning'
 
 // Interfaces.
-export interface dialogMessage {
+export interface DialogMessage {
     id: number
     type: DialogType
     message: string
