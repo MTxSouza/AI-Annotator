@@ -1,7 +1,7 @@
 :root {
     --dialog-container-height: 320px;
 
-    --error-dialog-background-color: rgb(255, 0, 0, 0.5);
+    --error-dialog-background-color: rgba(255, 0, 0, 0.5);
     --error-dialog-border-color: red;
 
     --info-dialog-background-color: rgba(0, 110, 255, 0.5);
