@@ -26,10 +26,10 @@ export function ProjectPassword({
                 placeholder={placeholderMessage}
                 onChange={(event) => setProjectPassword(event.target.value || null)}
             />
-            <label id="project-password-visibility-label" htmlFor="change-project-password-visibilty-btn">
+            <label id="project-password-visibility-label" htmlFor="change-project-password-visibility-btn">
                 <input
                     type="checkbox"
-                    id="change-project-password-visibilty-btn"
+                    id="change-project-password-visibility-btn"
                     checked={hidePassword}
                     onChange={() => setHidePassword(!hidePassword)}
                 />
