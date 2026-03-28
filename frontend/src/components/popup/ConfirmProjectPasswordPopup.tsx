@@ -58,7 +58,7 @@ export function ConfirmProjectPasswordPopup({
                     </svg>
                 </button>
             </div>
-            <ProjectPassword isOpcional={false} setProjectPassword={setProjectPassword} />
+            <ProjectPassword isOptional={false} setProjectPassword={setProjectPassword} />
             <div>
                 <SimpleConfirmButton
                     message={'Confirm'}
