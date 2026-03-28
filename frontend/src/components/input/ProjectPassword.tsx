@@ -3,10 +3,10 @@ import { JSX, useState } from 'react'
 import '../../styles/input/ProjectPassword.css'
 
 export function ProjectPassword({
-    isOpcional,
+    isOptional,
     setProjectPassword,
 }: {
-    isOpcional?: boolean
+    isOptional?: boolean
     setProjectPassword: (password: string | null) => void
 }): JSX.Element {
     // Set up state to manage the visibility of the project password input.
@@ -14,7 +14,7 @@ export function ProjectPassword({
 
     // Set placeholder message.
     let placeholderMessage = 'Password'
-    if (isOpcional) {
+    if (isOptional) {
         placeholderMessage += ' (optional)'
     }
 
