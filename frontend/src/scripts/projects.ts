@@ -120,7 +120,7 @@ export async function getProjectRequest(projectId: string, password: string | nu
     }
 
     // Authenticate to fetch the access token.
-    authenticateProjectRequest(projectId, password)
+    await authenticateProjectRequest(projectId, password)
     const accessToken = getCurrentProjectAccessToken()
 
     // Authenticate with password and fetch project.
