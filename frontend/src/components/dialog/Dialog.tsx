@@ -15,16 +15,6 @@ interface dialogContextType {
 const dialogContext = createContext<dialogContextType | undefined>(undefined)
 
 // Components.
-export function Dialog({
-    children,
-    variant,
-}: {
-    children: JSX.Element | JSX.Element[]
-    variant?: DialogType
-}): JSX.Element {
-    return <div className={`dialog-component ${variant ? `dialog-component--${variant}` : ''}`}>{children}</div>
-}
-
 export function DialogContainer({ children }: { children: JSX.Element | JSX.Element[] }): JSX.Element {
     return <div className="dialog-container">{children}</div>
 }
