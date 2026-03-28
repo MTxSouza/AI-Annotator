@@ -3,7 +3,7 @@ import { useState, useEffect, JSX } from 'react'
 import { useDialog } from '../components/dialog/Dialog'
 import { CreateProjectPopup } from '../components/popup/CreateProjectPopup'
 import { APIErrorResponse, fetchData, RequestMethod } from '../scripts/common'
-import { ConfirmProjectDeletionPopup } from '../components/popup/ConfirmProjectDeleteionPopup'
+import { ConfirmProjectDeletionPopup } from '../components/popup/ConfirmProjectDeletionPopup'
 import { CreateProjectCard, LoadCreateProjectCard, ProjectCard } from '../components/ProjectCard'
 
 import '../styles/ProjectMenu.css'
