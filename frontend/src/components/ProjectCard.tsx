@@ -19,7 +19,7 @@ export function ProjectCard({
     confirmProjectDeletion: () => void
 }): JSX.Element {
     return (
-        <div className="project-card-component" project-id={project._id}>
+        <div className="project-card-component">
             <div>
                 {project.is_private && (
                     <label>
