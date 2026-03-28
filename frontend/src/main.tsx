@@ -3,8 +3,9 @@ import { createRoot } from 'react-dom/client'
 import { TopMenuBar } from './components/TopMenuBar'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { BottomMenuBar } from './components/BottomMenuBar'
-import { ProjectMenuPage } from './components/ProjectMenuPage'
-import { ErrorDialogProvider } from './components/ErrorDialog'
+import { DialogProvider } from './components/dialog/Dialog'
+import { ProjectMenu } from './pages/ProjectMenu'
+import { PROJECT_MENU_URL } from './scripts/common'
 
 import './main.css'
 
@@ -17,14 +18,14 @@ if (!rootElement) {
 }
 createRoot(rootElement).render(
     <StrictMode>
-        <ErrorDialogProvider>
+        <DialogProvider>
             <BrowserRouter>
                 <TopMenuBar />
                 <Routes>
-                    <Route path="/" element={<ProjectMenuPage />} />
+                    <Route path={PROJECT_MENU_URL} element={<ProjectMenu />} />
                 </Routes>
                 <BottomMenuBar />
             </BrowserRouter>
-        </ErrorDialogProvider>
+        </DialogProvider>
     </StrictMode>,
 )

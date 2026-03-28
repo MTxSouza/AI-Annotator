@@ -1,12 +1,25 @@
 import { JSX } from 'react'
-import { switchApplicationTheme } from '../scripts/TopMenuBar'
+import { useNavigate } from 'react-router-dom'
+import { removeCurrentProjectAccessToken } from '../scripts/projects'
+import { redirectToProjectMenuPage, switchApplicationTheme } from '../scripts/TopMenuBar'
 
 import '../styles/TopMenuBar.css'
 
 export function TopMenuBar(): JSX.Element {
+    // Set up navigation.
+    const navigate = useNavigate()
+
     return (
         <div className="top-menu-bar-component">
-            <div className="project-logo-image-container"></div>
+            <div className="project-logo-image-container">
+                <button
+                    id="redirect-project-menu-btn"
+                    onClick={() => {
+                        redirectToProjectMenuPage(navigate)
+                        removeCurrentProjectAccessToken()
+                    }}
+                ></button>
+            </div>
             <div className="switch-theme-btn-container">
                 <button id="switch-dark-theme-btn" onClick={switchApplicationTheme}>
                     <svg

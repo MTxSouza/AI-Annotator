@@ -1,0 +1,6 @@
+.main-page-component {
+    display: flex;
+    flex-direction: row;
+    padding: 50px 80px 50px 80px;
+    gap: 20px;
+}

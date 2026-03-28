@@ -1,0 +1,52 @@
+:root {
+    --dialog-container-height: 320px;
+
+    --error-dialog-background-color: rgba(255, 0, 0, 0.5);
+    --error-dialog-border-color: red;
+
+    --info-dialog-background-color: rgba(0, 110, 255, 0.5);
+    --info-dialog-border-color: blue;
+
+    --warning-dialog-background-color: rgba(255, 187, 0, 0.5);
+    --warning-dialog-border-color: yellow;
+}
+
+.dialog-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 5px;
+    height: var(--dialog-container-height);
+    max-height: var(--dialog-container-height);
+    overflow: hidden;
+    z-index: 1000;
+    padding: 0px 10px 0px 10px;
+    mask-image: linear-gradient(to bottom, transparent 0%, rgb(0, 0, 0) 30%);
+    pointer-events: none;
+}
+
+.dialog-component {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid;
+    border-radius: 10px;
+    padding: 10px 20px 10px 20px;
+    max-width: 450px;
+    word-wrap: break-word;
+    user-select: none;
+}
+.dialog-component.error {
+    background-color: var(--error-dialog-background-color);
+    border-color: var(--error-dialog-border-color);
+}
+.dialog-component.info {
+    background-color: var(--info-dialog-background-color);
+    border-color: var(--info-dialog-border-color);
+}
+.dialog-component.warning {
+    background-color: var(--warning-dialog-background-color);
+    border-color: var(--warning-dialog-border-color);
+}

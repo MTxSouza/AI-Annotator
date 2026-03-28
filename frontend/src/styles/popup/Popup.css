@@ -1,0 +1,10 @@
+.popup-component {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 2px solid var(--secondary-text-color);
+    border-radius: 20px;
+    background-color: var(--primary-background-color);
+    box-shadow: 0px 0px 20px 1px var(--primary-shadow-color);
+}

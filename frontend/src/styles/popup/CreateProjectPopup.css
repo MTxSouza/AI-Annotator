@@ -1,0 +1,81 @@
+.create-project-popup-component {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 30px 30px 30px;
+    width: 700px;
+    gap: 8px;
+    div:first-child {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 50px;
+    }
+    button {
+        margin-left: auto;
+    }
+    button svg {
+        fill: var(--secondary-text-color);
+    }
+    button:hover svg {
+        fill: var(--primary-text-color);
+    }
+    h1 {
+        align-items: flex-start;
+        user-select: none;
+    }
+    input[type='text'],
+    select {
+        width: 100%;
+        border: 1px solid var(--secondary-text-color);
+        border-radius: 12px;
+        padding: 5px 10px 5px 10px;
+        font-size: 16px;
+    }
+    #create-project-task-description {
+        user-select: none;
+        margin-top: 5px;
+        font-style: italic;
+        height: 80px;
+        padding: 5px;
+        overflow: hidden;
+        overflow-y: scroll;
+        border: 1px solid var(--tertiary-text-color);
+        border-radius: 10px;
+    }
+}
+.create-project-popup-component > button {
+    margin-top: 40px;
+}
+
+.create-project-task-input-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.create-project-task-file-format-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+    gap: 2px;
+    p {
+        user-select: none;
+    }
+    div {
+        gap: 5px;
+        display: flex;
+        flex-direction: row;
+        background-color: var(--secondary-background-color);
+        border-radius: 10px;
+        padding: 8px;
+    }
+    div p {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--secondary-text-color);
+        border-radius: 10px;
+        padding: 3px 8px 3px 8px;
+    }
+}

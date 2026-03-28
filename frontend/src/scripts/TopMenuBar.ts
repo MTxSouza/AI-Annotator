@@ -1,8 +1,16 @@
+import { NavigateFunction } from 'react-router-dom'
+import { PROJECT_MENU_URL } from './common'
+
 function getCurrentApplicationTheme() {
     // Get the current theme of the application in browser's local storage.
     const currentTheme = localStorage.getItem('theme') || 'light'
     console.debug('Current theme of the application:', currentTheme)
     return currentTheme
+}
+
+export function redirectToProjectMenuPage(navigate: NavigateFunction) {
+    console.info('Redirecting to project menu page...')
+    navigate(PROJECT_MENU_URL)
 }
 
 export function switchApplicationTheme() {
@@ -33,4 +41,12 @@ document.addEventListener('DOMContentLoaded', () => {
     console.info('Setting theme of the application on page load.')
     const currentTheme = getCurrentApplicationTheme()
     applyCurrentApplicationTheme(currentTheme)
+})
+
+document.addEventListener('keydown', (event) => {
+    // Listen for the "SHIFT + T" keyboard shortcut to switch the theme of the application.
+    if (event.shiftKey && event.code === 'KeyT') {
+        console.info('SHIFT + T keyboard shortcut pressed. Switching theme of the application...')
+        switchApplicationTheme()
+    }
 })
