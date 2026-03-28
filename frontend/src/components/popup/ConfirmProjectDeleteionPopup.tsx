@@ -1,7 +1,7 @@
 import { JSX, useState } from 'react'
 import { APIErrorResponse } from '../../scripts/common'
 import { PopupOverlay } from '../../components/PopupOverlay'
-import { useErrorDialog } from '../dialog/ErrorDialog'
+import { useDialog } from '../dialog/Dialog'
 import { deleteProjectRequest } from '../../scripts/projects'
 import { ConfirmProjectPasswordPopup } from './ConfirmProjectPasswordPopup'
 import { Popup } from './Popup'
@@ -21,8 +21,9 @@ export function ConfirmProjectDeletionPopup({
 }): JSX.Element {
     console.info('Opening confirm project deletion popup...')
 
-    // Set up error dialog.
-    const { showErrorDialog } = useErrorDialog()
+    // Set up dialog.
+    const { showDialog } = useDialog()
+    const deleteProjectMessage = 'Project deleted successfully!'
 
     // Set up state to manage project password input.
     const [showPasswordPopup, setShowPasswordPopup] = useState<boolean>(false)
@@ -35,10 +36,10 @@ export function ConfirmProjectDeletionPopup({
         } catch (error) {
             if (error instanceof APIErrorResponse) {
                 console.error('Error deleting project:', error)
-                showErrorDialog(error.message, error.status_code)
+                showDialog('error', error.message, error.status_code)
             } else {
                 console.error('Unexpected error deleting project:', error)
-                showErrorDialog('An unexpected error occurred while deleting the project.', 500)
+                showDialog('error', 'An unexpected error occurred while deleting the project.', 500)
             }
         }
     }
@@ -51,6 +52,8 @@ export function ConfirmProjectDeletionPopup({
                 onSuccess={() => {
                     deleteProject(projectId)
                     setShowPasswordPopup(false)
+                    console.warn(deleteProjectMessage)
+                    showDialog('warning', deleteProjectMessage, null)
                 }}
             />
         )
@@ -70,6 +73,8 @@ export function ConfirmProjectDeletionPopup({
                             return
                         }
                         deleteProject(projectId)
+                        console.warn(deleteProjectMessage)
+                        showDialog('warning', deleteProjectMessage, null)
                     }}
                 >
                     Yes

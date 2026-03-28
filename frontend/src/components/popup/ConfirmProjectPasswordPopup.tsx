@@ -1,7 +1,7 @@
 import { JSX, useState } from 'react'
 import { APIErrorResponse } from '../../scripts/common'
 import { PopupOverlay } from '../PopupOverlay'
-import { useErrorDialog } from '../dialog/ErrorDialog'
+import { useDialog } from '../dialog/Dialog'
 import { authenticateProjectRequest } from '../../scripts/projects'
 import { ProjectPassword } from '../input/ProjectPassword'
 import { SimpleConfirmButton } from '../button/SimpleConfirmButton'
@@ -20,8 +20,8 @@ export function ConfirmProjectPasswordPopup({
 }): JSX.Element {
     console.info('Opening confirm project password popup...')
 
-    // Set up error dialog.
-    const { showErrorDialog } = useErrorDialog()
+    // Set up dialog.
+    const { showDialog } = useDialog()
 
     // Set up state to manage project password input.
     const [projectPassword, setProjectPassword] = useState<string | null>(null)
@@ -34,10 +34,10 @@ export function ConfirmProjectPasswordPopup({
         } catch (error) {
             if (error instanceof APIErrorResponse) {
                 console.error('Error authenticating to project:', error)
-                showErrorDialog(error.message, error.status_code)
+                showDialog('error', error.message, error.status_code)
             } else {
                 console.error('Unexpected error authenticating to project:', error)
-                showErrorDialog('An unexpected error occurred while authenticating to the project.', 500)
+                showDialog('error', 'An unexpected error occurred while authenticating to the project.', 500)
             }
         }
     }
@@ -64,7 +64,7 @@ export function ConfirmProjectPasswordPopup({
                     message={'Confirm'}
                     onConfirm={() => {
                         if (projectPassword === null) {
-                            showErrorDialog('Please enter the project password.', 400)
+                            showDialog('error', 'Please enter the project password.', 400)
                             return
                         }
                         authenticateProject(projectId, projectPassword)

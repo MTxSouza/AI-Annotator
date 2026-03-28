@@ -1,6 +1,6 @@
 import { useState, useEffect, JSX } from 'react'
 import { PopupOverlay } from '../PopupOverlay'
-import { useErrorDialog } from '../dialog/ErrorDialog'
+import { useDialog } from '../dialog/Dialog'
 import { Project, Task, createProjectRequest } from '../../scripts/projects'
 import { APIErrorResponse, fetchData, RequestMethod } from '../../scripts/common'
 import { ProjectPassword } from '../input/ProjectPassword'
@@ -18,8 +18,8 @@ export function CreateProjectPopup({
 }): JSX.Element {
     console.info('Opening create project popup...')
 
-    // Set up error dialog.
-    const { showErrorDialog } = useErrorDialog()
+    // Set up dialog.
+    const { showDialog } = useDialog()
 
     // Request project tasks from backend.
     const [tasks, setTasks] = useState<Task[]>([])
@@ -95,13 +95,14 @@ export function CreateProjectPopup({
                         const project = await createProjectRequest(projectName, selectedTask, projectPassword)
                         if (project) refreshProjects(project)
                         closePopup()
+                        showDialog('info', 'Project created successfully!', null)
                     } catch (error) {
                         if (error instanceof APIErrorResponse) {
                             console.error('Error creating project:', error)
-                            showErrorDialog(error.message, error.status_code)
+                            showDialog('error', error.message, error.status_code)
                         } else {
                             console.error('Unexpected error creating project:', error)
-                            showErrorDialog('An unexpected error occurred while creating the project.', 500)
+                            showDialog('error', 'An unexpected error occurred while creating the project.', 500)
                         }
                     }
                 }}
