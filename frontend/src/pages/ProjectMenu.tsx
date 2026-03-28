@@ -1,6 +1,6 @@
 import { Project } from '../scripts/projects'
 import { useState, useEffect, JSX } from 'react'
-import { useErrorDialog } from '../components/dialog/ErrorDialog'
+import { useDialog } from '../components/dialog/Dialog'
 import { CreateProjectPopup } from '../components/popup/CreateProjectPopup'
 import { APIErrorResponse, fetchData, RequestMethod } from '../scripts/common'
 import { ConfirmProjectDeletionPopup } from '../components/popup/ConfirmProjectDeleteionPopup'
@@ -67,8 +67,8 @@ function ProjectMenuComponent({
 }
 
 export function ProjectMenu(): JSX.Element {
-    // Set up error dialog.
-    const { showErrorDialog } = useErrorDialog()
+    // Set up dialog.
+    const { showDialog } = useDialog()
 
     // Set states to manage the projects.
     const [projects, setProjects] = useState<Project[]>([])
@@ -94,10 +94,10 @@ export function ProjectMenu(): JSX.Element {
             } catch (error) {
                 if (error instanceof APIErrorResponse) {
                     console.error('Error fetching projects:', error)
-                    showErrorDialog(error.message, error.status_code)
+                    showDialog('error', error.message, error.status_code)
                 } else {
                     console.error('Unexpected error fetching projects:', error)
-                    showErrorDialog('An unexpected error occurred while fetching projects.', 500)
+                    showDialog('error', 'An unexpected error occurred while fetching projects.', 500)
                 }
             }
             setIsLoading(false)
