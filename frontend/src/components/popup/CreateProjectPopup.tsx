@@ -28,9 +28,19 @@ export function CreateProjectPopup({
     const [projectPassword, setProjectPassword] = useState<string | null>(null)
     useEffect(() => {
         async function getTasks() {
-            const responseData = await fetchData('/tasks/', RequestMethod.GET)
-            setTasks(responseData)
-            if (responseData.length > 0) setSelectedTask(responseData[0].name)
+            try {
+                const responseData = await fetchData('/tasks/', RequestMethod.GET)
+                setTasks(responseData)
+                if (responseData.length > 0) setSelectedTask(responseData[0].name)
+            } catch (error) {
+                if (error instanceof APIErrorResponse) {
+                    console.error('Error fetching tasks:', error)
+                    showDialog('error', error.message, error.status_code)
+                } else {
+                    console.error('Unexpected error fetching tasks:', error)
+                    showDialog('error', 'An unexpected error occurred while fetching tasks.', 500)
+                }
+            }
         }
         getTasks()
     }, [])
