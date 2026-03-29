@@ -7,6 +7,7 @@ import { DialogProvider } from './components/dialog/Dialog'
 import { ProjectMenu } from './pages/ProjectMenu'
 import { Home } from './pages/Home'
 import { PROJECT_MENU_URL, PROJECT_HOME_URL } from './scripts/common'
+import { ProjectHomeLayout } from './pages/ProjectHomeLayout'
 
 import './main.css'
 
@@ -29,7 +30,9 @@ const application = () => {
                 <TopMenuBar />
                 <Routes>
                     <Route path={PROJECT_MENU_URL} element={<ProjectMenu />} />
-                    <Route path={PROJECT_HOME_URL} element={<Home />} />
+                    <Route element={<ProjectHomeLayout />}>
+                        <Route path={PROJECT_HOME_URL} element={<Home />} />
+                    </Route>
                 </Routes>
                 <BottomMenuBar />
             </BrowserRouter>
