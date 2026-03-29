@@ -10,7 +10,7 @@ export function Home(): JSX.Element {
     const { projectId } = useParams<{ projectId: string }>()
 
     return (
-        <div className="main-component-page">
+        <div className="main-page-component">
             <p>Project ID: {projectId}</p>
         </div>
     )
