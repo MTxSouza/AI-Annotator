@@ -58,3 +58,7 @@ select {
     background: none;
     border: none;
 }
+
+.main-page-component {
+    padding: 50px 80px 50px 80px;
+}
