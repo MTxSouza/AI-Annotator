@@ -10,6 +10,9 @@ import { PROJECT_MENU_URL, PROJECT_HOME_URL } from './scripts/common'
 
 import './main.css'
 
+// Get environment variables.
+const isDevelopment: boolean = import.meta.env.VITE_APP_DEVELOP === 'true'
+
 // Ensure that the root element exists before attempting to render the React application.
 const rootElement: HTMLElement | null = document.getElementById('root')
 if (!rootElement) {
@@ -17,8 +20,10 @@ if (!rootElement) {
         'Failed to find the root element. Please ensure that there is an element with id "root" in the HTML file.',
     )
 }
-createRoot(rootElement).render(
-    <StrictMode>
+
+const application = () => {
+    // Define the main application component with routing and context providers.
+    const application = (
         <DialogProvider>
             <BrowserRouter>
                 <TopMenuBar />
@@ -29,5 +34,13 @@ createRoot(rootElement).render(
                 <BottomMenuBar />
             </BrowserRouter>
         </DialogProvider>
-    </StrictMode>,
-)
+    )
+
+    if (isDevelopment) {
+        console.info('Running in development mode...')
+        return <StrictMode>{application}</StrictMode>
+    }
+    console.info('Running in production mode...')
+    return application
+}
+createRoot(rootElement).render(application())
