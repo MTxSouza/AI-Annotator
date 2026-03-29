@@ -24,8 +24,6 @@ createRoot(rootElement).render(
                 <TopMenuBar />
                 <Routes>
                     <Route path={PROJECT_MENU_URL} element={<ProjectMenu />} />
-                </Routes>
-                <Routes>
                     <Route path={PROJECT_HOME_URL} element={<Home />} />
                 </Routes>
                 <BottomMenuBar />
