@@ -1,5 +1,7 @@
 import { JSX } from 'react'
 import { Project } from '../scripts/projects'
+import { redirectTo } from '../scripts/common'
+import { useNavigate } from 'react-router-dom'
 
 import '../styles/ProjectCard.css'
 
@@ -14,12 +16,30 @@ export function CreateProjectCard({ createProjectPopup }: { createProjectPopup: 
 export function ProjectCard({
     project,
     confirmProjectDeletion,
+    authenticatedProject,
 }: {
     project: Project
     confirmProjectDeletion: () => void
+    authenticatedProject: () => void
 }): JSX.Element {
+    // Set page navigator.
+    const navigate = useNavigate()
+    const handleCardClick = () => {
+        if (project.is_private) {
+            authenticatedProject()
+        } else {
+            redirectTo(`/${project._id}`, navigate)
+        }
+    }
+
+    // Set delete button click handler.
+    const handleDeleteBtnClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation() // Prevent card click event from firing.
+        confirmProjectDeletion()
+    }
+
     return (
-        <div className="project-card-component">
+        <div className="project-card-component" onClick={handleCardClick}>
             <div>
                 {project.is_private && (
                     <label>
@@ -34,7 +54,7 @@ export function ProjectCard({
                         </svg>
                     </label>
                 )}
-                <button onClick={confirmProjectDeletion}>
+                <button onClick={handleDeleteBtnClick}>
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         height="24px"
