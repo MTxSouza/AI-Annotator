@@ -5,7 +5,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { BottomMenuBar } from './components/BottomMenuBar'
 import { DialogProvider } from './components/dialog/Dialog'
 import { ProjectMenu } from './pages/ProjectMenu'
-import { PROJECT_MENU_URL } from './scripts/common'
+import { Home } from './pages/Home'
+import { PROJECT_MENU_URL, PROJECT_HOME_URL } from './scripts/common'
 
 import './main.css'
 
@@ -23,6 +24,7 @@ createRoot(rootElement).render(
                 <TopMenuBar />
                 <Routes>
                     <Route path={PROJECT_MENU_URL} element={<ProjectMenu />} />
+                    <Route path={PROJECT_HOME_URL} element={<Home />} />
                 </Routes>
                 <BottomMenuBar />
             </BrowserRouter>

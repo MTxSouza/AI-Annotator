@@ -1,9 +1,11 @@
 import { Project } from '../scripts/projects'
+import { useNavigate } from 'react-router-dom'
 import { useState, useEffect, JSX } from 'react'
 import { useDialog } from '../components/dialog/Dialog'
 import { CreateProjectPopup } from '../components/popup/CreateProjectPopup'
-import { APIErrorResponse, fetchData, RequestMethod } from '../scripts/common'
+import { APIErrorResponse, redirectTo, fetchData, RequestMethod } from '../scripts/common'
 import { ConfirmProjectDeletionPopup } from '../components/popup/ConfirmProjectDeletionPopup'
+import { ConfirmProjectPasswordPopup } from '../components/popup/ConfirmProjectPasswordPopup'
 import { CreateProjectCard, LoadCreateProjectCard, ProjectCard } from '../components/ProjectCard'
 
 import '../styles/ProjectMenu.css'
@@ -27,10 +29,14 @@ function ProjectMenuComponent({
 }): JSX.Element {
     console.info(`Number of projects fetched: ${projects.length}`)
 
+    // Set page navigator.
+    const navigate = useNavigate()
+
     // Set up popup states.
     const [createProjectPopup, setCreateProjectPopup] = useState(false)
     const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
     const [isProjectPrivate, setIsProjectPrivate] = useState(false)
+    const [authenticatedProject, setAuthenticatedProject] = useState<string | null>(null)
 
     return (
         <div className="main-page-component">
@@ -44,6 +50,7 @@ function ProjectMenuComponent({
                         setProjectToDelete(project._id)
                         setIsProjectPrivate(project.is_private)
                     }}
+                    authenticatedProject={() => setAuthenticatedProject(project._id)}
                 />
             ))}
 
@@ -59,6 +66,17 @@ function ProjectMenuComponent({
                     refreshProjects={() => {
                         onProjectDelete(projectToDelete)
                         setProjectToDelete(null)
+                    }}
+                />
+            )}
+
+            {authenticatedProject && (
+                <ConfirmProjectPasswordPopup
+                    projectId={authenticatedProject}
+                    closePopup={() => setAuthenticatedProject(null)}
+                    onSuccess={() => {
+                        setAuthenticatedProject(null)
+                        redirectTo(`/${authenticatedProject}`, navigate)
                     }}
                 />
             )}

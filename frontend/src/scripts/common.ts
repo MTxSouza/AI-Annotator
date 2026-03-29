@@ -1,6 +1,9 @@
+import { NavigateFunction } from 'react-router-dom'
+
 // Global variables.
 export const API_BASE_URL = 'http://127.0.0.1:8000/api/v1'
 export const PROJECT_MENU_URL = '/'
+export const PROJECT_HOME_URL = '/:projectId'
 
 // Structures.
 export enum RequestMethod {
@@ -21,6 +24,11 @@ export class APIErrorResponse extends Error {
 }
 
 // Functions.
+export function redirectTo(url: string, navigate: NavigateFunction): void {
+    console.info(`Redirecting to ${url}...`)
+    navigate(url)
+}
+
 export async function fetchData(
     url: string,
     method: RequestMethod,
