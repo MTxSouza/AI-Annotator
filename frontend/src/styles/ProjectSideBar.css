@@ -1,0 +1,21 @@
+.project-side-bar-component {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    gap: 20px;
+}
+.project-side-bar-component > button {
+    position: relative;
+}
+.project-side-bar-component > button > span {
+    display: none;
+    position: absolute;
+    top: 2px;
+    left: 40px;
+    background-color: var(--secondary-background-color);
+    border-radius: 4px;
+    padding: 1px 5px 1px 5px;
+}
+.project-side-bar-component > button:hover > span {
+    display: block;
+}
