@@ -30,6 +30,7 @@ const application = () => {
                 <TopMenuBar />
                 <Routes>
                     <Route path={PROJECT_MENU_URL} element={<ProjectMenu />} />
+                    <Route path="*" element={<ProjectMenu />} />
                     <Route element={<ProjectHomeLayout />}>
                         <Route path={PROJECT_HOME_URL} element={<Home />} />
                     </Route>
