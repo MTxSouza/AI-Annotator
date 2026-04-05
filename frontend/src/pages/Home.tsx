@@ -2,16 +2,17 @@
 Main home page for project management.
 */
 import { JSX } from 'react'
-import { useParams } from 'react-router-dom'
+import { Project } from '../scripts/projects'
+import { useOutletContext } from 'react-router-dom'
 
 // Components.
 export function Home(): JSX.Element {
-    // Get the project ID from the URL parameters.
-    const { projectId } = useParams<{ projectId: string }>()
+    // Get the project data from the outlet context.
+    const project = useOutletContext<Project>()
 
     return (
         <div className="main-page-component">
-            <p>Project ID: {projectId}</p>
+            <p>Project ID: {project._id}</p>
         </div>
     )
 }
