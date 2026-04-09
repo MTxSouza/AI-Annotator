@@ -2,14 +2,23 @@
 Main side bar component for the project home page.
 */
 import { JSX } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { PROJECT_DATASET_URL, PROJECT_SETTINGS_URL, redirectTo } from '../scripts/common'
 
 import '../styles/ProjectSideBar.css'
 
 // Components.
-export function ProjectSideBar(): JSX.Element {
+export function ProjectSideBar({ projectId }: { projectId: string }): JSX.Element {
+    // Set up navigation.
+    const navigate = useNavigate()
+
     return (
         <div className="project-side-bar-component">
-            <button>
+            <button
+                onClick={() => {
+                    redirectTo(PROJECT_DATASET_URL.replace(':projectId', projectId), navigate)
+                }}
+            >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     height="24px"
@@ -33,7 +42,12 @@ export function ProjectSideBar(): JSX.Element {
                 </svg>
                 <span>Analytics</span>
             </button>
-            <button id="project-settings-btn">
+            <button
+                id="project-settings-btn"
+                onClick={() => {
+                    redirectTo(PROJECT_SETTINGS_URL.replace(':projectId', projectId), navigate)
+                }}
+            >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     height="24px"
