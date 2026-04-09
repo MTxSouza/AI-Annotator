@@ -10,6 +10,7 @@
     border: 1px solid var(--tertiary-text-color);
     border-radius: 20px;
     padding: 30px 20px 30px 20px;
+    transition: left 0.3s ease-in-out;
 }
 .project-side-bar-component > button {
     position: relative;
@@ -35,4 +36,10 @@
 
 #project-settings-btn {
     margin-top: 25px;
+}
+
+@media (max-width: 800px) {
+    .project-side-bar-component {
+        left: -100px;
+    }
 }
