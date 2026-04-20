@@ -31,11 +31,11 @@ const application = () => {
                 <TopMenuBar />
                 <Routes>
                     <Route path={PROJECT_MENU_URL} element={<ProjectMenu />} />
-                    <Route path="*" element={<ProjectMenu />} />
                     <Route element={<ProjectPageLayout />}>
                         <Route path={PROJECT_DATASET_URL} element={<Dataset />} />
                         <Route path={PROJECT_SETTINGS_URL} element={<Settings />} />
                     </Route>
+                    <Route path="*" element={<ProjectMenu />} />
                 </Routes>
                 <BottomMenuBar />
             </BrowserRouter>
