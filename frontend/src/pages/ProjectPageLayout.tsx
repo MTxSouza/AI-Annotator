@@ -28,8 +28,8 @@ export function ProjectPageLayout(): JSX.Element {
         const fetchProjectData = async () => {
             try {
                 const accessToken = getCurrentProjectAccessToken()
-                const projectData = await getProjectRequest(projectId, accessToken)
-                setProjectData(projectData)
+                const fetchedData = await getProjectRequest(projectId, accessToken)
+                setProjectData(fetchedData)
             } catch (error) {
                 if (error instanceof APIErrorResponse) {
                     console.error('Error fetching project data:', error)
