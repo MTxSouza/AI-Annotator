@@ -1,0 +1,37 @@
+# Ruff.
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+extend-select = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint.isort]
+known-first-party = ["backend", "scripts"]
+
+# Mypy.
+[tool.mypy]
+mypy_path = "."
+python_version = "3.12"
+strict = false
+warn_return_any = false
+warn_unused_configs = true
+ignore_missing_imports = true
+explicit_package_bases = true
+check_untyped_defs = true
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_untyped_fields = true
+
+# Coverage.
+[tool.pytest.ini_options]
+addopts = "--cov=backend --cov-report=term-missing:skip-covered --cov-fail-under=80"
+testpaths = ["tests"]

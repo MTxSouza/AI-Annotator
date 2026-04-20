@@ -1,0 +1,300 @@
+"""
+Main module with all schemas used in Samples collection.
+"""
+
+from pydantic import Field
+
+from backend.database.enums import PyObjectId
+from backend.database.models import CommonModel, CommonRequestModel, CommonResponseModel
+
+
+# Schemas.
+class _Sample(CommonModel):
+    """
+    Schema for a sample.
+    """
+
+    project_id: PyObjectId = Field(..., description="ID of the project associated with the sample.")
+    file_id: PyObjectId = Field(..., description="ID of the file associated with the sample.")
+
+
+class _SampleDB(CommonResponseModel, _Sample):
+    """
+    Schema for a sample in the database.
+    """
+
+    pass
+
+
+class _SampleCreate(_Sample, CommonRequestModel):
+    """
+    Schema for creating a sample.
+    """
+
+    pass
+
+
+class _SampleUpdate(_Sample):
+    """
+    Schema for updating a sample.
+    """
+
+    project_id: PyObjectId | None = Field(default=None, exclude=True)  # type: ignore
+    file_id: PyObjectId | None = Field(default=None, exclude=True)  # type: ignore
+
+
+# - Schemas for different sample types.
+class _VisualLocationSample(_Sample):
+    """
+    Schema for a visual location sample.
+    """
+
+    cx: float = Field(..., ge=0.0, le=1.0, description="X-coordinate of the center of the bounding box.")
+    cy: float = Field(..., ge=0.0, le=1.0, description="Y-coordinate of the center of the bounding box.")
+    width: float = Field(..., ge=0.0, le=1.0, description="Width of the bounding box.")
+    height: float = Field(..., ge=0.0, le=1.0, description="Height of the bounding box.")
+
+
+class _VisualLocationSampleUpdate(_SampleUpdate):
+    """
+    Schema for updating a visual location sample.
+    """
+
+    cx: float = Field(ge=0.0, le=1.0, default=0.0)
+    cy: float = Field(ge=0.0, le=1.0, default=0.0)
+    width: float = Field(ge=0.0, le=1.0, default=0.0)
+    height: float = Field(ge=0.0, le=1.0, default=0.0)
+
+
+class _ClassSample(_Sample):
+    """
+    Schema for a class sample.
+    """
+
+    class_name: str = Field(..., description="Name of the class associated with the sample.")
+
+
+class _ClassSampleUpdate(_SampleUpdate):
+    """
+    Schema for updating a class sample.
+    """
+
+    class_name: str | None = Field(default=None)
+
+
+class _TextSample(_Sample):
+    """
+    Schema for a text sample.
+    """
+
+    text: str = Field(default="", description="Text content of the sample.")
+
+
+class _TextSampleUpdate(_SampleUpdate):
+    """
+    Schema for updating a text sample.
+    """
+
+    text: str | None = Field(default=None)
+
+
+# - Image Task Samples.
+# * Image Classification Sample.
+class _ImageClassificationSample(_ClassSample):
+    """
+    Schema for an image classification sample.
+    """
+
+    pass
+
+
+class ImageClassificationSample(_SampleDB, _ImageClassificationSample):
+    """
+    Schema for an image classification sample.
+    """
+
+    pass
+
+
+class ImageClassificationSampleCreate(_SampleCreate, _ImageClassificationSample):
+    """
+    Schema for creating an image classification sample.
+    """
+
+    pass
+
+
+class ImageClassificationSampleUpdate(_ClassSampleUpdate):
+    """
+    Schema for updating an image classification sample.
+    """
+
+    pass
+
+
+# * Object Detection Sample.
+class _ObjectDetectionSample(_ClassSample, _VisualLocationSample):
+    """
+    Schema for an object detection sample.
+    """
+
+    pass
+
+
+class ObjectDetectionSample(_SampleDB, _ObjectDetectionSample):
+    """
+    Schema for an object detection sample.
+    """
+
+    pass
+
+
+class ObjectDetectionSampleCreate(_SampleCreate, _ObjectDetectionSample):
+    """
+    Schema for creating an object detection sample.
+    """
+
+    pass
+
+
+class ObjectDetectionSampleUpdate(_ClassSampleUpdate, _VisualLocationSampleUpdate):
+    """
+    Schema for updating an object detection sample.
+    """
+
+    pass
+
+
+# * Image Caption Sample.
+class _ImageCaptionSample(_TextSample):
+    """
+    Schema for an image caption sample.
+    """
+
+    pass
+
+
+class ImageCaptionSample(_SampleDB, _ImageCaptionSample):
+    """
+    Schema for an image caption sample.
+    """
+
+    pass
+
+
+class ImageCaptionSampleCreate(_SampleCreate, _ImageCaptionSample):
+    """
+    Schema for creating an image caption sample.
+    """
+
+    pass
+
+
+class ImageCaptionSampleUpdate(_TextSampleUpdate):
+    """
+    Schema for updating an image caption sample.
+    """
+
+    pass
+
+
+# * Object Caption Sample.
+class _ObjectCaptionSample(_TextSample, _VisualLocationSample):
+    """
+    Schema for an object caption sample.
+    """
+
+    pass
+
+
+class ObjectCaptionSample(_SampleDB, _ObjectCaptionSample):
+    """
+    Schema for an object caption sample.
+    """
+
+    pass
+
+
+class ObjectCaptionSampleCreate(_SampleCreate, _ObjectCaptionSample):
+    """
+    Schema for creating an object caption sample.
+    """
+
+    pass
+
+
+class ObjectCaptionSampleUpdate(_TextSampleUpdate, _VisualLocationSampleUpdate):
+    """
+    Schema for updating an object caption sample.
+    """
+
+    pass
+
+
+# Text Task Samples.
+# * Text Classification Sample.
+class _TextClassificationSample(_TextSample, _ClassSample):
+    """
+    Schema for a text classification sample.
+    """
+
+    pass
+
+
+class TextClassificationSample(_SampleDB, _TextClassificationSample):
+    """
+    Schema for a text classification sample.
+    """
+
+    pass
+
+
+class TextClassificationSampleCreate(_SampleCreate, _TextClassificationSample):
+    """
+    Schema for creating a text classification sample.
+    """
+
+    # Fields.
+    text: str | None = Field(default=None, exclude=True)  # type: ignore
+
+
+class TextClassificationSampleUpdate(_ClassSampleUpdate, _TextSampleUpdate):
+    """
+    Schema for updating a text classification sample.
+    """
+
+    pass
+
+
+# Audio Task Samples.
+# * Audio Transcription Sample.
+class _AudioTranscriptionSample(_TextSample):
+    """
+    Schema for an audio transcription sample.
+    """
+
+    pass
+
+
+class AudioTranscriptionSample(_SampleDB, _AudioTranscriptionSample):
+    """
+    Schema for an audio transcription sample.
+    """
+
+    pass
+
+
+class AudioTranscriptionSampleCreate(_SampleCreate, _AudioTranscriptionSample):
+    """
+    Schema for creating an audio transcription sample.
+    """
+
+    pass
+
+
+class AudioTranscriptionSampleUpdate(_TextSampleUpdate):
+    """
+    Schema for updating an audio transcription sample.
+    """
+
+    pass

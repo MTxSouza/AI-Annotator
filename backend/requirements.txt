@@ -1,0 +1,10 @@
+fastapi[standard]
+uvicorn[standard]
+celery[redis]
+pymongo
+pydantic_settings
+slowapi
+python-jose
+pillow
+soundfile
+asgiref

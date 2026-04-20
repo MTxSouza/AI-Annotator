@@ -1,0 +1,132 @@
+import { Project } from '../scripts/projects'
+import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, JSX } from 'react'
+import { useDialog } from '../components/dialog/Dialog'
+import { CreateProjectPopup } from '../components/popup/CreateProjectPopup'
+import { APIErrorResponse, redirectTo, fetchData, RequestMethod } from '../scripts/common'
+import { ConfirmProjectDeletionPopup } from '../components/popup/ConfirmProjectDeletionPopup'
+import { ConfirmProjectPasswordPopup } from '../components/popup/ConfirmProjectPasswordPopup'
+import { CreateProjectCard, LoadCreateProjectCard, ProjectCard } from '../components/ProjectCard'
+
+import '../styles/ProjectMenu.css'
+
+function LoadProjectMenuComponent(): JSX.Element {
+    return (
+        <div className="main-page-component">
+            <LoadCreateProjectCard />
+        </div>
+    )
+}
+
+function ProjectMenuComponent({
+    projects,
+    onProjectInsert,
+    onProjectDelete,
+}: {
+    projects: Project[]
+    onProjectInsert: (newProject: Project) => void
+    onProjectDelete: (deletedProjectId: string) => void
+}): JSX.Element {
+    console.info(`Number of projects fetched: ${projects.length}`)
+
+    // Set page navigator.
+    const navigate = useNavigate()
+
+    // Set up popup states.
+    const [createProjectPopup, setCreateProjectPopup] = useState(false)
+    const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
+    const [isProjectPrivate, setIsProjectPrivate] = useState(false)
+    const [authenticatedProject, setAuthenticatedProject] = useState<string | null>(null)
+
+    return (
+        <div className="main-page-component">
+            <CreateProjectCard createProjectPopup={() => setCreateProjectPopup(true)} />
+
+            {projects.map((project) => (
+                <ProjectCard
+                    key={project._id}
+                    project={project}
+                    confirmProjectDeletion={() => {
+                        setProjectToDelete(project._id)
+                        setIsProjectPrivate(project.is_private)
+                    }}
+                    authenticatedProject={() => setAuthenticatedProject(project._id)}
+                />
+            ))}
+
+            {createProjectPopup && (
+                <CreateProjectPopup closePopup={() => setCreateProjectPopup(false)} refreshProjects={onProjectInsert} />
+            )}
+
+            {projectToDelete && (
+                <ConfirmProjectDeletionPopup
+                    projectId={projectToDelete}
+                    isPrivate={isProjectPrivate}
+                    closePopup={() => setProjectToDelete(null)}
+                    refreshProjects={() => {
+                        onProjectDelete(projectToDelete)
+                        setProjectToDelete(null)
+                    }}
+                />
+            )}
+
+            {authenticatedProject && (
+                <ConfirmProjectPasswordPopup
+                    projectId={authenticatedProject}
+                    closePopup={() => setAuthenticatedProject(null)}
+                    onSuccess={() => {
+                        setAuthenticatedProject(null)
+                        redirectTo(`/${authenticatedProject}`, navigate)
+                    }}
+                />
+            )}
+        </div>
+    )
+}
+
+export function ProjectMenu(): JSX.Element {
+    // Set up dialog.
+    const { showDialog } = useDialog()
+
+    // Set states to manage the projects.
+    const [projects, setProjects] = useState<Project[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+
+    // Handle deleted project by refreshing the project list.
+    const insertProject = (newProject: Project) => {
+        console.info(`Refreshing projects after creation of project with ID: ${newProject._id}`)
+        setProjects((prevProjects) => [...prevProjects, newProject])
+    }
+    const deleteProject = (deletedProjectId: string) => {
+        console.info(`Refreshing projects after deletion of project with ID: ${deletedProjectId}`)
+        setProjects((prevProjects) => prevProjects.filter((project) => project._id !== deletedProjectId))
+    }
+
+    // Fetch projects.
+    useEffect(() => {
+        async function getProjects() {
+            try {
+                console.info('Fetching projects from backend...')
+                const responseData = await fetchData('/projects/', RequestMethod.GET)
+                setProjects(responseData)
+            } catch (error) {
+                if (error instanceof APIErrorResponse) {
+                    console.error('Error fetching projects:', error)
+                    showDialog('error', error.message, error.status_code)
+                } else {
+                    console.error('Unexpected error fetching projects:', error)
+                    showDialog('error', 'An unexpected error occurred while fetching projects.', 500)
+                }
+            }
+            setIsLoading(false)
+        }
+        getProjects()
+    }, [])
+
+    // Display loading screen while fetching projects.
+    if (isLoading) {
+        return <LoadProjectMenuComponent />
+    }
+
+    return <ProjectMenuComponent projects={projects} onProjectInsert={insertProject} onProjectDelete={deleteProject} />
+}
