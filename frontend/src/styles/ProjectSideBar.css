@@ -29,7 +29,7 @@
     cursor: pointer;
 }
 .project-side-bar-component > button:hover > svg {
-    fill: var(--primary-highlight-color);
+    fill: var(--secondary-highlight-color);
 }
 .project-side-bar-component > button:hover > span {
     display: block;
