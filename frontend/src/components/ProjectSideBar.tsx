@@ -2,15 +2,28 @@
 Main side bar component for the project home page.
 */
 import { JSX } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { PROJECT_DATASET_URL, PROJECT_SETTINGS_URL, redirectTo } from '../scripts/common'
 
 import '../styles/ProjectSideBar.css'
 
 // Components.
 export function ProjectSideBar({ projectId }: { projectId: string }): JSX.Element {
-    // Set up navigation.
+    // Set up navigation and location hooks.
     const navigate = useNavigate()
+    const location = useLocation()
+
+    // Get URL for each page.
+    const datasetUrl: string = PROJECT_DATASET_URL.replace(':projectId', projectId)
+    const settingsUrl: string = PROJECT_SETTINGS_URL.replace(':projectId', projectId)
+
+    const isInDatasetPage: boolean = location.pathname === datasetUrl
+    const isInSettingsPage: boolean = location.pathname === settingsUrl
+    if (!isInDatasetPage && !isInSettingsPage) {
+        // If the user is not in any of the pages, redirect to the dataset page.
+        console.warn('User is not in any of the project pages, redirecting to dataset page.')
+        redirectTo(datasetUrl, navigate)
+    }
 
     return (
         <div className="project-side-bar-component">
@@ -18,6 +31,7 @@ export function ProjectSideBar({ projectId }: { projectId: string }): JSX.Elemen
                 onClick={() => {
                     redirectTo(PROJECT_DATASET_URL.replace(':projectId', projectId), navigate)
                 }}
+                className={isInDatasetPage ? 'active' : ''}
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -47,6 +61,7 @@ export function ProjectSideBar({ projectId }: { projectId: string }): JSX.Elemen
                 onClick={() => {
                     redirectTo(PROJECT_SETTINGS_URL.replace(':projectId', projectId), navigate)
                 }}
+                className={isInSettingsPage ? 'active' : ''}
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
