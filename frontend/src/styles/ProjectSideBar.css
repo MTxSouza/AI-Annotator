@@ -29,10 +29,25 @@
     cursor: pointer;
 }
 .project-side-bar-component > button:hover > svg {
-    fill: var(--primary-highlight-color);
+    fill: var(--secondary-highlight-color);
 }
 .project-side-bar-component > button:hover > span {
     display: block;
+}
+
+.project-side-bar-component > button.active::before {
+    position: absolute;
+    content: '';
+    bottom: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 5px;
+    background-color: var(--primary-highlight-color);
+}
+.project-side-bar-component > button.active > svg {
+    fill: var(--primary-highlight-color);
 }
 
 #project-settings-btn {
