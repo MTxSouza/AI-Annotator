@@ -5,8 +5,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { BottomMenuBar } from './components/BottomMenuBar'
 import { DialogProvider } from './components/dialog/Dialog'
 import { ProjectMenu } from './pages/ProjectMenu'
-import { Home } from './pages/Home'
-import { PROJECT_MENU_URL, PROJECT_HOME_URL } from './scripts/common'
+import { Dataset } from './pages/Dataset'
+import { Settings } from './pages/Settings'
+import { PROJECT_MENU_URL, PROJECT_DATASET_URL, PROJECT_SETTINGS_URL } from './scripts/common'
+import { ProjectPageLayout } from './pages/ProjectPageLayout'
 
 import './main.css'
 
@@ -29,7 +31,11 @@ const application = () => {
                 <TopMenuBar />
                 <Routes>
                     <Route path={PROJECT_MENU_URL} element={<ProjectMenu />} />
-                    <Route path={PROJECT_HOME_URL} element={<Home />} />
+                    <Route element={<ProjectPageLayout />}>
+                        <Route path={PROJECT_DATASET_URL} element={<Dataset />} />
+                        <Route path={PROJECT_SETTINGS_URL} element={<Settings />} />
+                    </Route>
+                    <Route path="*" element={<ProjectMenu />} />
                 </Routes>
                 <BottomMenuBar />
             </BrowserRouter>

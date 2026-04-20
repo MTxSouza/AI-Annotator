@@ -3,7 +3,9 @@ import { NavigateFunction } from 'react-router-dom'
 // Global variables.
 export const API_BASE_URL = 'http://127.0.0.1:8000/api/v1'
 export const PROJECT_MENU_URL = '/'
-export const PROJECT_HOME_URL = '/:projectId'
+export const PROJECT_DATASET_URL = '/:projectId'
+export const PROJECT_ANALYTICS_URL = '/:projectId/analytics'
+export const PROJECT_SETTINGS_URL = '/:projectId/settings'
 
 // Structures.
 export enum RequestMethod {
