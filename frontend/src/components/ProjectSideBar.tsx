@@ -1,7 +1,7 @@
 /*
 Main side bar component for the project home page.
 */
-import { JSX } from 'react'
+import { JSX, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { PROJECT_DATASET_URL, PROJECT_SETTINGS_URL, redirectTo } from '../scripts/common'
 
@@ -19,11 +19,14 @@ export function ProjectSideBar({ projectId }: { projectId: string }): JSX.Elemen
 
     const isInDatasetPage: boolean = location.pathname === datasetUrl
     const isInSettingsPage: boolean = location.pathname === settingsUrl
-    if (!isInDatasetPage && !isInSettingsPage) {
-        // If the user is not in any of the pages, redirect to the dataset page.
-        console.warn('User is not in any of the project pages, redirecting to dataset page.')
-        redirectTo(datasetUrl, navigate)
-    }
+
+    useEffect(() => {
+        if (!isInDatasetPage && !isInSettingsPage) {
+            // If the user is not in any of the pages, redirect to the dataset page.
+            console.warn('User is not in any of the project pages, redirecting to dataset page.')
+            redirectTo(datasetUrl, navigate)
+        }
+    }, [isInDatasetPage, isInSettingsPage, datasetUrl, navigate])
 
     return (
         <div className="project-side-bar-component">
