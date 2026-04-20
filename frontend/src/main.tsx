@@ -7,8 +7,9 @@ import { DialogProvider } from './components/dialog/Dialog'
 import { ProjectMenu } from './pages/ProjectMenu'
 import { Dataset } from './pages/Dataset'
 import { Settings } from './pages/Settings'
-import { PROJECT_MENU_URL, PROJECT_DATASET_URL, PROJECT_SETTINGS_URL } from './scripts/common'
+import { PROJECT_MENU_URL, PROJECT_DATASET_URL, PROJECT_ANALYTICS_URL, PROJECT_SETTINGS_URL } from './scripts/common'
 import { ProjectPageLayout } from './pages/ProjectPageLayout'
+import { AnalysisLayout } from './pages/AnalysisLayout'
 
 import './main.css'
 
@@ -33,6 +34,7 @@ const application = () => {
                     <Route path={PROJECT_MENU_URL} element={<ProjectMenu />} />
                     <Route element={<ProjectPageLayout />}>
                         <Route path={PROJECT_DATASET_URL} element={<Dataset />} />
+                        <Route path={PROJECT_ANALYTICS_URL} element={<AnalysisLayout />} />
                         <Route path={PROJECT_SETTINGS_URL} element={<Settings />} />
                     </Route>
                     <Route path="*" element={<ProjectMenu />} />
