@@ -15,16 +15,15 @@ export function ProjectPageLayout(): JSX.Element {
     // Set up dialog.
     const { showDialog } = useDialog()
 
-    // Get the project ID from the URL parameters.
+    // Set up parameters and state.
     const { projectId } = useParams<{ projectId: string }>()
-    if (!projectId) {
-        console.error('Project ID not found in URL parameters.')
-        return <div className="project-home-layout-component">Project ID not found in URL parameters.</div>
-    }
+    const [projectData, setProjectData] = useState<Project | null>(null)
 
     // Request project data from the server when the component mounts.
-    const [projectData, setProjectData] = useState<Project | null>(null)
     useEffect(() => {
+        // Check if project ID is available.
+        if (!projectId) return
+
         // Fetch project data from the server.
         const fetchProjectData = async () => {
             try {
@@ -41,7 +40,14 @@ export function ProjectPageLayout(): JSX.Element {
             }
         }
         fetchProjectData()
-    }, [])
+    }, [projectId])
+
+    // Get the project ID from the URL parameters.
+    if (!projectId) {
+        console.error('Project ID not found in URL parameters.')
+        return <div className="project-home-layout-component">Project ID not found in URL parameters.</div>
+    }
+
     if (!projectData) {
         return <div className="project-home-layout-component">Loading project data...</div>
     }
