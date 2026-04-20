@@ -3,9 +3,9 @@ Main component to store all sub components for the project home page.
 */
 import { JSX, useState, useEffect } from 'react'
 import { Outlet, useParams } from 'react-router-dom'
-import { Project } from '../scripts/projects'
+import { Project, getCurrentProjectAccessToken, getProjectRequest } from '../scripts/projects'
 import { useDialog } from '../components/dialog/Dialog'
-import { RequestMethod, fetchData, APIErrorResponse } from '../scripts/common'
+import { APIErrorResponse } from '../scripts/common'
 import { ProjectSideBar } from '../components/ProjectSideBar'
 
 import '../styles/ProjectHomeLayout.css'
@@ -27,7 +27,8 @@ export function ProjectPageLayout(): JSX.Element {
         // Fetch project data from the server.
         const fetchProjectData = async () => {
             try {
-                const projectData = await fetchData(`/projects/${projectId}`, RequestMethod.GET)
+                const accessToken = getCurrentProjectAccessToken()
+                const projectData = await getProjectRequest(projectId, accessToken)
                 setProjectData(projectData)
             } catch (error) {
                 if (error instanceof APIErrorResponse) {
