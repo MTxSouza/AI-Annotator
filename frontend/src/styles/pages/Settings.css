@@ -54,9 +54,7 @@
 }
 @media (max-width: 500px) {
     .project-name-settings-container > *,
-    .project-type-info-container > * {
-        display: none;
-    }
+    .project-type-info-container > *,
     .project-password-settings-container > * {
         display: none;
     }
