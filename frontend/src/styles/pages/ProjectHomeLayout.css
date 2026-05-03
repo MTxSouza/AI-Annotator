@@ -5,3 +5,14 @@
     height: 100%;
     padding: 50px 50px 50px 50px;
 }
+
+.project-home-layout-component > .main-page-component {
+    margin-left: 100px;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+@media (max-width: 800px) {
+    .project-home-layout-component > .main-page-component {
+        margin-left: 0px;
+    }
+}
