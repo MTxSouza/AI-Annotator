@@ -4,7 +4,8 @@ import { PopupOverlay } from '../PopupOverlay'
 import { useDialog } from '../dialog/Dialog'
 import { authenticateProjectRequest } from '../../scripts/projects'
 import { ProjectPasswordInput } from '../input/ProjectPasswordInput'
-import { SimpleConfirmButton } from '../button/SimpleConfirmButton'
+import { Button } from '../button/Button'
+import { ButtonType } from '../../scripts/Button'
 import { Popup } from './Popup'
 
 import '../../styles/popup/ConfirmProjectPasswordPopup.css'
@@ -60,9 +61,11 @@ export function ConfirmProjectPasswordPopup({
             </div>
             <ProjectPasswordInput isOptional={false} setProjectPassword={setProjectPassword} />
             <div>
-                <SimpleConfirmButton
-                    message={'Confirm'}
-                    onConfirm={() => {
+                <Button
+                    id="confirm-project-password-btn"
+                    value={'Confirm'}
+                    buttonType={ButtonType.SECONDARY}
+                    onClickEvent={() => {
                         if (projectPassword === null) {
                             showDialog('error', 'Please enter the project password.', 400)
                             return
