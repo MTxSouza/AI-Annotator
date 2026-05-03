@@ -1,4 +1,5 @@
 import { JSX, useState } from 'react'
+import { SimpleInput } from './SimpleInput'
 
 import '../../styles/input/ProjectPassword.css'
 
@@ -20,11 +21,11 @@ export function ProjectPassword({
 
     const component = (
         <div className="project-password-input-container">
-            <input
+            <SimpleInput
                 id="project-password-input"
                 type={hidePassword ? 'password' : 'text'}
                 placeholder={placeholderMessage}
-                onChange={(event) => setProjectPassword(event.target.value || null)}
+                onChangeEvent={(event) => setProjectPassword(event.target.value || null)}
             />
             <label id="project-password-visibility-label" htmlFor="change-project-password-visibility-btn">
                 <input

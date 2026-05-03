@@ -72,7 +72,7 @@ export function CreateProjectPopup({
             <SimpleInput
                 id="create-project-name-input"
                 placeholder="Project Name"
-                onChangeEvent={setProjectName}
+                onChangeEvent={(event) => setProjectName(event.target.value)}
                 maxLength={32}
             />
             <ProjectPassword isOptional={true} setProjectPassword={setProjectPassword} />
