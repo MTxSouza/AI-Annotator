@@ -10,6 +10,10 @@
     color: var(--primary-text-color);
     border: 1px solid var(--primary-text-color);
 }
+.secondary-btn-component {
+    color: var(--secondary-text-color);
+    border: 1px solid var(--secondary-text-color);
+}
 
 .primary-btn-component:disabled,
 .secondary-btn-component:disabled {
@@ -23,4 +27,8 @@
 .primary-btn-component:hover:not(:disabled) {
     border: 1px solid var(--primary-highlight-color);
     background-color: var(--primary-highlight-color);
+}
+.secondary-btn-component:hover:not(:disabled) {
+    color: var(--primary-text-color);
+    border: 1px solid var(--primary-text-color);
 }
