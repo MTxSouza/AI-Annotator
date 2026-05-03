@@ -5,7 +5,7 @@ import { Project, Task, createProjectRequest } from '../../scripts/projects'
 import { APIErrorResponse, fetchData, RequestMethod } from '../../scripts/common'
 import { ProjectPassword } from '../input/ProjectPassword'
 import { SimpleConfirmButton } from '../button/SimpleConfirmButton'
-import { SimpleInput } from '../input/SimpleInput'
+import { ProjectNameInput } from '../input/ProjectNameInput'
 import { Popup } from './Popup'
 
 import '../../styles/popup/CreateProjectPopup.css'
@@ -69,12 +69,7 @@ export function CreateProjectPopup({
                     </svg>
                 </button>
             </div>
-            <SimpleInput
-                id="create-project-name-input"
-                placeholder="Project Name"
-                onChangeEvent={(event) => setProjectName(event.target.value)}
-                maxLength={32}
-            />
+            <ProjectNameInput onChangeEvent={(event) => setProjectName(event.target.value)} />
             <ProjectPassword isOptional={true} setProjectPassword={setProjectPassword} />
             <div className="create-project-task-input-container">
                 <select
