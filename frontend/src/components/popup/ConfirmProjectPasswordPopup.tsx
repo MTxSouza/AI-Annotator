@@ -3,7 +3,7 @@ import { APIErrorResponse } from '../../scripts/common'
 import { PopupOverlay } from '../PopupOverlay'
 import { useDialog } from '../dialog/Dialog'
 import { authenticateProjectRequest } from '../../scripts/projects'
-import { ProjectPassword } from '../input/ProjectPassword'
+import { ProjectPasswordInput } from '../input/ProjectPasswordInput'
 import { SimpleConfirmButton } from '../button/SimpleConfirmButton'
 import { Popup } from './Popup'
 
@@ -58,7 +58,7 @@ export function ConfirmProjectPasswordPopup({
                     </svg>
                 </button>
             </div>
-            <ProjectPassword isOptional={false} setProjectPassword={setProjectPassword} />
+            <ProjectPasswordInput isOptional={false} setProjectPassword={setProjectPassword} />
             <div>
                 <SimpleConfirmButton
                     message={'Confirm'}

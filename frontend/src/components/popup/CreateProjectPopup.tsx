@@ -3,7 +3,7 @@ import { PopupOverlay } from '../PopupOverlay'
 import { useDialog } from '../dialog/Dialog'
 import { Project, Task, createProjectRequest } from '../../scripts/projects'
 import { APIErrorResponse, fetchData, RequestMethod } from '../../scripts/common'
-import { ProjectPassword } from '../input/ProjectPassword'
+import { ProjectPasswordInput } from '../input/ProjectPasswordInput'
 import { SimpleConfirmButton } from '../button/SimpleConfirmButton'
 import { ProjectNameInput } from '../input/ProjectNameInput'
 import { Popup } from './Popup'
@@ -70,7 +70,7 @@ export function CreateProjectPopup({
                 </button>
             </div>
             <ProjectNameInput onChangeEvent={(event) => setProjectName(event.target.value)} />
-            <ProjectPassword isOptional={true} setProjectPassword={setProjectPassword} />
+            <ProjectPasswordInput isOptional={true} setProjectPassword={setProjectPassword} />
             <div className="create-project-task-input-container">
                 <select
                     name="create-project-task"

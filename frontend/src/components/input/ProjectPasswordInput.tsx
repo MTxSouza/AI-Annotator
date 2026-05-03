@@ -3,7 +3,7 @@ import { SimpleInput } from './SimpleInput'
 
 import '../../styles/input/ProjectPassword.css'
 
-export function ProjectPassword({
+export function ProjectPasswordInput({
     isOptional,
     setProjectPassword,
 }: {
