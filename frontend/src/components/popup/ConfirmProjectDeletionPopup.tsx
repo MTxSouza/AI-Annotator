@@ -4,6 +4,8 @@ import { PopupOverlay } from '../PopupOverlay'
 import { useDialog } from '../dialog/Dialog'
 import { deleteProjectRequest } from '../../scripts/projects'
 import { ConfirmProjectPasswordPopup } from './ConfirmProjectPasswordPopup'
+import { Button } from '../button/Button'
+import { ButtonType } from '../../scripts/Button'
 import { Popup } from './Popup'
 
 import '../../styles/popup/ConfirmProjectDeletionPopup.css'
@@ -66,8 +68,11 @@ export function ConfirmProjectDeletionPopup({
         <div className="confirm-project-deletion-popup-component" onClick={(event) => event.stopPropagation()}>
             <h4>Are you sure you want to delete this project?</h4>
             <div>
-                <button
-                    onClick={() => {
+                <Button
+                    id="confirm-project-deletion-yes-btn"
+                    value={'Yes'}
+                    buttonType={ButtonType.TERTIARY}
+                    onClickEvent={() => {
                         if (isPrivate) {
                             setShowPasswordPopup(true)
                             return
@@ -76,10 +81,13 @@ export function ConfirmProjectDeletionPopup({
                         console.warn(deleteProjectMessage)
                         showDialog('warning', deleteProjectMessage, null)
                     }}
-                >
-                    Yes
-                </button>
-                <button onClick={closePopup}>No</button>
+                />
+                <Button
+                    id="confirm-project-deletion-no-btn"
+                    value={'No'}
+                    buttonType={ButtonType.TERTIARY}
+                    onClickEvent={closePopup}
+                />
             </div>
         </div>
     )
