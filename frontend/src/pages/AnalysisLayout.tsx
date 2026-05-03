@@ -5,7 +5,7 @@ import { JSX } from 'react'
 import { Project } from '../scripts/projects'
 import { useOutletContext } from 'react-router-dom'
 
-import '../styles/AnalysisLayout.css'
+import '../styles/pages/AnalysisLayout.css'
 
 // Components.
 export function AnalysisLayout(): JSX.Element {

@@ -8,7 +8,7 @@ import { useDialog } from '../components/dialog/Dialog'
 import { APIErrorResponse } from '../scripts/common'
 import { ProjectSideBar } from '../components/ProjectSideBar'
 
-import '../styles/ProjectHomeLayout.css'
+import '../styles/pages/ProjectHomeLayout.css'
 
 // Components.
 export function ProjectPageLayout(): JSX.Element {
