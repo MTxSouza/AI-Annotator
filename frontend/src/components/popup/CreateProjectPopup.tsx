@@ -4,7 +4,8 @@ import { useDialog } from '../dialog/Dialog'
 import { Project, Task, createProjectRequest } from '../../scripts/projects'
 import { APIErrorResponse, fetchData, RequestMethod } from '../../scripts/common'
 import { ProjectPasswordInput } from '../input/ProjectPasswordInput'
-import { SimpleConfirmButton } from '../button/SimpleConfirmButton'
+import { Button } from '../button/Button'
+import { ButtonType } from '../../scripts/Button'
 import { ProjectNameInput } from '../input/ProjectNameInput'
 import { Popup } from './Popup'
 
@@ -93,9 +94,11 @@ export function CreateProjectPopup({
                     </div>
                 </div>
             </div>
-            <SimpleConfirmButton
-                message={'Create'}
-                onConfirm={async () => {
+            <Button
+                id="create-project-btn-component"
+                value="Create"
+                buttonType={ButtonType.SECONDARY}
+                onClickEvent={async () => {
                     try {
                         const project = await createProjectRequest(projectName, selectedTask, projectPassword)
                         if (project) refreshProjects(project)
