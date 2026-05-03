@@ -6,14 +6,14 @@ export function SimpleInput({
     id,
     placeholder,
     onChangeEvent,
-    value = '',
+    value,
     type = 'text',
     maxLength = 32,
 }: {
     id: string
     placeholder: string
     onChangeEvent: (value: any) => void
-    value?: string
+    value?: string | number
     type?: string
     maxLength?: number
 }): JSX.Element {
@@ -24,7 +24,7 @@ export function SimpleInput({
         <input
             className="simple-input-component"
             id={id}
-            value={value}
+            defaultValue={value}
             type={type}
             maxLength={maxLength}
             placeholder={placeholder}
