@@ -4,15 +4,15 @@ import '../../styles/input/SimpleInput.css'
 
 export function SimpleInput({
     id,
-    placeholder,
     onChangeEvent,
+    placeholder,
     value,
     type = 'text',
     maxLength = 32,
 }: {
     id: string
-    placeholder: string
     onChangeEvent: (value: any) => void
+    placeholder?: string
     value?: string | number
     type?: string
     maxLength?: number
