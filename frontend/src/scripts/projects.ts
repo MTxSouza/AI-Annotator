@@ -81,7 +81,7 @@ export async function authenticateProjectRequest(projectId: string, password: st
 
     // Authenticate to fetch the access token.
     const tokenResponse = await fetchData(
-        '/auth/token/',
+        '/auth/token',
         RequestMethod.POST,
         undefined,
         {
@@ -124,9 +124,13 @@ export async function getProjectRequest(projectId: string, password: string | nu
         return await fetchData(`/projects/${projectId}/`, RequestMethod.GET)
     }
 
-    // Authenticate to fetch the access token.
-    await authenticateProjectRequest(projectId, password)
-    const accessToken = getCurrentProjectAccessToken()
+    // Check current access token.
+    let accessToken = getCurrentProjectAccessToken()
+    if (accessToken !== password) {
+        // Authenticate to fetch the access token.
+        await authenticateProjectRequest(projectId, password)
+        accessToken = getCurrentProjectAccessToken()
+    }
 
     // Authenticate with password and fetch project.
     console.debug('Password provided. Trying to fetch project with authentication...')
