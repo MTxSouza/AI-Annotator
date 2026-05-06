@@ -57,13 +57,21 @@ export function Settings(): JSX.Element {
                     </div>
                 </div>
             </div>
-            <Button
-                id="project-settings-save-btn"
-                value="Save"
-                buttonType={ButtonType.PRIMARY}
-                onClickEvent={() => console.log('ok')}
-                disabled={!isProjectInfoChanged}
-            />
+            <div className="project-bottom-buttons-container">
+                <Button
+                    id="project-delete-btn"
+                    value="delete project"
+                    buttonType={ButtonType.TERTIARY}
+                    onClickEvent={() => console.log('Delete project clicked')}
+                />
+                <Button
+                    id="project-settings-save-btn"
+                    value="Save"
+                    buttonType={ButtonType.PRIMARY}
+                    onClickEvent={() => console.log('ok')}
+                    disabled={!isProjectInfoChanged}
+                />
+            </div>
         </div>
     )
 }
