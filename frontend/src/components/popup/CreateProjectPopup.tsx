@@ -3,8 +3,10 @@ import { PopupOverlay } from '../PopupOverlay'
 import { useDialog } from '../dialog/Dialog'
 import { Project, Task, createProjectRequest } from '../../scripts/projects'
 import { APIErrorResponse, fetchData, RequestMethod } from '../../scripts/common'
-import { ProjectPassword } from '../input/ProjectPassword'
-import { SimpleConfirmButton } from '../button/SimpleConfirmButton'
+import { ProjectPasswordInput } from '../input/ProjectPasswordInput'
+import { Button } from '../button/Button'
+import { ButtonType } from '../../scripts/Button'
+import { ProjectNameInput } from '../input/ProjectNameInput'
 import { Popup } from './Popup'
 
 import '../../styles/popup/CreateProjectPopup.css'
@@ -68,14 +70,8 @@ export function CreateProjectPopup({
                     </svg>
                 </button>
             </div>
-            <input
-                id="create-project-name-input"
-                type="text"
-                maxLength={32}
-                placeholder="Project Name"
-                onChange={(event) => setProjectName(event.target.value)}
-            />
-            <ProjectPassword isOptional={true} setProjectPassword={setProjectPassword} />
+            <ProjectNameInput onChangeEvent={(event) => setProjectName(event.target.value)} />
+            <ProjectPasswordInput isOptional={true} setProjectPassword={setProjectPassword} />
             <div className="create-project-task-input-container">
                 <select
                     name="create-project-task"
@@ -98,9 +94,11 @@ export function CreateProjectPopup({
                     </div>
                 </div>
             </div>
-            <SimpleConfirmButton
-                message={'Create'}
-                onConfirm={async () => {
+            <Button
+                id="create-project-btn-component"
+                value="Create"
+                buttonType={ButtonType.SECONDARY}
+                onClickEvent={async () => {
                     try {
                         const project = await createProjectRequest(projectName, selectedTask, projectPassword)
                         if (project) refreshProjects(project)

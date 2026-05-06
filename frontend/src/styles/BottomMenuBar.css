@@ -6,6 +6,7 @@
     flex-direction: row;
     width: 100%;
     padding: 10px 20px 10px 20px;
+    transition: bottom 0.3s ease-in-out;
 }
 
 .developer-info-container {
@@ -74,4 +75,10 @@
     border-radius: 5px;
     padding: 1px 3px 1px 3px;
     margin-right: 8px;
+}
+
+@media (max-height: 550px) {
+    .bottom-menu-bar-component {
+        bottom: -100px;
+    }
 }

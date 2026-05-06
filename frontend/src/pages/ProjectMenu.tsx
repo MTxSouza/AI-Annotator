@@ -8,7 +8,7 @@ import { ConfirmProjectDeletionPopup } from '../components/popup/ConfirmProjectD
 import { ConfirmProjectPasswordPopup } from '../components/popup/ConfirmProjectPasswordPopup'
 import { CreateProjectCard, LoadCreateProjectCard, ProjectCard } from '../components/ProjectCard'
 
-import '../styles/ProjectMenu.css'
+import '../styles/pages/ProjectMenu.css'
 
 function LoadProjectMenuComponent(): JSX.Element {
     return (
