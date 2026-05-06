@@ -9,6 +9,7 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi import status
 from fastapi.exceptions import HTTPException
+from fastapi.responses import Response
 from fastapi.security import OAuth2PasswordBearer
 from jose import ExpiredSignatureError, JWTError, jwt
 
@@ -179,6 +180,46 @@ def decode_access_token(token: str) -> dict | None:
     except JWTError:
         throw_bearer_error(message="Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
     return None
+
+
+def refresh_tokens(refresh_token: str) -> str:
+    """
+    Validate a refresh token and issue a new access token.
+
+    Args:
+            refresh_token (str): The refresh JWT token.
+
+    Returns:
+            str: A fresh access token.
+    """
+    decoded = decode_access_token(token=refresh_token)
+    project_id = decoded.get("sub")  # type: ignore
+    return generate_single_access_token(data={"sub": project_id}, expires_delta=__ACCESS_TOKEN_EXPIRE_MINUTES__)
+
+
+def set_auth_cookies(response: Response, *, access_token: str, refresh_token: str | None = None) -> None:
+    """
+    Write access (and optionally refresh) tokens as HTTPOnly cookies on *response*.
+
+    Args:
+            response (Response): The FastAPI Response object.
+            access_token (str): The JWT access token.
+            refresh_token (str | None): The JWT refresh token. Pass None to skip setting it. (Default: None)
+    """
+    _common = dict(httponly=True, secure=False, samesite="lax")
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        max_age=__ACCESS_TOKEN_EXPIRE_MINUTES__,
+        **_common,  # type: ignore
+    )
+    if refresh_token is not None:
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            max_age=__ACCESS_TOKEN_REFRESH_MINUTES__,
+            **_common,  # type: ignore
+        )
 
 
 def throw_bearer_error(message: str, status_code: int) -> None:
