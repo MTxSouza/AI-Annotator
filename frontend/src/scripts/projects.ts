@@ -81,7 +81,7 @@ export async function authenticateProjectRequest(projectId: string, password: st
 
     // Authenticate to fetch the access token.
     const tokenResponse = await fetchData(
-        '/auth/token/',
+        '/auth/token',
         RequestMethod.POST,
         undefined,
         {
