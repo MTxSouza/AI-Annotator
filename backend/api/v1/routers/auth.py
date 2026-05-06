@@ -5,6 +5,7 @@ Module with all endpoints related to authentication operations.
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
+from fastapi.responses import Response
 from fastapi.security import OAuth2PasswordRequestForm
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -27,6 +28,7 @@ router = APIRouter(
 @limiter.limit("10/minute")
 async def authenticate_access_token(
     request: Request,
+    response: Response,
     auth_form: OAuth2PasswordRequestForm = Depends(dependency=OAuth2PasswordRequestForm),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> Token:
@@ -52,7 +54,13 @@ async def authenticate_access_token(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     # Create access token.
-    access_token = create_access_token(data={"sub": project_id})
+    token_data = create_access_token(data={"sub": project_id})
+    access_token = token_data["access_token"]
+    refresh_token = token_data["refresh_token"]
+
+    # Set refresh token in cookie.
+    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=True, samesite="strict")
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, secure=True, samesite="strict")
 
     # Return access token.
     return Token(access_token=access_token, token_type="bearer")

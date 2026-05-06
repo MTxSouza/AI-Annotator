@@ -18,6 +18,7 @@ from backend.configs import BackendSettings
 __JWT_ALGORITHM__ = BackendSettings.jwt_algorithm
 __SECRET_KEY__ = BackendSettings.secret_key
 __ACCESS_TOKEN_EXPIRE_MINUTES__ = BackendSettings.access_token_expire_minutes
+__ACCESS_TOKEN_REFRESH_MINUTES__ = BackendSettings.access_token_refresh_minutes
 __SALT_LENGTH__ = BackendSettings.salt_length
 __PASSWORD_HASH_ALGORITHM__ = BackendSettings.password_hash_algorithm
 __PASSWORD_HASH_ITERATIONS__ = BackendSettings.password_hash_iterations
@@ -25,6 +26,7 @@ del (
     BackendSettings.jwt_algorithm,
     BackendSettings.secret_key,
     BackendSettings.access_token_expire_minutes,
+    BackendSettings.access_token_refresh_minutes,
     BackendSettings.salt_length,
     BackendSettings.password_hash_algorithm,
     BackendSettings.password_hash_iterations,
@@ -116,24 +118,46 @@ def check_password(password: str, hashed_password: str) -> bool:
     return hmac.compare_digest(hashed_provided_password, hashed_password)
 
 
-def create_access_token(data: dict) -> str:
+def generate_single_access_token(data: dict, expires_delta: timedelta | int | None = None) -> str:
     """
-    Create a JWT access token.
+    Generate a single JWT access token with an optional expiration time.
+
+    Args:
+            data (dict): The data to be included in the token.
+            expires_delta (timedelta | int | None): The time delta for the token expiration. If None, the default
+            expiration time is used.
+
+    Returns:
+            str: The generated JWT access token.
+    """
+    # Set authentication tokens.
+    encoded_token = data.copy()
+
+    if expires_delta is not None:
+        if not isinstance(expires_delta, timedelta):
+            expires_delta = timedelta(minutes=__ACCESS_TOKEN_EXPIRE_MINUTES__)
+        expires_delta = datetime.now(tz=UTC) + expires_delta  # type: ignore
+    encoded_token.update({"exp": expires_delta})
+
+    # Create the JWT token.
+    token = jwt.encode(claims=encoded_token, key=__SECRET_KEY__, algorithm=__JWT_ALGORITHM__)
+    return token
+
+
+def create_access_token(data: dict) -> dict[str, str]:
+    """
+    Create both the JWT access token and the refresh token.
 
     Args:
             data (dict): The data to be included in the token.
 
     Returns:
-            str: The generated JWT access token.
+            dict[str, str]: A dictionary containing the generated JWT access token and refresh token.
     """
-    # Set expiration time.
-    encoded_token = data.copy()
-    expire = datetime.now(tz=UTC) + timedelta(minutes=__ACCESS_TOKEN_EXPIRE_MINUTES__)
-    encoded_token.update({"exp": expire})
-
-    # Create the JWT token.
-    token = jwt.encode(claims=encoded_token, key=__SECRET_KEY__, algorithm=__JWT_ALGORITHM__)
-    return token
+    # Create the JWT tokens.
+    expired_token = generate_single_access_token(data=data, expires_delta=__ACCESS_TOKEN_EXPIRE_MINUTES__)
+    refresh_token = generate_single_access_token(data=data, expires_delta=__ACCESS_TOKEN_REFRESH_MINUTES__)
+    return {"access_token": expired_token, "refresh_token": refresh_token}
 
 
 def decode_access_token(token: str) -> dict | None:
