@@ -1,4 +1,4 @@
-import { JSX } from 'react'
+import { ChangeEvent, JSX } from 'react'
 
 import '../../styles/input/SimpleInput.css'
 
@@ -11,7 +11,7 @@ export function SimpleInput({
     maxLength = 32,
 }: {
     id: string
-    onChangeEvent: (value: any) => void
+    onChangeEvent: (value: ChangeEvent<HTMLInputElement>) => void
     placeholder?: string
     value?: string | number
     type?: string

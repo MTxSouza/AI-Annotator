@@ -1,4 +1,4 @@
-import { JSX } from 'react'
+import { JSX, MouseEvent } from 'react'
 import { ButtonType } from '../../scripts/Button'
 
 import '../../styles/button/Button.css'
@@ -14,7 +14,7 @@ export function Button({
     value?: string
     buttonType?: ButtonType
     disabled?: boolean
-    onClickEvent: (value: any) => void
+    onClickEvent: (value: MouseEvent<HTMLButtonElement>) => void
 }): JSX.Element {
     // Set up class name based on button type.
     const className = `${buttonType}-btn-component`
