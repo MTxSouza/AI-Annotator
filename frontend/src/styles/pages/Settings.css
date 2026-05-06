@@ -8,10 +8,7 @@
     padding: 30px 50px 30px 50px !important;
     gap: 10px;
 }
-.project-settings-component > #project-settings-save-btn {
-    margin-top: 30px;
-    margin-left: auto;
-}
+
 .project-settings-component label {
     user-select: none;
     font-weight: 600;
@@ -79,6 +76,18 @@
     border-radius: 0.5em;
 }
 
+.project-bottom-buttons-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 80px;
+    width: 100%;
+    padding-top: 10px;
+}
+.project-bottom-buttons-container > #project-settings-save-btn {
+    margin-left: auto;
+}
+
 @media (max-width: 700px) {
     .project-name-settings-container > label {
         display: none;
@@ -87,10 +96,8 @@
 @media (max-width: 500px) {
     .project-name-settings-container > *,
     .project-type-info-container > *,
-    .project-password-settings-container > * {
-        display: none;
-    }
-    #project-settings-save-btn {
+    .project-password-settings-container > *,
+    .project-bottom-buttons-container > * {
         display: none;
     }
 }
