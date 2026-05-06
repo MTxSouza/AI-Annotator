@@ -135,7 +135,7 @@ def generate_single_access_token(data: dict, expires_delta: timedelta | int | No
 
     if expires_delta is not None:
         if not isinstance(expires_delta, timedelta):
-            expires_delta = timedelta(minutes=__ACCESS_TOKEN_EXPIRE_MINUTES__)
+            expires_delta = timedelta(minutes=expires_delta)
         expires_delta = datetime.now(tz=UTC) + expires_delta  # type: ignore
     encoded_token.update({"exp": expires_delta})
 
