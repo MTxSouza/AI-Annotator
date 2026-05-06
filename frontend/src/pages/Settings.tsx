@@ -15,7 +15,6 @@ export function Settings(): JSX.Element {
     // Get the project data from the outlet context.
     const project = useOutletContext<Project>()
     const currentProjectName = project.name
-    console.log('project in settings: ', project)
 
     // Set up states.
     const [newProjectName, setNewProjectName] = useState<string>(currentProjectName)
@@ -46,10 +45,17 @@ export function Settings(): JSX.Element {
                 />
             </div>
             <div className="project-type-info-container">
-                <label htmlFor="project-task-name">Task</label>
-                <span id="project-task-name">{project.task}</span>
-                <label htmlFor="is-private-project">Private</label>
-                <span id="is-private-project">{project.is_private ? 'Yes' : 'No'}</span>
+                <p>Extra project information</p>
+                <div className="project-type-info-block-container">
+                    <div className="project-type-info-block-sub-container">
+                        <label htmlFor="project-task-name">Task</label>
+                        <span id="project-task-name">{project.task}</span>
+                    </div>
+                    <div className="project-type-info-block-sub-container">
+                        <label htmlFor="is-private-project">Private</label>
+                        <span id="is-private-project">{project.is_private ? 'Yes' : 'No'}</span>
+                    </div>
+                </div>
             </div>
             <Button
                 id="project-settings-save-btn"
