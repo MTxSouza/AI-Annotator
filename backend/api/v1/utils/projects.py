@@ -119,6 +119,8 @@ async def get_authenticated_project(
 
     # Get decoded token.
     decoded_token = decode_access_token(token=access_token)  # type: ignore
+    if decoded_token is None:
+        throw_bearer_error(message="Invalid access token", status_code=status.HTTP_401_UNAUTHORIZED)
 
     # Check token subject matches project ID.
     if decoded_token.get("sub") != str(project["_id"]):  # type: ignore
