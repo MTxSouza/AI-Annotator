@@ -8,11 +8,11 @@
     padding: 30px 50px 30px 50px !important;
     gap: 10px;
 }
-.project-settings-component > button {
+.project-settings-component > #project-settings-save-btn {
     margin-top: 30px;
     margin-left: auto;
 }
-.project-settings-component > * > label {
+.project-settings-component label {
     user-select: none;
     font-weight: 600;
 }
@@ -38,13 +38,45 @@
 
 .project-type-info-container {
     display: flex;
-    flex-direction: row;
-    gap: 10px;
+    flex-direction: column;
+    gap: 5px;
     margin-top: 10px;
     text-wrap: nowrap;
+    user-select: none;
 }
-.project-type-info-container > label::after {
+.project-type-info-container > p {
+    color: var(--secondary-text-color);
+    font-size: 14px;
+    font-style: italic;
+}
+
+.project-type-info-block-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px dashed var(--tertiary-background-color);
+    border-radius: 0.5em;
+    padding: 10px;
+}
+
+.project-type-info-block-sub-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-size: 14px;
+}
+.project-type-info-block-sub-container > label::after {
     content: ':';
+}
+.project-type-info-block-sub-container > span {
+    margin-left: auto;
+}
+
+#project-task-name {
+    background-color: var(--secondary-background-color);
+    padding: 2px 5px 2px 5px;
+    border: 1px dashed var(--secondary-text-color);
+    border-radius: 0.5em;
 }
 
 @media (max-width: 700px) {
