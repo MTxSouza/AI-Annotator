@@ -24,7 +24,7 @@ router = APIRouter(
 
 # Endpoints.
 @router.post(path="/token", response_model=Token, status_code=status.HTTP_201_CREATED)
-@limiter.limit("3/minute")
+@limiter.limit("10/minute")
 async def authenticate_access_token(
     request: Request,
     auth_form: OAuth2PasswordRequestForm = Depends(dependency=OAuth2PasswordRequestForm),
