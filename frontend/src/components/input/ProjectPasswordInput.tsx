@@ -1,8 +1,9 @@
 import { JSX, useState } from 'react'
+import { SimpleInput } from './SimpleInput'
 
-import '../../styles/input/ProjectPassword.css'
+import '../../styles/input/ProjectPasswordInput.css'
 
-export function ProjectPassword({
+export function ProjectPasswordInput({
     isOptional,
     setProjectPassword,
 }: {
@@ -20,11 +21,11 @@ export function ProjectPassword({
 
     const component = (
         <div className="project-password-input-container">
-            <input
-                id="project-password-input"
+            <SimpleInput
+                id="project-password-input-component"
                 type={hidePassword ? 'password' : 'text'}
                 placeholder={placeholderMessage}
-                onChange={(event) => setProjectPassword(event.target.value || null)}
+                onChangeEvent={(event) => setProjectPassword(event.target.value || null)}
             />
             <label id="project-password-visibility-label" htmlFor="change-project-password-visibility-btn">
                 <input

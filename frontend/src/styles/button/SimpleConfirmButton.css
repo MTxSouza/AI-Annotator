@@ -1,8 +1,0 @@
-.simple-confirm-button-component {
-    border: 1px solid var(--tertiary-text-color);
-    border-radius: 20px;
-    padding: 10px;
-}
-.simple-confirm-button-component:hover {
-    border: 1px solid var(--secondary-text-color);
-}
