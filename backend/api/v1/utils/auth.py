@@ -20,6 +20,8 @@ __JWT_ALGORITHM__ = BackendSettings.jwt_algorithm
 __SECRET_KEY__ = BackendSettings.secret_key
 __ACCESS_TOKEN_EXPIRE_MINUTES__ = BackendSettings.access_token_expire_minutes
 __ACCESS_TOKEN_REFRESH_MINUTES__ = BackendSettings.access_token_refresh_minutes
+__ACCESS_TOKEN_EXPIRE_SECONDS__ = __ACCESS_TOKEN_EXPIRE_MINUTES__ * 60  # Convert minutes to seconds.
+__ACCESS_TOKEN_REFRESH_SECONDS__ = __ACCESS_TOKEN_REFRESH_MINUTES__ * 60  # Convert minutes to seconds.
 __SALT_LENGTH__ = BackendSettings.salt_length
 __PASSWORD_HASH_ALGORITHM__ = BackendSettings.password_hash_algorithm
 __PASSWORD_HASH_ITERATIONS__ = BackendSettings.password_hash_iterations
@@ -210,14 +212,14 @@ def set_auth_cookies(response: Response, *, access_token: str, refresh_token: st
     response.set_cookie(
         key="access_token",
         value=access_token,
-        max_age=__ACCESS_TOKEN_EXPIRE_MINUTES__,
+        max_age=__ACCESS_TOKEN_EXPIRE_SECONDS__,
         **_common,  # type: ignore
     )
     if refresh_token is not None:
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
-            max_age=__ACCESS_TOKEN_REFRESH_MINUTES__,
+            max_age=__ACCESS_TOKEN_REFRESH_SECONDS__,
             **_common,  # type: ignore
         )
 
