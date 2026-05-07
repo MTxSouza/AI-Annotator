@@ -1,6 +1,6 @@
 import { JSX } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { removeCurrentProjectAccessToken } from '../scripts/projects'
+import { logoutProjectRequest } from '../scripts/projects'
 import { redirectToProjectMenuPage, switchApplicationTheme } from '../scripts/TopMenuBar'
 
 import '../styles/TopMenuBar.css'
@@ -16,7 +16,7 @@ export function TopMenuBar(): JSX.Element {
                     id="redirect-project-menu-btn"
                     onClick={() => {
                         redirectToProjectMenuPage(navigate)
-                        removeCurrentProjectAccessToken()
+                        logoutProjectRequest()
                     }}
                 ></button>
             </div>
