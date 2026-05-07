@@ -35,8 +35,8 @@ export function BottomMenuBar(): JSX.Element {
                     <KeyBoardIcon style={{ fill: 'var(--tertiary-text-color)' }} />
                     <div className="keyboard-shortcuts-window-popup">
                         <h3>Keyboard Shortcuts</h3>
-                        <ShortcutKey keyMapping="SHIFT + F" description="Full Screen (Recommended)" />
-                        <ShortcutKey keyMapping="SHIFT + T" description="Switch theme" />
+                        <ShortcutKey keyMapping="CTRL + SHIFT + F" description="Full Screen (Recommended)" />
+                        <ShortcutKey keyMapping="CTRL + SHIFT + L" description="Switch theme" />
                     </div>
                 </button>
             </div>
