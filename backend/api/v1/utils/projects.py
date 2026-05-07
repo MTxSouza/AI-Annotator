@@ -11,7 +11,13 @@ from fastapi.responses import Response
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import Project
-from backend.api.v1.utils.auth import decode_access_token, remove_auth_cookies, throw_bearer_error
+from backend.api.v1.utils.auth import (
+    create_access_token,
+    decode_access_token,
+    remove_auth_cookies,
+    set_auth_cookies,
+    throw_bearer_error,
+)
 from backend.api.v1.utils.files import unset_project_id_in_file_records
 from backend.api.v1.utils.samples import delete_samples_by_project_id
 from backend.api.v1.utils.task_details import setup_task_detail
@@ -176,9 +182,15 @@ async def update_project(project_id: str, project_data: dict, response: Response
     # Retrieve the updated project.
     updated_project = await get_project_by_id(db=db, project_id=project_id_obj)
 
-    # Logout to project if it was made non-private.
-    if "hashed_password" in project_data and project_data["hashed_password"] is None:
+    # Check if a password was updated.
+    if "hashed_password" in project_data:
         remove_auth_cookies(response=response)
+        if project_data["hashed_password"]:
+            token = create_access_token(data={"sub": project_id})
+            access_token = token["access_token"]
+            refresh_token = token["refresh_token"]
+            set_auth_cookies(response=response, access_token=access_token, refresh_token=refresh_token)
+            del token, access_token, refresh_token
 
     return updated_project  # type: ignore
 
