@@ -1,8 +1,5 @@
 import { fetchData, RequestMethod, APIErrorResponse } from '../scripts/common'
 
-// Constants.
-const ACCESS_TOKEN_KEY = 'current_project_access_token'
-
 // Structures.
 export interface Task {
     name: string
@@ -22,16 +19,15 @@ export interface Project {
 
 // Functions.
 function validateProjectName(name: string): string {
-    // Trim whitespace from the name.
     name = name.trim()
 
-    // Check if the name is empty.
+    // Check for empty name.
     if (!name) {
         console.error('Project name cannot be empty.')
         throw new APIErrorResponse('Project name cannot be empty.', 400)
     }
 
-    // Check characters.
+    // Check for invalid characters.
     const invalidChars = /[.<>:"/\\|?*]/g
     if (invalidChars.test(name)) {
         console.error('Project name contains invalid characters: . < > : " / \\ | ? *')
@@ -46,118 +42,76 @@ export async function createProjectRequest(
     task: string,
     password: string | null = null,
 ): Promise<Project> {
-    // Check input validity.
     console.debug(`Creating project with name: ${name}, task: ${task}`)
 
-    // Validate fields.
+    // Validate input.
     name = validateProjectName(name)
 
-    // Create body for the request.
-    const body = {
-        name: name,
-        task: task,
-        password: password,
-    }
+    // Build request body.
+    const body = { name, task, password }
     console.debug('Project body:', body)
 
-    // Send request to the backend.
+    // Request project creation.
     const responseData = await fetchData('/projects/', RequestMethod.POST, undefined, body)
     console.debug('Project created successfully:', responseData)
-    return await responseData
+    return responseData
 }
 
 export async function authenticateProjectRequest(projectId: string, password: string): Promise<void> {
     console.debug(`Authenticating project with ID: ${projectId}`)
 
-    // Check if project ID and password are provided.
+    // Validate input.
     if (!projectId) {
-        console.error('Project ID is required for authentication.')
         throw new APIErrorResponse('Project ID is required for authentication.', 400)
     }
     if (!password) {
-        console.error('Password is required for authentication.')
         throw new APIErrorResponse('Password is required for authentication.', 400)
     }
 
-    // Authenticate to fetch the access token.
-    const tokenResponse = await fetchData(
+    // The backend sets the access_token and refresh_token cookies on success.
+    await fetchData(
         '/auth/token',
         RequestMethod.POST,
         undefined,
-        {
-            username: projectId,
-            password: password,
-        },
-        undefined,
-        'application/x-www-form-urlencoded',
+        { username: projectId, password: password },
+        { 'Content-Type': 'application/x-www-form-urlencoded' },
     )
-    localStorage.setItem(ACCESS_TOKEN_KEY, tokenResponse.access_token)
-    console.debug('Project authenticated successfully. Access token stored.')
+    console.debug('Project authenticated successfully. Auth cookies set by the server.')
 }
 
-export function getCurrentProjectAccessToken(): string | null {
-    const token = localStorage.getItem(ACCESS_TOKEN_KEY)
-    console.debug('Retrieved current project access token')
-    if (token === null) {
-        console.warn('No current project access token found.')
-    }
-    return token
-}
+export async function logoutProjectRequest(): Promise<void> {
+    console.debug('Logging out of current project...')
 
-export function removeCurrentProjectAccessToken(): void {
-    localStorage.removeItem(ACCESS_TOKEN_KEY)
-    console.debug('Removed current project access token.')
+    // Clear auth cookies.
+    await fetchData('/auth/logout', RequestMethod.POST)
+    console.debug('Logged out. Auth cookies cleared by the server.')
 }
 
 export async function getProjectRequest(projectId: string, password: string | null = null): Promise<Project> {
     console.debug(`Fetching project with ID: ${projectId}`)
 
-    // Check if project ID is provided.
+    // Validate input.
     if (!projectId) {
-        console.error('Project ID is required for fetching.')
         throw new APIErrorResponse('Project ID is required for fetching.', 400)
     }
-
-    // Check if password is provided.
-    if (password === null) {
-        console.debug('No password provided. Trying to fetch project without password...')
-        return await fetchData(`/projects/${projectId}/`, RequestMethod.GET)
-    }
-
-    // Check current access token.
-    let accessToken = getCurrentProjectAccessToken()
-    if (accessToken !== password) {
-        // Authenticate to fetch the access token.
+    if (password !== null) {
+        // Authenticate first; the server will set the access_token cookie.
         await authenticateProjectRequest(projectId, password)
-        accessToken = getCurrentProjectAccessToken()
     }
 
-    // Authenticate with password and fetch project.
-    console.debug('Password provided. Trying to fetch project with authentication...')
-    return await fetchData(`/projects/${projectId}/`, RequestMethod.GET, undefined, undefined, {
-        Authorization: `Bearer ${accessToken}`,
-    })
+    // Cookie is sent automatically via credentials: 'include' in fetchData.
+    return await fetchData(`/projects/${projectId}/`, RequestMethod.GET)
 }
 
 export async function deleteProjectRequest(projectId: string): Promise<void> {
     console.debug(`Deleting project with ID: ${projectId}`)
+
+    // Validate input.
     if (!projectId) {
-        console.error('Project ID is required for deletion.')
         throw new APIErrorResponse('Project ID is required for deletion.', 400)
     }
 
-    // Check if access token exists for the project. If it does, include it in the request to allow deletion of private projects.
-    const accessToken = getCurrentProjectAccessToken()
-    let headers = undefined
-    if (accessToken) {
-        headers = {
-            Authorization: `Bearer ${accessToken}`,
-        }
-    }
-
-    await fetchData(`/projects/${projectId}/`, RequestMethod.DELETE, undefined, undefined, headers)
-    console.debug(`Project with ID: ${projectId} deleted successfully.`)
-
-    // Remove access token from local storage after project deletion.
-    removeCurrentProjectAccessToken()
+    // Cookie is sent automatically; no manual Authorization header needed.
+    await fetchData(`/projects/${projectId}/`, RequestMethod.DELETE)
+    console.debug(`Project ${projectId} deleted successfully.`)
 }

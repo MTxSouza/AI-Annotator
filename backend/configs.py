@@ -67,7 +67,8 @@ class BackendSettingsModel(BaseSettings):
 
     jwt_algorithm: str = "HS256"
     secret_key: str = os.getenv("AI_ANNOTATOR_SECRET_KEY", "your_default_secret_key")
-    access_token_expire_minutes: int = 60 * 24  # 1 day
+    access_token_expire_minutes: int = 30
+    access_token_refresh_minutes: int = 60 * 24  # 1 day
     salt_length: int = 16
     password_hash_algorithm: str = "sha256"
     password_hash_iterations: int = 100000

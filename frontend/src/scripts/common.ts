@@ -1,7 +1,8 @@
 import { NavigateFunction } from 'react-router-dom'
+import { Task } from '../scripts/projects'
 
 // Global variables.
-export const API_BASE_URL = 'http://127.0.0.1:8000/api/v1'
+export const API_BASE_URL = 'http://localhost:8000/api/v1'
 export const PROJECT_MENU_URL = '/'
 export const PROJECT_DATASET_URL = '/:projectId'
 export const PROJECT_ANALYTICS_URL = '/:projectId/analytics'
@@ -31,28 +32,69 @@ export function redirectTo(url: string, navigate: NavigateFunction): void {
     navigate(url)
 }
 
+async function tryRefreshToken(): Promise<boolean> {
+    try {
+        const response = await fetch(new URL('/auth/refresh', API_BASE_URL).toString(), {
+            method: 'POST',
+            credentials: 'include',
+        })
+        return response.ok
+    } catch {
+        return false
+    }
+}
+
+async function parseErrorResponse(response: Response): Promise<string> {
+    const errorText = await response.text()
+    try {
+        const errorJson = JSON.parse(errorText)
+        if (errorJson.detail && errorJson.detail instanceof Array && errorJson.detail.length > 0) {
+            return errorJson.detail[0].msg
+        }
+        if (errorJson.detail && typeof errorJson.detail === 'string') {
+            return errorJson.detail
+        }
+    } catch {
+        console.warn('Failed to parse error response as JSON.')
+    }
+    return errorText || 'Unknown error occurred.'
+}
+
 export async function fetchData(
     url: string,
     method: RequestMethod,
     params?: any,
     body?: any,
-    headers?: any,
-    contentType: string = 'application/json',
+    headers?: Record<string, string>,
 ): Promise<any | void> {
     // Set up the full URL.
     let fullUrl: string = new URL(url, API_BASE_URL).toString()
     console.debug(
-        `Fetching data from ${fullUrl} with method ${method}, params: ${JSON.stringify(params)}, body: ${JSON.stringify(body)}, headers: ${JSON.stringify(headers)}, Content-Type: ${contentType}`,
+        `Fetching data from ${fullUrl} with method ${method}, params: ${JSON.stringify(params)}, body: ${JSON.stringify(body)}, headers: ${JSON.stringify(headers)}`,
     )
+
+    // Add params to the URL if provided.
+    if (params) {
+        const queryParams = new URLSearchParams(params).toString()
+        fullUrl += `?${queryParams}`
+    }
 
     // Set up the request options.
     const options: RequestInit = {
         method: method,
-        headers: {
-            'Content-Type': contentType,
-            ...headers,
-        },
+        credentials: 'include',
     }
+
+    // Add headers.
+    const defaultHeaders: Record<string, string> = {}
+    if (headers) {
+        Object.assign(defaultHeaders, headers)
+    }
+    if (!defaultHeaders['Content-Type']) {
+        defaultHeaders['Content-Type'] = 'application/json'
+    }
+    const contentType = defaultHeaders['Content-Type']
+    options.headers = defaultHeaders
 
     // Add body if provided.
     if (body) {
@@ -66,40 +108,39 @@ export async function fetchData(
         }
     }
 
-    // Add params to the URL if provided.
-    if (params) {
-        console.trace('Adding query parameters to the URL.')
-        const queryParams = new URLSearchParams(params).toString()
-        fullUrl += `?${queryParams}`
-    }
-
-    // Request data from the API.
     console.debug(`Final options for fetch: ${JSON.stringify(options)}`)
-    const response = await fetch(fullUrl, options)
-    if (!response.ok) {
-        // Get status and message from the response.
-        const errorStatus = response.status
-        const errorText = await response.text()
-        let errorMessage = errorText
-        try {
-            const errorJson = JSON.parse(errorText)
-            if (errorJson.detail && errorJson.detail instanceof Array && errorJson.detail.length > 0) {
-                errorMessage = errorJson.detail[0].msg
-            } else if (errorJson.detail && typeof errorJson.detail === 'string') {
-                errorMessage = errorJson.detail
-            }
-        } catch (e) {
-            console.warn('Failed to parse error response as JSON:', e)
-        }
-        errorMessage = errorMessage || errorText || 'Unknown error occurred.'
+    let response = await fetch(fullUrl, options)
 
-        console.error('HTTP error:', response.status, 'Response:', errorMessage)
-        throw new APIErrorResponse(errorMessage, errorStatus)
+    // On 401, attempt a silent token refresh and retry once.
+    if (response.status === 401 && !url.includes('auth/')) {
+        console.debug('Access token expired. Attempting silent refresh...')
+        const refreshed = await tryRefreshToken()
+        if (refreshed) {
+            console.debug('Token refreshed. Retrying original request...')
+            response = await fetch(fullUrl, options)
+        }
     }
+
+    if (!response.ok) {
+        const errorMessage = await parseErrorResponse(response)
+        console.error('HTTP error:', response.status, 'Response:', errorMessage)
+        throw new APIErrorResponse(errorMessage, response.status)
+    }
+
     console.debug(`Fetched data from ${fullUrl} successfully.`)
 
     if (response.status === 204) {
         return
     }
     return await response.json()
+}
+
+export async function getProjectsRequest(): Promise<any> {
+    console.debug('Fetching projects from the backend...')
+    return await fetchData('/projects/', RequestMethod.GET)
+}
+
+export async function getTasksRequest(): Promise<Task[]> {
+    console.debug('Fetching tasks from the backend...')
+    return await fetchData('/tasks/', RequestMethod.GET)
 }

@@ -2,13 +2,22 @@
 Module with all utilities related to project operations.
 """
 
-from fastapi import Depends, status
+from typing import Annotated
+
+from fastapi import Cookie, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.params import Path
+from fastapi.responses import Response
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import Project
-from backend.api.v1.utils.auth import decode_access_token, oauth2_scheme, throw_bearer_error
+from backend.api.v1.utils.auth import (
+    create_access_token,
+    decode_access_token,
+    remove_auth_cookies,
+    set_auth_cookies,
+    throw_bearer_error,
+)
 from backend.api.v1.utils.files import unset_project_id_in_file_records
 from backend.api.v1.utils.samples import delete_samples_by_project_id
 from backend.api.v1.utils.task_details import setup_task_detail
@@ -86,7 +95,7 @@ async def is_project_name_exists(project_name: str, db: AsyncDatabase) -> bool:
 
 async def get_authenticated_project(
     project_id: str = Path(..., description="The ID of the project."),  # type: ignore
-    token: str = Depends(dependency=oauth2_scheme),
+    access_token: Annotated[str | None, Cookie()] = None,
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> Project:
     """
@@ -94,7 +103,7 @@ async def get_authenticated_project(
 
     Args:
             project_id (str): The ID of the project.
-            token (str): The access token.
+            access_token (str | None): The access token from the cookie. (Default: None)
             db (AsyncDatabase): The database instance.
 
     Returns:
@@ -105,18 +114,20 @@ async def get_authenticated_project(
     if project is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
-    # Check if the project is private.
+    # Check if the project needs authentication.
     if not project.get("hashed_password"):
         return Project.model_validate(obj=project)
 
-    # Check if the token is valid.
-    if token is None:
+    # Check if access token is provided.
+    if access_token is None:
         throw_bearer_error(
             message="Not authenticated to access this private project", status_code=status.HTTP_401_UNAUTHORIZED
         )
 
     # Get decoded token.
-    decoded_token = decode_access_token(token=token)
+    decoded_token = decode_access_token(token=access_token)  # type: ignore
+    if decoded_token is None:
+        throw_bearer_error(message="Invalid access token", status_code=status.HTTP_401_UNAUTHORIZED)
 
     # Check token subject matches project ID.
     if decoded_token.get("sub") != str(project["_id"]):  # type: ignore
@@ -148,13 +159,14 @@ async def create_project(project_data: dict, db: AsyncDatabase) -> dict:
     return created_project  # type: ignore
 
 
-async def update_project(project_id: str, project_data: dict, db: AsyncDatabase) -> dict:
+async def update_project(project_id: str, project_data: dict, response: Response, db: AsyncDatabase) -> dict:
     """
     Utility function to update an existing project.
 
     Args:
             project_id (str): The ID of the project to update.
             project_data (dict): The updated project data.
+            response (Response): The FastAPI response object to set cookies if needed.
             db (AsyncDatabase): The database instance.
 
     Returns:
@@ -169,6 +181,16 @@ async def update_project(project_id: str, project_data: dict, db: AsyncDatabase)
 
     # Retrieve the updated project.
     updated_project = await get_project_by_id(db=db, project_id=project_id_obj)
+
+    # Check if a password was updated.
+    if "hashed_password" in project_data:
+        remove_auth_cookies(response=response)
+        if project_data["hashed_password"]:
+            token = create_access_token(data={"sub": project_id})
+            access_token = token["access_token"]
+            refresh_token = token["refresh_token"]
+            set_auth_cookies(response=response, access_token=access_token, refresh_token=refresh_token)
+            del token, access_token, refresh_token
 
     return updated_project  # type: ignore
 
