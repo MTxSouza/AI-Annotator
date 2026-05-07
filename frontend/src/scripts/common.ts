@@ -2,7 +2,7 @@ import { NavigateFunction } from 'react-router-dom'
 import { Task } from '../scripts/projects'
 
 // Global variables.
-export const API_BASE_URL = 'http://127.0.0.1:8000/api/v1'
+export const API_BASE_URL = 'http://localhost:8000/api/v1'
 export const PROJECT_MENU_URL = '/'
 export const PROJECT_DATASET_URL = '/:projectId'
 export const PROJECT_ANALYTICS_URL = '/:projectId/analytics'
