@@ -9,6 +9,16 @@ import KeyBoardIcon from '../icons/keyBoard.svg?react'
 
 import '../styles/BottomMenuBar.css'
 
+// Components.
+function ShortcutKey({ keyMapping, description }: { keyMapping: string; description: string }): JSX.Element {
+    return (
+        <p>
+            <span className="shortcut-key">{keyMapping}</span>
+            {description}
+        </p>
+    )
+}
+
 export function BottomMenuBar(): JSX.Element {
     return (
         <div className="bottom-menu-bar-component">
@@ -25,12 +35,8 @@ export function BottomMenuBar(): JSX.Element {
                     <KeyBoardIcon style={{ fill: 'var(--tertiary-text-color)' }} />
                     <div className="keyboard-shortcuts-window-popup">
                         <h3>Keyboard Shortcuts</h3>
-                        <p>
-                            <span className="shortcut-key">F11</span>Full Screen (Recommended)
-                        </p>
-                        <p>
-                            <span className="shortcut-key">SHIFT + T</span>Switch theme
-                        </p>
+                        <ShortcutKey keyMapping="SHIFT + F" description="Full Screen (Recommended)" />
+                        <ShortcutKey keyMapping="SHIFT + T" description="Switch theme" />
                     </div>
                 </button>
             </div>
