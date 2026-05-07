@@ -52,7 +52,7 @@ export function Settings(): JSX.Element {
 
         // Update UI.
         console.info('Project updated successfully.')
-        showDialog('info', 'Project updated successfully!', 201)
+        showDialog('info', 'Project updated successfully!', null)
         setCurrentProjectName(newProjectName)
         setIsProjectInfoChanged(false)
     }
