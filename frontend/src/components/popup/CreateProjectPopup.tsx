@@ -2,7 +2,7 @@ import { useState, useEffect, JSX } from 'react'
 import { PopupOverlay } from '../PopupOverlay'
 import { useDialog } from '../dialog/Dialog'
 import { Project, Task, createProjectRequest } from '../../scripts/projects'
-import { APIErrorResponse, fetchData, RequestMethod } from '../../scripts/common'
+import { APIErrorResponse, getTasksRequest } from '../../scripts/common'
 import { ProjectPasswordInput } from '../input/ProjectPasswordInput'
 import { Button } from '../button/Button'
 import { ButtonType } from '../../scripts/Button'
@@ -31,7 +31,7 @@ export function CreateProjectPopup({
     useEffect(() => {
         async function getTasks() {
             try {
-                const responseData = await fetchData('/tasks/', RequestMethod.GET)
+                const responseData = await getTasksRequest()
                 setTasks(responseData)
                 if (responseData.length > 0) setSelectedTask(responseData[0].name)
             } catch (error) {

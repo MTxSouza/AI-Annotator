@@ -88,8 +88,7 @@ export async function authenticateProjectRequest(projectId: string, password: st
             username: projectId,
             password: password,
         },
-        undefined,
-        'application/x-www-form-urlencoded',
+        { 'Content-Type': 'application/x-www-form-urlencoded' },
     )
     localStorage.setItem(ACCESS_TOKEN_KEY, tokenResponse.access_token)
     console.debug('Project authenticated successfully. Access token stored.')
