@@ -7,10 +7,11 @@ from typing import Annotated
 from fastapi import Cookie, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.params import Path
+from fastapi.responses import Response
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import Project
-from backend.api.v1.utils.auth import decode_access_token, throw_bearer_error
+from backend.api.v1.utils.auth import decode_access_token, remove_auth_cookies, throw_bearer_error
 from backend.api.v1.utils.files import unset_project_id_in_file_records
 from backend.api.v1.utils.samples import delete_samples_by_project_id
 from backend.api.v1.utils.task_details import setup_task_detail
@@ -152,13 +153,14 @@ async def create_project(project_data: dict, db: AsyncDatabase) -> dict:
     return created_project  # type: ignore
 
 
-async def update_project(project_id: str, project_data: dict, db: AsyncDatabase) -> dict:
+async def update_project(project_id: str, project_data: dict, response: Response, db: AsyncDatabase) -> dict:
     """
     Utility function to update an existing project.
 
     Args:
             project_id (str): The ID of the project to update.
             project_data (dict): The updated project data.
+            response (Response): The FastAPI response object to set cookies if needed.
             db (AsyncDatabase): The database instance.
 
     Returns:
@@ -173,6 +175,10 @@ async def update_project(project_id: str, project_data: dict, db: AsyncDatabase)
 
     # Retrieve the updated project.
     updated_project = await get_project_by_id(db=db, project_id=project_id_obj)
+
+    # Logout to project if it was made non-private.
+    if "hashed_password" in project_data and project_data["hashed_password"] is None:
+        remove_auth_cookies(response=response)
 
     return updated_project  # type: ignore
 

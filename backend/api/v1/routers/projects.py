@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.params import Param
 from fastapi.requests import Request
+from fastapi.responses import Response
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import Create, Project, ProjectSimple, Update
@@ -84,6 +85,7 @@ async def create_project_endpoint(
 @router.put(path="/{project_id}", name="Update Project", response_model=Project, status_code=status.HTTP_201_CREATED)
 async def update_project_endpoint(
     update: Update,
+    response: Response,
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> Project:
@@ -102,7 +104,7 @@ async def update_project_endpoint(
 
     # Update the project.
     updated_project = await update_project(
-        db=db, project_id=project_id, project_data=update.model_dump(exclude_unset=True)
+        db=db, response=response, project_id=project_id, project_data=update.model_dump(exclude_unset=True)
     )
 
     return updated_project  # type: ignore
