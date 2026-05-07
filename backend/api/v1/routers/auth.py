@@ -12,7 +12,13 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.auth import Token
-from backend.api.v1.utils.auth import check_password, create_access_token, refresh_tokens, set_auth_cookies
+from backend.api.v1.utils.auth import (
+    check_password,
+    create_access_token,
+    refresh_tokens,
+    remove_auth_cookies,
+    set_auth_cookies,
+)
 from backend.api.v1.utils.projects import get_project_by_id
 from backend.database.configs import DatabaseConfig
 from backend.limiter import limiter
@@ -88,5 +94,4 @@ async def logout(response: Response) -> None:
     Endpoint to clear the auth cookies, effectively logging the project out.
     """
     # Clear the auth cookies.
-    response.delete_cookie(key="access_token")
-    response.delete_cookie(key="refresh_token")
+    remove_auth_cookies(response=response)

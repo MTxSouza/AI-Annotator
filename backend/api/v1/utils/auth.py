@@ -222,6 +222,17 @@ def set_auth_cookies(response: Response, *, access_token: str, refresh_token: st
         )
 
 
+def remove_auth_cookies(response: Response) -> None:
+    """
+    Logout by deleting the authentication cookies.
+
+    Args:
+            response (Response): The FastAPI Response object.
+    """
+    response.delete_cookie(key="access_token")
+    response.delete_cookie(key="refresh_token")
+
+
 def throw_bearer_error(message: str, status_code: int) -> None:
     """
     Utility function to throw a 401 Bearer authentication error.
