@@ -4,7 +4,8 @@ Main component for the top menu bar.
 import { JSX } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { logoutProjectRequest } from '../scripts/projects'
-import { redirectToProjectMenuPage, switchApplicationTheme } from '../scripts/TopMenuBar'
+import { switchApplicationTheme } from '../scripts/theme'
+import { redirectToProjectMenuPage } from '../scripts/TopMenuBar'
 
 import LightThemeIcon from '../icons/lightMode.svg?react'
 import DarkThemeIcon from '../icons/darkMode.svg?react'
