@@ -17,6 +17,11 @@ export interface Project {
     updated_at: string
 }
 
+export interface ProjectUpdate {
+    name?: string
+    description?: string
+}
+
 // Functions.
 function validateProjectName(name: string): string {
     name = name.trim()
@@ -101,6 +106,27 @@ export async function getProjectRequest(projectId: string, password: string | nu
 
     // Cookie is sent automatically via credentials: 'include' in fetchData.
     return await fetchData(`/projects/${projectId}/`, RequestMethod.GET)
+}
+
+export async function updateProjectRequest(projectId: string, updates: Partial<ProjectUpdate>): Promise<void> {
+    console.debug(`Updating project with ID: ${projectId}`, updates)
+
+    // Check if all fields are empty.
+    if (Object.keys(updates).length === 0) {
+        console.warn('No updates provided for project.')
+        throw new APIErrorResponse('No updates provided for project.', 400)
+    }
+
+    // Validate input.
+    if (!projectId) {
+        throw new APIErrorResponse('Project ID is required for updating.', 400)
+    }
+    if (updates.name !== undefined) {
+        updates.name = validateProjectName(updates.name)
+    }
+
+    // Request project update.
+    return await fetchData(`/projects/${projectId}/`, RequestMethod.PUT, undefined, updates)
 }
 
 export async function deleteProjectRequest(projectId: string): Promise<void> {

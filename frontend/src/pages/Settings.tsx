@@ -2,26 +2,30 @@
 Main settings page for project management.
 */
 import { useState, useEffect, JSX } from 'react'
-import { Project } from '../scripts/projects'
+import { Project, ProjectUpdate, updateProjectRequest } from '../scripts/projects'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { SimpleInput } from '../components/input/SimpleInput'
+import { useDialog } from '../components/dialog/Dialog'
 import { Button } from '../components/button/Button'
 import { ButtonType } from '../scripts/Button'
 import { ConfirmProjectDeletionPopup } from '../components/popup/ConfirmProjectDeletionPopup'
-import { PROJECT_MENU_URL, redirectTo } from '../scripts/common'
+import { PROJECT_MENU_URL, APIErrorResponse, redirectTo } from '../scripts/common'
 
 import '../styles/pages/Settings.css'
 
 // Components.
 export function Settings(): JSX.Element {
+    // Set up dialog.
+    const { showDialog } = useDialog()
+
     // Set page navigator.
     const navigate = useNavigate()
 
     // Get the project data from the outlet context.
     const project = useOutletContext<Project>()
-    const currentProjectName = project.name
 
     // Set up states.
+    const [currentProjectName, setCurrentProjectName] = useState<string>(project.name)
     const [newProjectName, setNewProjectName] = useState<string>(currentProjectName)
     const [isProjectInfoChanged, setIsProjectInfoChanged] = useState<boolean>(false)
     const [deleteProject, setDeleteProject] = useState<boolean>(false)
@@ -29,6 +33,29 @@ export function Settings(): JSX.Element {
     useEffect(() => {
         setIsProjectInfoChanged(currentProjectName !== newProjectName)
     }, [newProjectName])
+
+    async function saveProjectChanges() {
+        const updates: Partial<ProjectUpdate> = {}
+        updates.name = newProjectName
+        try {
+            await updateProjectRequest(project._id, updates)
+        } catch (error) {
+            if (error instanceof APIErrorResponse) {
+                console.error('Error updating project:', error)
+                showDialog('error', error.message, error.status_code)
+            } else {
+                console.error('Unexpected error updating project:', error)
+                showDialog('error', 'Failed to update project. Please try again later.', 500)
+            }
+            return
+        }
+
+        // Update UI.
+        console.info('Project updated successfully.')
+        showDialog('info', 'Project updated successfully!', 201)
+        setCurrentProjectName(newProjectName)
+        setIsProjectInfoChanged(false)
+    }
 
     return (
         <div id="main-page" className="project-settings-component">
@@ -74,7 +101,7 @@ export function Settings(): JSX.Element {
                     id="project-settings-save-btn"
                     value="Save"
                     buttonType={ButtonType.PRIMARY}
-                    onClickEvent={() => console.log('ok')}
+                    onClickEvent={saveProjectChanges}
                     disabled={!isProjectInfoChanged}
                 />
             </div>
