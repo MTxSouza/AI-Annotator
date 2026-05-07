@@ -8,6 +8,8 @@ import { Button } from '../button/Button'
 import { ButtonType } from '../../scripts/Button'
 import { Popup } from './Popup'
 
+import Close from '../../icons/close.svg?react'
+
 import '../../styles/popup/ConfirmProjectPasswordPopup.css'
 
 export function ConfirmProjectPasswordPopup({
@@ -48,15 +50,7 @@ export function ConfirmProjectPasswordPopup({
             <div>
                 <h2>Project Password</h2>
                 <button onClick={closePopup}>
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        height="24px"
-                        viewBox="0 -960 960 960"
-                        width="24px"
-                        fill="#FFFFFF"
-                    >
-                        <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" />
-                    </svg>
+                    <Close />
                 </button>
             </div>
             <ProjectPasswordInput isOptional={false} setProjectPassword={setProjectPassword} />

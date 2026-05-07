@@ -25,3 +25,28 @@ export function Button({
         </button>
     )
 }
+
+export function IconButton({
+    id,
+    value,
+    icon,
+    buttonType = ButtonType.TERTIARY,
+    disabled = false,
+    onClickEvent,
+}: {
+    id: string
+    value?: string
+    icon: JSX.Element
+    buttonType?: ButtonType
+    disabled?: boolean
+    onClickEvent: (value: MouseEvent<HTMLButtonElement>) => void
+}): JSX.Element {
+    // Set up class name based on button type.
+    const className = `${buttonType}-btn-component`
+
+    return (
+        <button className={className} id={id} onClick={onClickEvent} disabled={disabled}>
+            {value}
+        </button>
+    )
+}
