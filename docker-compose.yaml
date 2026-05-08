@@ -37,6 +37,7 @@ services:
       - redis
     environment:
       - AI_ANNOTATOR_DATABASE_NAME=ai_annotator_db_test
+      - AI_ANNOTATOR_SECRET_KEY=unittest_secret_key
     profiles:
       - unittest
   worker:
