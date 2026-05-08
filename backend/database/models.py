@@ -2,7 +2,7 @@
 Module with common database models inherited by all API models.
 """
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from backend.database.enums import PyDateTime, PyObjectId
 from backend.database.utils import get_current_datetime
@@ -25,7 +25,17 @@ class _TimestampModel(CommonModel):
 
     # Fields.
     created_at: PyDateTime = Field(default_factory=get_current_datetime, description="The creation timestamp.")
-    updated_at: PyDateTime = Field(default_factory=get_current_datetime, description="The last update timestamp.")
+
+    # Computed Fields.
+    @computed_field(description="The last update timestamp.")
+    def updated_at(self) -> PyDateTime:
+        """
+        Computed field to get the last update timestamp.
+
+        Returns:
+                PyDateTime: The last update timestamp.
+        """
+        return get_current_datetime()
 
 
 class CommonResponseModel(_TimestampModel):
