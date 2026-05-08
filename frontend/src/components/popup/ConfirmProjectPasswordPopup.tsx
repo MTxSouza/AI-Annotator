@@ -8,8 +8,6 @@ import { Button } from '../button/Button'
 import { ButtonType } from '../../scripts/Button'
 import { Popup } from './Popup'
 
-import Close from '../../icons/close.svg?react'
-
 import '../../styles/popup/ConfirmProjectPasswordPopup.css'
 
 export function ConfirmProjectPasswordPopup({
@@ -47,12 +45,6 @@ export function ConfirmProjectPasswordPopup({
 
     const children = (
         <div className="confirm-project-password-popup-component">
-            <div>
-                <h2>Project Password</h2>
-                <button onClick={closePopup}>
-                    <Close />
-                </button>
-            </div>
             <ProjectPasswordInput isOptional={false} setProjectPassword={setProjectPassword} />
             <div>
                 <Button
@@ -70,7 +62,7 @@ export function ConfirmProjectPasswordPopup({
             </div>
         </div>
     )
-    const component = <Popup children={children} />
+    const component = <Popup title="Confirm Project Password" children={children} closePopup={closePopup} />
 
     return <PopupOverlay children={component} />
 }

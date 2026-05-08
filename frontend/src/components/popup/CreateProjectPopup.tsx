@@ -9,8 +9,6 @@ import { ButtonType } from '../../scripts/Button'
 import { ProjectNameInput } from '../input/ProjectNameInput'
 import { Popup } from './Popup'
 
-import Close from '../../icons/close.svg?react'
-
 import '../../styles/popup/CreateProjectPopup.css'
 
 export function CreateProjectPopup({
@@ -58,12 +56,6 @@ export function CreateProjectPopup({
 
     const children = (
         <div className="create-project-popup-component">
-            <div>
-                <h1>Create Project</h1>
-                <button onClick={closePopup}>
-                    <Close />
-                </button>
-            </div>
             <ProjectNameInput onChangeEvent={(event) => setProjectName(event.target.value)} />
             <ProjectPasswordInput isOptional={true} setProjectPassword={setProjectPassword} />
             <div className="create-project-task-input-container">
@@ -111,7 +103,7 @@ export function CreateProjectPopup({
             />
         </div>
     )
-    const component = <Popup children={children} />
+    const component = <Popup title="Create Project" children={children} closePopup={closePopup} />
 
     return <PopupOverlay children={component} />
 }
