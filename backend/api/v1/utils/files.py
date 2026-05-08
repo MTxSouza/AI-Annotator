@@ -739,14 +739,14 @@ async def create_file_records(
         file_error = file.get(key="error")
         if file_error:
             file_record = UploadedFileResponse(
-                status=FileUploadStatus.FAILED, message=f"File '{file.filename}' upload failed: {file_error}."
+                status=FileUploadStatus.FAILED, message=f"File '{file.filename}' upload failed: {file_error}"
             )
             processed_file_records.append(file_record.model_dump())
             number_of_failed_files += 1
             if state_updater:
                 state_updater.update_state(  # type: ignore
                     **update_state_args,  # type: ignore
-                    message=f"File '{file.filename}' upload failed: {file_error}.",
+                    message=f"File '{file.filename}' upload failed: {file_error}",
                 )
             continue
         del file_error
