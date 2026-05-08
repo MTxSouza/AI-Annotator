@@ -155,7 +155,10 @@ class DatabaseConfig:
         client: AsyncMongoClient = AsyncMongoClient(
             host=BackendSettings.database_uri, port=BackendSettings.database_port
         )
-        assert await client.server_info()  # Check if the connection is successful.
+
+        # Check if the connection is successful.
+        if not await client.server_info():
+            raise RuntimeError("Failed to connect to the database.")
         return client.get_database(name=BackendSettings.database_name)
 
     # Properties.
