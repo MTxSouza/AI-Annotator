@@ -20,6 +20,7 @@ export interface Project {
 export interface ProjectUpdate {
     name?: string
     description?: string
+    password?: string | null
 }
 
 // Functions.
@@ -42,6 +43,22 @@ function validateProjectName(name: string): string {
     return name
 }
 
+function validateProjectPassword(password: string | null): string | null {
+    if (password === null) {
+        return null
+    }
+
+    password = password.trim()
+
+    // Check for empty password.
+    if (!password) {
+        console.error('Project password cannot be empty.')
+        throw new APIErrorResponse('Project password cannot be empty.', 400)
+    }
+
+    return password
+}
+
 export async function createProjectRequest(
     name: string,
     task: string,
@@ -51,6 +68,7 @@ export async function createProjectRequest(
 
     // Validate input.
     name = validateProjectName(name)
+    password = validateProjectPassword(password)
 
     // Build request body.
     const body = { name, task, password }
@@ -108,7 +126,7 @@ export async function getProjectRequest(projectId: string, password: string | nu
     return await fetchData(`/projects/${projectId}/`, RequestMethod.GET)
 }
 
-export async function updateProjectRequest(projectId: string, updates: Partial<ProjectUpdate>): Promise<void> {
+export async function updateProjectRequest(projectId: string, updates: Partial<ProjectUpdate>): Promise<Project> {
     console.debug(`Updating project with ID: ${projectId}`, updates)
 
     // Check if all fields are empty.
@@ -123,6 +141,9 @@ export async function updateProjectRequest(projectId: string, updates: Partial<P
     }
     if (updates.name !== undefined) {
         updates.name = validateProjectName(updates.name)
+    }
+    if (updates.password !== undefined) {
+        updates.password = validateProjectPassword(updates.password)
     }
 
     // Request project update.
