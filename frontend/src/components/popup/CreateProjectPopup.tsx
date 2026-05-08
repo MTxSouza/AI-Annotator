@@ -56,20 +56,6 @@ export function CreateProjectPopup({
 
     const children = (
         <div className="create-project-popup-component">
-            <div>
-                <h1>Create Project</h1>
-                <button onClick={closePopup}>
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        height="24px"
-                        viewBox="0 -960 960 960"
-                        width="24px"
-                        fill="#FFFFFF"
-                    >
-                        <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" />
-                    </svg>
-                </button>
-            </div>
             <ProjectNameInput onChangeEvent={(event) => setProjectName(event.target.value)} />
             <ProjectPasswordInput isOptional={true} setProjectPassword={setProjectPassword} />
             <div className="create-project-task-input-container">
@@ -117,7 +103,7 @@ export function CreateProjectPopup({
             />
         </div>
     )
-    const component = <Popup children={children} />
+    const component = <Popup title="Create Project" children={children} closePopup={closePopup} />
 
     return <PopupOverlay children={component} />
 }

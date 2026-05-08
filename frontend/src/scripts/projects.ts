@@ -17,6 +17,12 @@ export interface Project {
     updated_at: string
 }
 
+export interface ProjectUpdate {
+    name?: string
+    description?: string
+    password?: string | null
+}
+
 // Functions.
 function validateProjectName(name: string): string {
     name = name.trim()
@@ -37,6 +43,22 @@ function validateProjectName(name: string): string {
     return name
 }
 
+function validateProjectPassword(password: string | null): string | null {
+    if (password === null) {
+        return null
+    }
+
+    password = password.trim()
+
+    // Check for empty password.
+    if (!password) {
+        console.error('Project password cannot be empty.')
+        throw new APIErrorResponse('Project password cannot be empty.', 400)
+    }
+
+    return password
+}
+
 export async function createProjectRequest(
     name: string,
     task: string,
@@ -46,6 +68,7 @@ export async function createProjectRequest(
 
     // Validate input.
     name = validateProjectName(name)
+    password = validateProjectPassword(password)
 
     // Build request body.
     const body = { name, task, password }
@@ -101,6 +124,30 @@ export async function getProjectRequest(projectId: string, password: string | nu
 
     // Cookie is sent automatically via credentials: 'include' in fetchData.
     return await fetchData(`/projects/${projectId}/`, RequestMethod.GET)
+}
+
+export async function updateProjectRequest(projectId: string, updates: Partial<ProjectUpdate>): Promise<Project> {
+    console.debug(`Updating project with ID: ${projectId}`, updates)
+
+    // Check if all fields are empty.
+    if (Object.keys(updates).length === 0) {
+        console.warn('No updates provided for project.')
+        throw new APIErrorResponse('No updates provided for project.', 400)
+    }
+
+    // Validate input.
+    if (!projectId) {
+        throw new APIErrorResponse('Project ID is required for updating.', 400)
+    }
+    if (updates.name !== undefined) {
+        updates.name = validateProjectName(updates.name)
+    }
+    if (updates.password !== undefined) {
+        updates.password = validateProjectPassword(updates.password)
+    }
+
+    // Request project update.
+    return await fetchData(`/projects/${projectId}/`, RequestMethod.PUT, undefined, updates)
 }
 
 export async function deleteProjectRequest(projectId: string): Promise<void> {

@@ -45,20 +45,6 @@ export function ConfirmProjectPasswordPopup({
 
     const children = (
         <div className="confirm-project-password-popup-component">
-            <div>
-                <h2>Project Password</h2>
-                <button onClick={closePopup}>
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        height="24px"
-                        viewBox="0 -960 960 960"
-                        width="24px"
-                        fill="#FFFFFF"
-                    >
-                        <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" />
-                    </svg>
-                </button>
-            </div>
             <ProjectPasswordInput isOptional={false} setProjectPassword={setProjectPassword} />
             <div>
                 <Button
@@ -76,7 +62,7 @@ export function ConfirmProjectPasswordPopup({
             </div>
         </div>
     )
-    const component = <Popup children={children} />
+    const component = <Popup title="Confirm Project Password" children={children} closePopup={closePopup} />
 
     return <PopupOverlay children={component} />
 }
