@@ -29,13 +29,14 @@ class WorkerUploadFile:
     """
 
     # Special methods.
-    def __init__(self, temp_file_path: str, filename: str, content_type: str) -> None:
+    def __init__(self, temp_file_path: str, filename: str, content_type: str, **kwargs) -> None:
 
         # Attributes.
         self.file_path = temp_file_path
         self.filename = filename
         self.content_type = content_type
         self.__file: BinaryIO | None = None
+        self.__extra_kwargs = kwargs
 
     def __enter__(self):
         """
@@ -73,7 +74,10 @@ class WorkerUploadFile:
             BinaryIO: The file content.
         """
         if self.__file is None:
-            self.__file = open(file=self.file_path, mode="rb")
+            if self.file_path and os.path.exists(path=self.file_path):
+                self.__file = open(file=self.file_path, mode="rb")
+            else:
+                raise FileNotFoundError(f"File not found at path: {self.file_path}")
         return self.__file
 
     @property
@@ -110,6 +114,18 @@ class WorkerUploadFile:
             except OSError:
                 pass
         self.file_path = ""  # Clear the file path to prevent further access.
+
+    def get(self, key: str) -> Any | None:
+        """
+        Method to get extra keyword arguments passed during initialization.
+
+        Args:
+            key (str): The key of the extra keyword argument to get.
+
+        Returns:
+            Any | None: The value of the extra keyword argument.
+        """
+        return self.__extra_kwargs.get(key)  # type: ignore
 
 
 class UpdateTaskState(ABC):

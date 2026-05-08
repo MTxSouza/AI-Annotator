@@ -74,6 +74,7 @@ class BackendSettingsModel(BaseSettings):
     password_hash_iterations: int = 100000
 
     static_file_directory: str = "/app/storage"
+    max_upload_file_size: int = 720 * 1024**2  # 720 MB
 
     # Properties.
     @property
