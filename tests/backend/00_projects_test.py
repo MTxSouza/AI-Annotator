@@ -3,6 +3,7 @@ Module used to test project-related endpoints.
 """
 
 import io
+import time
 from collections.abc import Callable
 
 import pytest
@@ -209,12 +210,23 @@ def test_update_project_name(client: TestClient, project_payload: dict):
     # Create a project.
     response = client.post(url="/projects/", json=project_payload)
     assert response.status_code == 201, f"Failed to create project: {response.text}"
-    project_id = response.json()["_id"]
+
+    created_project = response.json()
+    project_id = created_project["_id"]
+    created_at_0 = created_project["created_at"]
+    updated_at_0 = created_project["updated_at"]
+
+    # Sleep for a short time to ensure updated_at timestamp will be different after the update.
+    time.sleep(2)
 
     # Update the project's name.
     updated_name = "Updated Project Name"
     update_payload = {"name": updated_name}
     response = client.put(url=f"/projects/{project_id}", json=update_payload)
+
+    updated_project = response.json()
+    created_at_1 = updated_project["created_at"]
+    updated_at_1 = updated_project["updated_at"]
 
     # Assert the response status code.
     assert response.status_code == 201, f"Failed to update project name: {response.text}"
@@ -223,6 +235,10 @@ def test_update_project_name(client: TestClient, project_payload: dict):
     response_data = response.json()
     assert response_data["name"] == updated_name
     assert response_data["task"] == project_payload["task"]
+
+    # Assert creation and update timestamps.
+    assert created_at_0 == created_at_1, "Creation timestamp should not change on update"
+    assert updated_at_0 != updated_at_1, "Update timestamp should change on update"
 
 
 def test_update_private_project_name(client: TestClient, project_payload: dict):
