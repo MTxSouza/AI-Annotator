@@ -50,6 +50,11 @@ class Collections(Enum):
     )
     SAMPLES = _CollectionConfig(
         name="samples",
+        index_configs=[
+            _IndexConfig(name="project_id", is_indexed=True),
+            _IndexConfig(name="file_id", is_indexed=True),
+            _IndexConfig(name="sample_id", is_indexed=True),
+        ],
     )
 
 
