@@ -147,8 +147,13 @@ def save_upload_file_to_disk(file: UploadFile | WorkerUploadFile, unique_filenam
     file.file.seek(0)
 
     # Save file in chunks to avoid memory issues.
-    with Path(BackendSettings.static_file_directory, unique_filename).open(mode="wb") as file_buffer:
+    file_path = Path(BackendSettings.static_file_directory, unique_filename)
+    with file_path.open(mode="wb") as file_buffer:
         shutil.copyfileobj(fsrc=file.file, fdst=file_buffer)
+
+    # Check if file is saved successfully.
+    if not file_path.exists():
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to save file to disk.")
 
 
 def save_temporary_upload_file_to_disk(file: UploadFile) -> str:
@@ -731,8 +736,8 @@ async def create_file_records(
         state_updater.update_state()  # type: ignore
     for file in file_list:
         # Check if file has any error.
-        if file.get(key="error"):
-            file_error = file.get(key="error")
+        file_error = file.get(key="error")
+        if file_error:
             file_record = UploadedFileResponse(
                 status=FileUploadStatus.FAILED, message=f"File '{file.filename}' upload failed: {file_error}."
             )
@@ -744,6 +749,7 @@ async def create_file_records(
                     message=f"File '{file.filename}' upload failed: {file_error}.",
                 )
             continue
+        del file_error
 
         # Get file hash.
         number_of_processed_files += 1
