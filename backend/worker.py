@@ -73,10 +73,11 @@ class WorkerUploadFile:
         Returns:
             BinaryIO: The file content.
         """
-        if self.__file is None and self.file_path and os.path.exists(path=self.file_path):
-            self.__file = open(file=self.file_path, mode="rb")
-        else:
-            raise FileNotFoundError(f"File not found at path: {self.file_path}")
+        if self.__file is None:
+            if self.file_path and os.path.exists(path=self.file_path):
+                self.__file = open(file=self.file_path, mode="rb")
+            else:
+                raise FileNotFoundError(f"File not found at path: {self.file_path}")
         return self.__file
 
     @property
@@ -124,7 +125,7 @@ class WorkerUploadFile:
         Returns:
             Any | None: The value of the extra keyword argument.
         """
-        return self.__extra_kwargs.get(key=key)  # type: ignore
+        return self.__extra_kwargs.get(key)  # type: ignore
 
 
 class UpdateTaskState(ABC):
