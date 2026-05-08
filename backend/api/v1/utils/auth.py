@@ -25,15 +25,6 @@ __ACCESS_TOKEN_REFRESH_SECONDS__ = __ACCESS_TOKEN_REFRESH_MINUTES__ * 60  # Conv
 __SALT_LENGTH__ = BackendSettings.salt_length
 __PASSWORD_HASH_ALGORITHM__ = BackendSettings.password_hash_algorithm
 __PASSWORD_HASH_ITERATIONS__ = BackendSettings.password_hash_iterations
-del (
-    BackendSettings.jwt_algorithm,
-    BackendSettings.secret_key,
-    BackendSettings.access_token_expire_minutes,
-    BackendSettings.access_token_refresh_minutes,
-    BackendSettings.salt_length,
-    BackendSettings.password_hash_algorithm,
-    BackendSettings.password_hash_iterations,
-)  # Remove sensitive information from settings after use.
 
 # Instantiate the OAuth2 scheme.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token", auto_error=False)
