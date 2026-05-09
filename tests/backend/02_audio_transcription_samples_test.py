@@ -243,7 +243,7 @@ def test_update_audio_transcription_sample(
         updated_text = f"Updated transcription for audio file {i}"
         update_payload = {"text": updated_text}
         update_response = client.put(url=f"/projects/{project_id}/samples/{sample_id}/", json=update_payload)
-        assert update_response.status_code == 201, f"Failed to update sample: {update_response.text}"
+        assert update_response.status_code == 200, f"Failed to update sample: {update_response.text}"
 
         # Check response.
         sample_response_json = update_response.json()

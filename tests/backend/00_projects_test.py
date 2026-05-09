@@ -229,7 +229,7 @@ def test_update_project_name(client: TestClient, project_payload: dict):
     updated_at_1 = updated_project["updated_at"]
 
     # Assert the response status code.
-    assert response.status_code == 201, f"Failed to update project name: {response.text}"
+    assert response.status_code == 200, f"Failed to update project name: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -277,7 +277,7 @@ def test_update_private_project_name(client: TestClient, project_payload: dict):
     response = client.put(url=f"/projects/{project_id}", json=update_payload)
 
     # Assert the response status code.
-    assert response.status_code == 201, f"Failed to update project name: {response.text}"
+    assert response.status_code == 200, f"Failed to update project name: {response.text}"
 
     # Assert the response data.
     response_data = response.json()
@@ -316,7 +316,7 @@ def test_update_project_password(client: TestClient, project_payload: dict):
     response = client.put(url=f"/projects/{project_id}", json=update_payload)
 
     # Assert the response status code.
-    assert response.status_code == 201, f"Failed to update project password: {response.text}"
+    assert response.status_code == 200, f"Failed to update project password: {response.text}"
 
     # Get the project to ensure it is now private.
     response = client.get(url=f"/projects/{project_id}")
@@ -358,7 +358,7 @@ def test_update_private_project_to_non_private(client: TestClient, project_paylo
     response = client.put(url=f"/projects/{project_id}", json=update_payload)
 
     # Assert the response status code.
-    assert response.status_code == 201, f"Failed to update project to non-private: {response.text}"
+    assert response.status_code == 200, f"Failed to update project to non-private: {response.text}"
 
     # Get the project to ensure it is now non-private.
     response = client.get(url=f"/projects/{project_id}")

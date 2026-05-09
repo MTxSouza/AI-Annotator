@@ -83,7 +83,7 @@ async def create_sample_endpoint(
     return await create_sample(sample_data=sample, db=db)  # type: ignore
 
 
-@router.put(path="/{sample_id}", response_model=__SAMPLE_RESPONSES__, status_code=status.HTTP_201_CREATED)
+@router.put(path="/{sample_id}", response_model=__SAMPLE_RESPONSES__, status_code=status.HTTP_200_OK)
 async def update_sample_endpoint(
     sample_id: str,
     sample: _SAMPLE_UPDATE_,

@@ -82,7 +82,7 @@ async def create_project_endpoint(
     return new_project  # type: ignore
 
 
-@router.put(path="/{project_id}", name="Update Project", response_model=Project, status_code=status.HTTP_201_CREATED)
+@router.put(path="/{project_id}", name="Update Project", response_model=Project, status_code=status.HTTP_200_OK)
 async def update_project_endpoint(
     update: Update,
     response: Response,

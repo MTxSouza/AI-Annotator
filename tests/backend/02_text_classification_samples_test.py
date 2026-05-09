@@ -239,7 +239,7 @@ def test_update_text_classification_sample(
         update_payload = {"class_name": updated_class_name}
 
         update_response = client.put(url=f"/projects/{project_id}/samples/{sample_id}", json=update_payload)
-        assert update_response.status_code == 201, f"Failed to update sample: {update_response.text}"
+        assert update_response.status_code == 200, f"Failed to update sample: {update_response.text}"
 
         # Check response.
         update_response_json = update_response.json()
@@ -251,7 +251,7 @@ def test_update_text_classification_sample(
         update_payload = {"text": updated_text}
 
         update_response = client.put(url=f"/projects/{project_id}/samples/{sample_id}", json=update_payload)
-        assert update_response.status_code == 201, f"Failed to update sample text: {update_response.text}"
+        assert update_response.status_code == 200, f"Failed to update sample text: {update_response.text}"
 
         # Check response.
         update_response_json = update_response.json()
