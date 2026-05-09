@@ -9,7 +9,7 @@ WORKDIR /home
 COPY ./backend ./backend
 # Expose the application port.
 EXPOSE 8000
-# Run the application.
+# Set up environment variables.
 ENV PYTHONPATH=/home
 
 # --- STAGE FOR TESTING ---
