@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useState, useEffect, JSX } from 'react'
 import { useDialog } from '../components/dialog/Dialog'
 import { CreateProjectPopup } from '../components/popup/CreateProjectPopup'
-import { APIErrorResponse, redirectTo, fetchData, RequestMethod } from '../scripts/common'
+import { APIErrorResponse, redirectTo, getProjectsRequest } from '../scripts/common'
 import { ConfirmProjectDeletionPopup } from '../components/popup/ConfirmProjectDeletionPopup'
 import { ConfirmProjectPasswordPopup } from '../components/popup/ConfirmProjectPasswordPopup'
 import { CreateProjectCard, LoadCreateProjectCard, ProjectCard } from '../components/ProjectCard'
@@ -107,7 +107,7 @@ export function ProjectMenu(): JSX.Element {
         async function getProjects() {
             try {
                 console.info('Fetching projects from backend...')
-                const responseData = await fetchData('/projects/', RequestMethod.GET)
+                const responseData = await getProjectsRequest()
                 setProjects(responseData)
             } catch (error) {
                 if (error instanceof APIErrorResponse) {

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.params import Param
 from fastapi.requests import Request
+from fastapi.responses import Response
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import Create, Project, ProjectSimple, Update
@@ -13,7 +14,6 @@ from backend.api.v1.utils.projects import (
     create_project,
     delete_project,
     get_authenticated_project,
-    get_project_by_id,
     get_projects,
     is_project_name_exists,
     update_project,
@@ -81,9 +81,10 @@ async def create_project_endpoint(
     return new_project  # type: ignore
 
 
-@router.put(path="/{project_id}", name="Update Project", response_model=Project, status_code=status.HTTP_201_CREATED)
+@router.put(path="/{project_id}", name="Update Project", response_model=Project, status_code=status.HTTP_200_OK)
 async def update_project_endpoint(
     update: Update,
+    response: Response,
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> Project:
@@ -102,7 +103,7 @@ async def update_project_endpoint(
 
     # Update the project.
     updated_project = await update_project(
-        db=db, project_id=project_id, project_data=update.model_dump(exclude_unset=True)
+        db=db, response=response, project_id=project_id, project_data=update.model_dump(exclude_unset=True)
     )
 
     return updated_project  # type: ignore
@@ -121,10 +122,6 @@ async def delete_project_endpoint(
     """
     # Get project ID.
     project_id = str(project.id)
-
-    # Check if the project exists.
-    if await get_project_by_id(db=db, project_id=project_id) is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
     # Delete the project.
     await delete_project(db=db, project_id=project_id)

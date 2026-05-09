@@ -25,18 +25,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    button {
-        position: relative;
+}
+.keyboard-shortcuts-image-container > button {
+    position: relative;
+    display: flex;
+    cursor: default;
+}
+.keyboard-shortcuts-image-container > button:hover {
+    .keyboard-shortcuts-window-popup {
         display: flex;
-        cursor: default;
-    }
-    svg {
-        fill: var(--tertiary-text-color);
-    }
-    button:hover {
-        .keyboard-shortcuts-window-popup {
-            display: flex;
-        }
     }
 }
 

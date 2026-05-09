@@ -203,7 +203,7 @@ def test_update_object_detection_sample(
         update_response = client.put(
             url=f"/projects/{project_id}/samples/{created_sample_id}", json=updated_sample_data
         )
-        assert update_response.status_code == 201, f"Failed to update sample: {update_response.text}"
+        assert update_response.status_code == 200, f"Failed to update sample: {update_response.text}"
         updated_sample_data_returned = update_response.json()
 
         # Check response.

@@ -52,7 +52,7 @@ async def check_if_file_belongs_to_project(
 
     # Check if file belongs to the specified project.
     project_id_obj = PyObjectId(oid=project_id)
-    if file_project_id_list and project_id_obj not in file_project_id_list:  # type: ignore
+    if project_id_obj not in file_project_id_list:  # type: ignore
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"File with ID {file_id} does not belong to project with ID {project_id}.",
@@ -116,16 +116,19 @@ def get_upload_file_hash(file: WorkerUploadFile) -> str:
     return sha256_hash.hexdigest()
 
 
-def get_file_metadata(file: WorkerUploadFile) -> dict:
+def get_file_metadata(file: UploadFile | WorkerUploadFile) -> dict:
     """
     Utility function to get metadata of an upload file.
 
     Args:
-            file (WorkerUploadFile): The upload file to get metadata for.
+            file (UploadFile | WorkerUploadFile): The upload file to get metadata for.
 
     Returns:
             dict: Metadata of the upload file.
     """
+    # Move cursor to the beginning of the file.
+    file.file.seek(0)
+
     # Get file extension.
     file_size = file.size
     file_extension = file.content_type.split(sep="/")[-1].lower()  # type: ignore
@@ -144,8 +147,13 @@ def save_upload_file_to_disk(file: UploadFile | WorkerUploadFile, unique_filenam
     file.file.seek(0)
 
     # Save file in chunks to avoid memory issues.
-    with Path(BackendSettings.static_file_directory, unique_filename).open(mode="wb") as file_buffer:
+    file_path = Path(BackendSettings.static_file_directory, unique_filename)
+    with file_path.open(mode="wb") as file_buffer:
         shutil.copyfileobj(fsrc=file.file, fdst=file_buffer)
+
+    # Check if file is saved successfully.
+    if not file_path.exists():
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to save file to disk.")
 
 
 def save_temporary_upload_file_to_disk(file: UploadFile) -> str:
@@ -186,8 +194,24 @@ async def push_upload_file_to_redis_queue(
         file_list = [file_list]
 
     # Push each file to the Redis queue.
+    current_total_upload_file_size = 0
     temp_file_list: list[dict] = []
     for file in file_list:
+        # Check file size.
+        file_metadata = await run_in_threadpool(func=get_file_metadata, file=file)
+        file_size = file_metadata["size_in_bytes"]
+        if current_total_upload_file_size + file_size > BackendSettings.max_upload_file_size:
+            temp_file_list.append(
+                {
+                    "temp_file_path": None,
+                    "filename": file.filename,
+                    "content_type": file.content_type,
+                    "error": "Upload size limit exceeded.",
+                }
+            )
+            continue
+        current_total_upload_file_size += file_size
+
         # Save file to disk with a temporary filename.
         temp_filename = await run_in_threadpool(func=save_temporary_upload_file_to_disk, file=file)
         temp_file_path = Path(BackendSettings.static_file_directory, temp_filename)
@@ -711,6 +735,22 @@ async def create_file_records(
     if state_updater:
         state_updater.update_state()  # type: ignore
     for file in file_list:
+        # Check if file has any error.
+        file_error = file.get(key="error")
+        if file_error:
+            file_record = UploadedFileResponse(
+                status=FileUploadStatus.FAILED, message=f"File '{file.filename}' upload failed: {file_error}"
+            )
+            processed_file_records.append(file_record.model_dump())
+            number_of_failed_files += 1
+            if state_updater:
+                state_updater.update_state(  # type: ignore
+                    **update_state_args,  # type: ignore
+                    message=f"File '{file.filename}' upload failed: {file_error}",
+                )
+            continue
+        del file_error
+
         # Get file hash.
         number_of_processed_files += 1
         file_hash = await run_in_threadpool(func=get_upload_file_hash, file=file)

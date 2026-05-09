@@ -10,6 +10,7 @@ import pytest
 import soundfile as sf
 from fastapi.testclient import TestClient
 
+from backend.configs import BackendSettings
 from tests.backend.conftest import check_for_worker_task_completion
 
 
@@ -36,6 +37,23 @@ def corrupt_audio_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]
     corrupt_audio_buffer.seek(0)
 
     return [("file_list", ("corrupt_audio.wav", corrupt_audio_buffer, "audio/wav"))]
+
+
+@pytest.fixture
+def larger_than_maximum_audio_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
+    """
+    Fixture to provide an audio file payload that exceeds the maximum file size limit.
+    """
+    # Create audio content that exceeds the maximum file size limit.
+    large_audio_content = b"A" * (
+        BackendSettings.max_upload_file_size + 1
+    )  # Create bytes that are 1 byte larger than the limit
+
+    # Write the audio content to a bytes buffer.
+    audio_buffer = io.BytesIO(initial_bytes=large_audio_content)
+    audio_buffer.seek(0)
+
+    return [("file_list", ("large_audio_file.wav", audio_buffer, "audio/wav"))]
 
 
 # Tests.
@@ -229,3 +247,35 @@ def test_create_text_file_format_record(
     for i, file_data in enumerate(iterable=file_data_list):
         assert file_data["status"] == "Failed"
         assert file_data["message"] == "Invalid file format for this project: txt."
+
+
+def test_upload_maximum_audio_file_size_limit(
+    client: TestClient,
+    audio_transcription_project_payload: dict,
+    larger_than_maximum_audio_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
+    reset_file_directory: None,  # Used to reset file directory
+):
+    """
+    Test to upload an audio file that exceeds the maximum file size limit.
+    """
+    # Create project first.
+    project_response = client.post(url="/projects/", json=audio_transcription_project_payload)
+    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
+    project_id = project_response.json()["_id"]
+
+    # Attempt to create file record.
+    worker_response = client.post(url=f"/projects/{project_id}/files/", files=larger_than_maximum_audio_file_payload)
+    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
+
+    # Wait for the file processing to complete.
+    worker_response_json = worker_response.json()
+    assert "task_id" in worker_response_json, "Response does not contain task_id"
+    worker_task_id = worker_response_json["task_id"]
+    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+    # Check response.
+    assert len(file_data_list) == len(larger_than_maximum_audio_file_payload)
+    for i, file_data in enumerate(iterable=file_data_list):
+        audio_filename = larger_than_maximum_audio_file_payload[i][1][0]
+        assert file_data["status"] == "Failed"
+        assert file_data["message"] == f"File '{audio_filename}' upload failed: Upload size limit exceeded."

@@ -67,6 +67,10 @@ export function ConfirmProjectDeletionPopup({
     const children = (
         <div className="confirm-project-deletion-popup-component" onClick={(event) => event.stopPropagation()}>
             <h4>Are you sure you want to delete this project?</h4>
+            <p>
+                All annotations will be lost. If you have uploaded the same data to another project, that data will
+                remain on the disk, otherwise, it will also be deleted. This operation can not be undone.
+            </p>
             <div>
                 <Button
                     id="confirm-project-deletion-yes-btn"

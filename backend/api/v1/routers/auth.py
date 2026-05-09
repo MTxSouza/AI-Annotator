@@ -2,14 +2,23 @@
 Module with all endpoints related to authentication operations.
 """
 
-from fastapi import APIRouter, Depends, status
+from typing import Annotated
+
+from fastapi import APIRouter, Cookie, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
+from fastapi.responses import Response
 from fastapi.security import OAuth2PasswordRequestForm
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.auth import Token
-from backend.api.v1.utils.auth import check_password, create_access_token
+from backend.api.v1.utils.auth import (
+    check_password,
+    create_access_token,
+    refresh_tokens,
+    remove_auth_cookies,
+    set_auth_cookies,
+)
 from backend.api.v1.utils.projects import get_project_by_id
 from backend.database.configs import DatabaseConfig
 from backend.limiter import limiter
@@ -18,7 +27,6 @@ from backend.limiter import limiter
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
-    dependencies=[Depends(dependency=DatabaseConfig.get_database), Depends(dependency=OAuth2PasswordRequestForm)],
 )
 
 
@@ -27,6 +35,7 @@ router = APIRouter(
 @limiter.limit("10/minute")
 async def authenticate_access_token(
     request: Request,
+    response: Response,
     auth_form: OAuth2PasswordRequestForm = Depends(dependency=OAuth2PasswordRequestForm),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> Token:
@@ -52,7 +61,37 @@ async def authenticate_access_token(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     # Create access token.
-    access_token = create_access_token(data={"sub": project_id})
+    token_data = create_access_token(data={"sub": project_id})
+    access_token = token_data["access_token"]
+    refresh_token = token_data["refresh_token"]
+    set_auth_cookies(response, access_token=access_token, refresh_token=refresh_token)
 
-    # Return access token.
     return Token(access_token=access_token, token_type="bearer")
+
+
+@router.post(path="/refresh", response_model=Token, status_code=status.HTTP_200_OK)
+async def refresh_access_token(
+    response: Response,
+    refresh_token: Annotated[str | None, Cookie()] = None,
+) -> Token:
+    """
+    Endpoint to issue a new access token using the refresh token cookie.
+    """
+    # Check if the refresh token is provided.
+    if refresh_token is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token provided")
+
+    # Refresh the access token.
+    new_access_token = refresh_tokens(refresh_token=refresh_token)
+    set_auth_cookies(response, access_token=new_access_token)
+
+    return Token(access_token=new_access_token, token_type="bearer")
+
+
+@router.post(path="/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(response: Response) -> None:
+    """
+    Endpoint to clear the auth cookies, effectively logging the project out.
+    """
+    # Clear the auth cookies.
+    remove_auth_cookies(response=response)

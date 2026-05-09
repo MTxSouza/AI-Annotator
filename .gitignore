@@ -222,7 +222,8 @@ WiredTiger*
 **/static/*.wav
 **/static/*.mp3
 
-# Node modules
+# Node stuffs.
+.npm
 node_modules
 dist
 dist-ssr

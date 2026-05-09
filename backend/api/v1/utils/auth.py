@@ -9,6 +9,7 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi import status
 from fastapi.exceptions import HTTPException
+from fastapi.responses import Response
 from fastapi.security import OAuth2PasswordBearer
 from jose import ExpiredSignatureError, JWTError, jwt
 
@@ -18,17 +19,12 @@ from backend.configs import BackendSettings
 __JWT_ALGORITHM__ = BackendSettings.jwt_algorithm
 __SECRET_KEY__ = BackendSettings.secret_key
 __ACCESS_TOKEN_EXPIRE_MINUTES__ = BackendSettings.access_token_expire_minutes
+__ACCESS_TOKEN_REFRESH_MINUTES__ = BackendSettings.access_token_refresh_minutes
+__ACCESS_TOKEN_EXPIRE_SECONDS__ = __ACCESS_TOKEN_EXPIRE_MINUTES__ * 60  # Convert minutes to seconds.
+__ACCESS_TOKEN_REFRESH_SECONDS__ = __ACCESS_TOKEN_REFRESH_MINUTES__ * 60  # Convert minutes to seconds.
 __SALT_LENGTH__ = BackendSettings.salt_length
 __PASSWORD_HASH_ALGORITHM__ = BackendSettings.password_hash_algorithm
 __PASSWORD_HASH_ITERATIONS__ = BackendSettings.password_hash_iterations
-del (
-    BackendSettings.jwt_algorithm,
-    BackendSettings.secret_key,
-    BackendSettings.access_token_expire_minutes,
-    BackendSettings.salt_length,
-    BackendSettings.password_hash_algorithm,
-    BackendSettings.password_hash_iterations,
-)  # Remove sensitive information from settings after use.
 
 # Instantiate the OAuth2 scheme.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token", auto_error=False)
@@ -116,24 +112,46 @@ def check_password(password: str, hashed_password: str) -> bool:
     return hmac.compare_digest(hashed_provided_password, hashed_password)
 
 
-def create_access_token(data: dict) -> str:
+def generate_single_access_token(data: dict, expires_delta: timedelta | int | None = None) -> str:
     """
-    Create a JWT access token.
+    Generate a single JWT access token with an optional expiration time.
+
+    Args:
+            data (dict): The data to be included in the token.
+            expires_delta (timedelta | int | None): The time delta for the token expiration. If None, the default
+            expiration time is used.
+
+    Returns:
+            str: The generated JWT access token.
+    """
+    # Set authentication tokens.
+    encoded_token = data.copy()
+
+    if expires_delta is not None:
+        if not isinstance(expires_delta, timedelta):
+            expires_delta = timedelta(minutes=expires_delta)
+        expires_delta = datetime.now(tz=UTC) + expires_delta  # type: ignore
+    encoded_token.update({"exp": expires_delta})
+
+    # Create the JWT token.
+    token = jwt.encode(claims=encoded_token, key=__SECRET_KEY__, algorithm=__JWT_ALGORITHM__)
+    return token
+
+
+def create_access_token(data: dict) -> dict[str, str]:
+    """
+    Create both the JWT access token and the refresh token.
 
     Args:
             data (dict): The data to be included in the token.
 
     Returns:
-            str: The generated JWT access token.
+            dict[str, str]: A dictionary containing the generated JWT access token and refresh token.
     """
-    # Set expiration time.
-    encoded_token = data.copy()
-    expire = datetime.now(tz=UTC) + timedelta(minutes=__ACCESS_TOKEN_EXPIRE_MINUTES__)
-    encoded_token.update({"exp": expire})
-
-    # Create the JWT token.
-    token = jwt.encode(claims=encoded_token, key=__SECRET_KEY__, algorithm=__JWT_ALGORITHM__)
-    return token
+    # Create the JWT tokens.
+    expired_token = generate_single_access_token(data=data, expires_delta=__ACCESS_TOKEN_EXPIRE_MINUTES__)
+    refresh_token = generate_single_access_token(data=data, expires_delta=__ACCESS_TOKEN_REFRESH_MINUTES__)
+    return {"access_token": expired_token, "refresh_token": refresh_token}
 
 
 def decode_access_token(token: str) -> dict | None:
@@ -155,6 +173,57 @@ def decode_access_token(token: str) -> dict | None:
     except JWTError:
         throw_bearer_error(message="Invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
     return None
+
+
+def refresh_tokens(refresh_token: str) -> str:
+    """
+    Validate a refresh token and issue a new access token.
+
+    Args:
+            refresh_token (str): The refresh JWT token.
+
+    Returns:
+            str: A fresh access token.
+    """
+    decoded = decode_access_token(token=refresh_token)
+    project_id = decoded.get("sub")  # type: ignore
+    return generate_single_access_token(data={"sub": project_id}, expires_delta=__ACCESS_TOKEN_EXPIRE_MINUTES__)
+
+
+def set_auth_cookies(response: Response, *, access_token: str, refresh_token: str | None = None) -> None:
+    """
+    Write access (and optionally refresh) tokens as HTTPOnly cookies on *response*.
+
+    Args:
+            response (Response): The FastAPI Response object.
+            access_token (str): The JWT access token.
+            refresh_token (str | None): The JWT refresh token. Pass None to skip setting it. (Default: None)
+    """
+    _common = dict(httponly=True, secure=False, samesite="lax")
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        max_age=__ACCESS_TOKEN_EXPIRE_SECONDS__,
+        **_common,  # type: ignore
+    )
+    if refresh_token is not None:
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            max_age=__ACCESS_TOKEN_REFRESH_SECONDS__,
+            **_common,  # type: ignore
+        )
+
+
+def remove_auth_cookies(response: Response) -> None:
+    """
+    Logout by deleting the authentication cookies.
+
+    Args:
+            response (Response): The FastAPI Response object.
+    """
+    response.delete_cookie(key="access_token")
+    response.delete_cookie(key="refresh_token")
 
 
 def throw_bearer_error(message: str, status_code: int) -> None:

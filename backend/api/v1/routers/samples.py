@@ -3,6 +3,7 @@ Module with all endpoints related to sample operations.
 """
 
 from fastapi import APIRouter, Depends, status
+from fastapi.params import Param
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.projects import Project
@@ -34,8 +35,8 @@ __SAMPLE_RESPONSES__ = TextClassificationSample | ObjectDetectionSample | AudioT
 # Endpoints.
 @router.get(path="/", response_model=list[__SAMPLE_RESPONSES__], status_code=status.HTTP_200_OK)
 async def get_samples_endpoint(
-    limit: int = 10,
-    offset: int = 0,
+    limit: int = Param(default=10, ge=1, le=1000),  # type: ignore
+    offset: int = Param(default=0, ge=0),  # type: ignore
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> list[__SAMPLE_RESPONSES__]:
@@ -83,7 +84,7 @@ async def create_sample_endpoint(
     return await create_sample(sample_data=sample, db=db)  # type: ignore
 
 
-@router.put(path="/{sample_id}", response_model=__SAMPLE_RESPONSES__, status_code=status.HTTP_201_CREATED)
+@router.put(path="/{sample_id}", response_model=__SAMPLE_RESPONSES__, status_code=status.HTTP_200_OK)
 async def update_sample_endpoint(
     sample_id: str,
     sample: _SAMPLE_UPDATE_,
