@@ -52,7 +52,7 @@ async def check_if_file_belongs_to_project(
 
     # Check if file belongs to the specified project.
     project_id_obj = PyObjectId(oid=project_id)
-    if file_project_id_list and project_id_obj not in file_project_id_list:  # type: ignore
+    if project_id_obj not in file_project_id_list:  # type: ignore
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"File with ID {file_id} does not belong to project with ID {project_id}.",
