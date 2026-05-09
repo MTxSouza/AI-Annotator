@@ -21,8 +21,8 @@ export class APIErrorResponse extends Error {
 
     constructor(message: string, status_code: number) {
         super(message)
-        this.message = message
         this.status_code = status_code
+        this.name = 'APIErrorResponse'
     }
 }
 
