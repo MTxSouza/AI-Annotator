@@ -252,10 +252,12 @@ async def _get_class_task_detail_information(project_id: str | PyObjectId, db: A
     )
 
     # Get class name histogram.
-    class_name_histogram = {}
-    for class_name in class_name_list:
-        count = await collection.count_documents(filter={"project_id": project_id_obj, "class_name": class_name})
-        class_name_histogram[class_name] = count
+    pipeline = [
+        {"$match": {"project_id": project_id_obj, "class_name": {"$ne": None}}},
+        {"$group": {"_id": "$class_name", "count": {"$sum": 1}}},
+    ]
+    results = await collection.aggregate(pipeline=pipeline)  # type: ignore
+    class_name_histogram = {result["_id"]: result["count"] async for result in results}
 
     return {"class_name_list": class_name_list, "class_name_histogram": class_name_histogram}
 
