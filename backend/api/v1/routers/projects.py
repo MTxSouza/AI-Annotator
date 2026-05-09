@@ -14,7 +14,6 @@ from backend.api.v1.utils.projects import (
     create_project,
     delete_project,
     get_authenticated_project,
-    get_project_by_id,
     get_projects,
     is_project_name_exists,
     update_project,
@@ -123,10 +122,6 @@ async def delete_project_endpoint(
     """
     # Get project ID.
     project_id = str(project.id)
-
-    # Check if the project exists.
-    if await get_project_by_id(db=db, project_id=project_id) is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
     # Delete the project.
     await delete_project(db=db, project_id=project_id)
