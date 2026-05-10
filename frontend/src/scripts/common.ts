@@ -93,23 +93,28 @@ export async function fetchData(
     if (headers) {
         Object.assign(defaultHeaders, headers)
     }
-    if (!defaultHeaders['Content-Type']) {
-        defaultHeaders['Content-Type'] = 'application/json'
-    }
-    const contentType = defaultHeaders['Content-Type']
-    options.headers = defaultHeaders
 
     // Add body if provided.
     if (body) {
         console.trace('Adding body to the request.')
-        if (contentType === 'application/x-www-form-urlencoded') {
+        if (body instanceof FormData) {
+            // Let the browser set Content-Type with the correct multipart boundary.
+            console.trace('Using FormData for body. Letting browser set Content-Type header.')
+            options.body = body
+        } else if (defaultHeaders['Content-Type'] === 'application/x-www-form-urlencoded') {
             console.trace('Encoding body as URL-encoded form data.')
             options.body = new URLSearchParams(body).toString()
         } else {
+            if (!defaultHeaders['Content-Type']) {
+                defaultHeaders['Content-Type'] = 'application/json'
+            }
             console.trace('Encoding body as JSON.')
             options.body = JSON.stringify(body)
         }
+    } else if (!defaultHeaders['Content-Type']) {
+        defaultHeaders['Content-Type'] = 'application/json'
     }
+    options.headers = defaultHeaders
 
     console.debug(`Final options for fetch: ${JSON.stringify(options)}`)
     let response = await fetch(fullUrl, options)
