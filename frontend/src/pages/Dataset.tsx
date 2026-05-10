@@ -20,6 +20,7 @@ export function Dataset(): JSX.Element {
 
     // Get the project data from the outlet context.
     const project = useOutletContext<Project>()
+    let projectFileFormat = project.details.file_format || []
 
     // Request all files and annotations of the project.
     useEffect(() => {
@@ -43,7 +44,15 @@ export function Dataset(): JSX.Element {
 
     return (
         <div className="project-dataset-component">
-            <FileUploadArea displayName="Upload a file to start labeling." />
+            {!projectFiles.length && (
+                <FileUploadArea
+                    displayName="Upload a file to start labeling."
+                    onUpload={() => {
+                        console.debug('Upload button clicked.')
+                    }}
+                    allowedFileTypes={projectFileFormat}
+                />
+            )}
         </div>
     )
 }
