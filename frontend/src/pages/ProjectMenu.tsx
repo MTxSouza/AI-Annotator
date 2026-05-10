@@ -1,6 +1,6 @@
 import { Project } from '../scripts/projects'
 import { useNavigate } from 'react-router-dom'
-import { useState, useEffect, JSX, use } from 'react'
+import { useState, useEffect, JSX } from 'react'
 import { useDialog } from '../components/dialog/Dialog'
 import { CreateProjectPopup } from '../components/popup/CreateProjectPopup'
 import { APIErrorResponse, redirectTo, getProjectsRequest } from '../scripts/common'
