@@ -53,7 +53,7 @@ class BackendSettingsModel(BaseSettings):
 
     api_version: str = "v1"
     api_host: str = "0.0.0.0"
-    api_port: int = 8000
+    api_port: int = int(os.environ["API_PORT"])  # Mandatory environment variable.
 
     front_host: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 

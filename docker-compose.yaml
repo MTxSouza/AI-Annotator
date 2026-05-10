@@ -43,6 +43,7 @@ services:
     environment:
       - AI_ANNOTATOR_DATABASE_NAME=ai_annotator_db_test
       - AI_ANNOTATOR_SECRET_KEY=unittest_secret_key
+      - API_PORT=8001
     profiles:
       - unittest
   worker:
@@ -58,6 +59,7 @@ services:
       - redis
     environment:
       - AI_ANNOTATOR_SECRET_KEY=${AI_ANNOTATOR_SECRET_KEY}
+      - API_PORT=${API_PORT}
     profiles:
       - app
       - test
@@ -71,6 +73,8 @@ services:
       - "5173:80"
     depends_on:
       - backend
+    environment:
+      - VITE_API_PORT=${API_PORT}
     profiles:
       - app
   frontend-tests:

@@ -1,8 +1,11 @@
 import { NavigateFunction } from 'react-router-dom'
 import { Task } from '../scripts/projects'
 
+// Environment variables.
+const VITE_API_PORT = import.meta.env.VITE_API_PORT
+
 // Global variables.
-export const API_BASE_URL = 'http://localhost:8000/api/v1'
+export const API_BASE_URL = `http://localhost:${VITE_API_PORT}/api/v1`
 export const PROJECT_MENU_URL = '/'
 export const PROJECT_DATASET_URL = '/:projectId'
 export const PROJECT_ANALYTICS_URL = '/:projectId/analytics'
