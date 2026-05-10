@@ -45,14 +45,14 @@ deploy_application() {
 development_deploy_application() {
     echo "🚀 Starting AI-Annotator application (in development mode)..."
     echo ""
-    docker compose --profile test up
+    docker compose --profile development up
     exit 0
 }
 
 stop_application() {
     echo "🛑 Stopping AI-Annotator application..."
     docker compose --profile app down
-    docker compose --profile test down
+    docker compose --profile development down
     echo ""
     echo "✅ Application stopped."
     exit 0
@@ -61,7 +61,7 @@ stop_application() {
 clean_application() {
     echo "🧹 Cleaning up AI-Annotator application..."
     docker compose --profile app down --rmi all -v --remove-orphans 2>/dev/null || true
-    docker compose --profile test down --rmi all -v --remove-orphans 2>/dev/null || true
+    docker compose --profile development down --rmi all -v --remove-orphans 2>/dev/null || true
     echo ""
     echo "✅ Cleanup complete."
     exit 0
