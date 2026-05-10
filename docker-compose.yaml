@@ -1,6 +1,7 @@
 services:
   database:
     image: mongo:8.0.0
+    restart: always
     ports:
       - "27017:27017"
     volumes:
@@ -8,6 +9,7 @@ services:
     command: ["mongod", "--quiet", "--logpath", "/dev/null"]
   redis:
     image: redis:8.2.4
+    restart: always
     ports:
       - "6379:6379"
   backend:
@@ -15,6 +17,7 @@ services:
       context: .
       dockerfile: Dockerfile.backend
       target: production
+    restart: always
     ports:
       - "8000:8000"
     volumes:
@@ -47,6 +50,7 @@ services:
       context: .
       dockerfile: Dockerfile.backend
       target: worker
+    restart: always
     volumes:
       - ${LOCAL_STORAGE_PATH}/static:/app/storage
     depends_on:
@@ -62,6 +66,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
       target: production
+    restart: always
     ports:
       - "5173:80"
     depends_on:
