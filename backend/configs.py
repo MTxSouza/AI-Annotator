@@ -54,6 +54,7 @@ class BackendSettingsModel(BaseSettings):
     api_version: str = "v1"
     api_host: str = "0.0.0.0"
     api_port: int = int(os.environ["API_PORT"])  # Mandatory environment variable.
+    api_reload: bool = os.getenv("API_RELOAD", "false").lower() == "true"
 
     front_host: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 

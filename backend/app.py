@@ -67,4 +67,9 @@ async def health_check(request: Request, db: AsyncDatabase = Depends(dependency=
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=BackendSettings.api_host, port=BackendSettings.api_port)
+    app_object: FastAPI | str = app
+    if BackendSettings.api_reload:
+        app_object = "backend.app:app"
+    uvicorn.run(
+        app_object, host=BackendSettings.api_host, port=BackendSettings.api_port, reload=BackendSettings.api_reload
+    )
