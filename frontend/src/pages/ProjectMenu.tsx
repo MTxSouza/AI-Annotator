@@ -1,6 +1,6 @@
 import { Project } from '../scripts/projects'
 import { useNavigate } from 'react-router-dom'
-import { useState, useEffect, JSX } from 'react'
+import { useState, useEffect, JSX, use } from 'react'
 import { useDialog } from '../components/dialog/Dialog'
 import { CreateProjectPopup } from '../components/popup/CreateProjectPopup'
 import { APIErrorResponse, redirectTo, getProjectsRequest } from '../scripts/common'
@@ -27,7 +27,9 @@ function ProjectMenuComponent({
     onProjectInsert: (newProject: Project) => void
     onProjectDelete: (deletedProjectId: string) => void
 }): JSX.Element {
-    console.info(`Number of projects fetched: ${projects.length}`)
+    useEffect(() => {
+        console.info(`Number of projects fetched: ${projects.length}`)
+    }, [projects])
 
     // Set page navigator.
     const navigate = useNavigate()
