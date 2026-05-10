@@ -6,19 +6,14 @@ import Upload from '../icons/upload.svg?react'
 
 // Components.
 export function FileUploadArea({
-    displayName,
+    displayName = 'Upload file here',
     onUpload,
     allowedFileTypes,
 }: {
-    displayName?: string
+    displayName: string | null
     onUpload: (files: FileList | null) => void
     allowedFileTypes?: string[]
 }): JSX.Element {
-    // Check display name.
-    if (!displayName) {
-        displayName = 'Upload file here'
-    }
-
     // Check allowed file types.
     if (allowedFileTypes && allowedFileTypes.length > 0) {
         allowedFileTypes = allowedFileTypes.map((type) => {
