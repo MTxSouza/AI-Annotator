@@ -215,6 +215,7 @@ diagnostic.data/
 WiredTiger*
 
 # Sample files.
+**/static/temp_*.*
 **/static/*.jpeg
 **/static/*.jpg
 **/static/*.png
