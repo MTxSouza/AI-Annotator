@@ -7,11 +7,18 @@ export interface Task {
     file_format_list: string[]
 }
 
+interface ProjectDetails {
+    number_of_files: number
+    number_of_samples: number
+    file_format: string[]
+}
+
 export interface Project {
     _id: string
     name: string
     description: string | null
     task: Task['name']
+    details: ProjectDetails
     is_private: boolean
     created_at: string
     updated_at: string
