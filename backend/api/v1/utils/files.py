@@ -391,6 +391,8 @@ def _sync_check_image_corruption(file: WorkerUploadFile) -> bool:
         return False
     except (UnidentifiedImageError, OSError):
         return True
+    except Exception:
+        return True
 
 
 def _sync_check_text_corruption(file: WorkerUploadFile) -> bool:
@@ -412,10 +414,8 @@ def _sync_check_text_corruption(file: WorkerUploadFile) -> bool:
         # Check if the file bytes can be decoded as UTF-8.
         if not FileFormat.is_utf8_text(file_bytes=file_bytes):
             return True
-
     except Exception:
         return True
-
     finally:
         file.file.seek(0)
 
@@ -470,13 +470,10 @@ def _sync_check_audio_corruption(file: WorkerUploadFile) -> bool:
             audio_data = file_buffer.read(dtype="float32")
             if not audio_data.shape[0] and file_buffer.frames > 0:
                 return True
-
     except Exception:
         return True
-
     finally:
         file.file.seek(0)
-
     return False
 
 
