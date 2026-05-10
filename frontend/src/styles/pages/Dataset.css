@@ -1,0 +1,15 @@
+.project-dataset-component {
+    display: flex;
+    flex-direction: column;
+    width: min(1500px, 100%);
+    height: min(800px, 100%);
+    padding: 20px 60px 30px 100px;
+    transition: padding 0.3s ease-in-out;
+}
+
+@media (max-width: 800px) {
+    .project-dataset-component {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
