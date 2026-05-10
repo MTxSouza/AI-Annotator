@@ -135,8 +135,13 @@ class UpdateTaskState(ABC):
     """
 
     # Special methods.
-    def __init__(self, task: Task) -> None:
+    def __init__(self, task: Task, task_id: str) -> None:
         self.__task = task
+        self.__task_id = task_id
+        if not isinstance(task, Task):
+            raise TypeError(f"Expected a Celery Task instance, got {type(task)}")
+        if task_id is None:
+            raise ValueError("Task ID is None. Cannot update task state without a valid task ID.")
 
     # Abstract methods.
     @abstractmethod
@@ -153,6 +158,10 @@ class UpdateTaskState(ABC):
             Task: The Celery task instance.
         """
         return self.__task
+
+    @property
+    def task_id(self) -> str:
+        return self.__task_id
 
 
 class UpdateProcessUploadedFileTaskState(UpdateTaskState):
@@ -171,6 +180,7 @@ class UpdateProcessUploadedFileTaskState(UpdateTaskState):
         number_of_failed_files: int = 0,
     ) -> None:
         self.task.update_state(
+            task_id=self.task_id,
             state=state,
             meta={
                 "current": number_processed_files,
@@ -215,9 +225,11 @@ def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str
         temp_file_list (list[dict]): The list of temporary file paths to process.
         project_id (str | PyObjectId): The ID of the project the files belong to.
     """
+    # Capture the task ID for state updates.
+    task_id: str = self.request.id
 
     # Async function to process the uploaded file.
-    async def wrapper(is_eager: bool = False) -> list[dict]:
+    async def wrapper(is_eager: bool = False, task_id: str | None = None) -> list[dict]:
 
         # Import function inside the task.
         from backend.api.v1.utils.files import create_file_records
@@ -232,7 +244,10 @@ def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str
         if is_eager:
             state_updater: UpdateProcessUploadedFileTaskState | None = None
         else:
-            state_updater: UpdateProcessUploadedFileTaskState = UpdateProcessUploadedFileTaskState(task=self)  # type: ignore
+            state_updater: UpdateProcessUploadedFileTaskState = UpdateProcessUploadedFileTaskState(  # type: ignore
+                task=self,
+                task_id=task_id,  # type: ignore
+            )
 
         # Process the files and create the file records in the database.
         try:
@@ -252,4 +267,4 @@ def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str
     # Check if the task is running in eager mode (i.e., during tests) and execute the wrapper function accordingly.
     if self.request.is_eager:
         return _run_worker_in_threading(wrapper_func=wrapper, is_eager=True)
-    return async_to_sync(wrapper)()
+    return async_to_sync(wrapper)(task_id=task_id)
