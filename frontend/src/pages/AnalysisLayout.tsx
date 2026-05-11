@@ -10,7 +10,7 @@ import '../styles/pages/AnalysisLayout.css'
 // Components.
 export function AnalysisLayout(): JSX.Element {
     // Get the project data from the outlet context.
-    const project = useOutletContext<Project>()
+    const [project, setProject] = useOutletContext<[Project, React.Dispatch<React.SetStateAction<Project>>]>()
 
     return <div className="project-analysis-layout-component"></div>
 }

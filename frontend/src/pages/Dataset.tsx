@@ -47,7 +47,7 @@ export function Dataset(): JSX.Element {
     }
 
     // Get the project data from the outlet context.
-    const project = useOutletContext<Project>()
+    const [project, setProject] = useOutletContext<[Project, React.Dispatch<React.SetStateAction<Project>>]>()
     let projectFileFormat = project.details.file_format || []
 
     // Request all files and annotations of the project.
