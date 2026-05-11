@@ -3,7 +3,7 @@ Main dataset page for project management.
 */
 import { JSX, useEffect, useState } from 'react'
 import { Project } from '../scripts/projects'
-import { File } from '../scripts/files'
+import { File, uploadFileToProject } from '../scripts/files'
 import { fetchData, RequestMethod, APIErrorResponse } from '../scripts/common'
 import { useOutletContext } from 'react-router-dom'
 import { FileUploadArea } from '../components/FileUploadArea'
@@ -31,28 +31,10 @@ export function Dataset(): JSX.Element {
     const [isLoading, setIsLoading] = useState(true)
 
     async function uploadFiles(files: FileList | null) {
-        // Ignore if no files are selected.
-        if (!files || files.length === 0) {
-            return
-        }
-
-        // Create form data for file upload.
-        const formData = new FormData()
-        for (let i = 0; i < files.length; i++) {
-            formData.append('file_list', files[i])
-        }
-        console.debug(`Uploading ${files.length} files to project ${project._id}`)
-
         // Send upload request to the server.
         try {
-            const uploadWorker = await fetchData(
-                `/projects/${project._id}/files`,
-                RequestMethod.POST,
-                undefined,
-                formData,
-            )
+            const fileUploadWorkerResult = await uploadFileToProject(files, project._id)
             showDialog('info', 'Files uploaded requested successfully!', null)
-            console.debug('Upload worker response:', uploadWorker)
         } catch (error) {
             if (error instanceof APIErrorResponse) {
                 console.error('Error uploading files:', error)
