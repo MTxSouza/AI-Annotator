@@ -23,10 +23,9 @@ export function Settings(): JSX.Element {
     const navigate = useNavigate()
 
     // Get the project data from the outlet context.
-    const project = useOutletContext<Project>()
+    const [project, setProject] = useOutletContext<[Project, React.Dispatch<React.SetStateAction<Project>>]>()
 
     // Set up states.
-    const [currentProject, setCurrentProject] = useState<Project>(project)
     const [currentProjectName, setCurrentProjectName] = useState<string>(project.name)
     const [newProjectName, setNewProjectName] = useState<string>(currentProjectName)
     const [isProjectInfoChanged, setIsProjectInfoChanged] = useState<boolean>(false)
@@ -41,7 +40,8 @@ export function Settings(): JSX.Element {
         const updates: Partial<ProjectUpdate> = {}
         updates.name = newProjectName
         try {
-            await updateProjectRequest(currentProject._id, updates)
+            const newProject = await updateProjectRequest(project._id, updates)
+            setProject(newProject)
         } catch (error) {
             if (error instanceof APIErrorResponse) {
                 console.error('Error updating project:', error)
@@ -75,7 +75,7 @@ export function Settings(): JSX.Element {
             <div className="project-password-settings-container">
                 <Button
                     id="set-project-password-btn"
-                    value={currentProject.is_private ? 'Update Password' : 'Set Password'}
+                    value={project.is_private ? 'Update Password' : 'Set Password'}
                     buttonType={ButtonType.TERTIARY}
                     onClickEvent={() => setUpdateProjectPassword(true)}
                 />
@@ -85,11 +85,11 @@ export function Settings(): JSX.Element {
                 <div className="project-type-info-block-container">
                     <div className="project-type-info-block-sub-container">
                         <label htmlFor="project-task-name">Task</label>
-                        <span id="project-task-name">{currentProject.task}</span>
+                        <span id="project-task-name">{project.task}</span>
                     </div>
                     <div className="project-type-info-block-sub-container">
                         <label htmlFor="is-private-project">Private</label>
-                        <span id="is-private-project">{currentProject.is_private ? 'Yes' : 'No'}</span>
+                        <span id="is-private-project">{project.is_private ? 'Yes' : 'No'}</span>
                     </div>
                 </div>
             </div>
@@ -104,15 +104,17 @@ export function Settings(): JSX.Element {
                     id="project-settings-save-btn"
                     value="Save"
                     buttonType={ButtonType.PRIMARY}
-                    onClickEvent={saveProjectChanges}
+                    onClickEvent={() => {
+                        saveProjectChanges()
+                    }}
                     disabled={!isProjectInfoChanged}
                 />
             </div>
 
             {deleteProject && (
                 <ConfirmProjectDeletionPopup
-                    projectId={currentProject._id}
-                    isPrivate={currentProject.is_private}
+                    projectId={project._id}
+                    isPrivate={project.is_private}
                     closePopup={() => setDeleteProject(false)}
                     refreshProjects={() => redirectTo(PROJECT_MENU_URL, navigate)}
                 />
@@ -120,11 +122,11 @@ export function Settings(): JSX.Element {
 
             {updateProjectPassword && (
                 <UpdateProjectPasswordPopup
-                    projectId={currentProject._id}
-                    isPrivate={currentProject.is_private}
+                    projectId={project._id}
+                    isPrivate={project.is_private}
                     closePopup={() => setUpdateProjectPassword(false)}
                     onSuccess={(newProject: Project) => {
-                        setCurrentProject(newProject)
+                        setProject(newProject)
                         setUpdateProjectPassword(false)
                     }}
                 />

@@ -55,7 +55,7 @@ export function ProjectPageLayout(): JSX.Element {
     return (
         <div className="project-home-layout-component">
             <ProjectSideBar projectId={projectId} />
-            <Outlet context={projectData} />
+            <Outlet context={[projectData, setProjectData]} />
         </div>
     )
 }
