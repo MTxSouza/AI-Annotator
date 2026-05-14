@@ -46,7 +46,7 @@ def is_a_directory_path(path: str) -> None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid directory path: {path}.")
 
 
-async def get_all_valid_files_from_directory(directory_path: str, project: Project) -> list[str]:
+def get_all_valid_files_from_directory(directory_path: str, project: Project) -> list[str]:
     """
     Given a directory path, it finds all valid files for a project in
     there.
