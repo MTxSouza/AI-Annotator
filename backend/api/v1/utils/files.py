@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.files import AudioFileCreate, ImageFileCreate, TextFileCreate, UploadedFileResponse
+from backend.api.v1.models.projects import Project
 from backend.api.v1.utils.common import _load_file_content
 from backend.api.v1.utils.samples import delete_samples_by_file_id
 from backend.api.v1.utils.task_details import get_task_file
@@ -43,6 +44,28 @@ def is_a_directory_path(path: str) -> None:
     """
     if not Path(path).is_dir():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid directory path: {path}.")
+
+
+async def get_all_valid_files_from_directory(directory_path: str, project: Project) -> list[str]:
+    """
+    Given a directory path, it finds all valid files for a project in
+    there.
+
+    Args:
+            directory_path (str): Directory path.
+            project (Project): Project instance.
+
+    Returns:
+            list[str]: List of valid files to be used in the project.
+    """
+    # Get all valid file formats of the project.
+    allowed_file_format_list = ["." + fmt for fmt in project.details.file_format]
+    allowed_file_list: list[str] = [
+        str(filepath)
+        for filepath in Path(directory_path).glob(pattern="*")
+        if filepath.suffix in allowed_file_format_list
+    ]
+    return allowed_file_list
 
 
 async def check_if_file_belongs_to_project(
