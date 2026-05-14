@@ -34,6 +34,17 @@ FILE_FORMAT_CHUNK_SIZE = 512  # 512 Bytes
 
 
 # Functions.
+def is_a_directory_path(path: str) -> None:
+    """
+    Validate if a given path is a directory.
+
+    Args:
+            path (str): The path to validate.
+    """
+    if not Path(path).is_dir():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid directory path: {path}.")
+
+
 async def check_if_file_belongs_to_project(
     file_id: str | PyObjectId, project_id: str | PyObjectId, db: AsyncDatabase
 ) -> None:
