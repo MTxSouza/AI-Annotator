@@ -18,8 +18,20 @@ class __File(CommonResponseModel):
     project_id_list: list[PyObjectId] = Field(..., description="List of project IDs associated with this file.")
     file_hash: str = Field(..., description="The hash of the file content.")
     filename: str = Field(..., description="The name of the file.")
+    filepath: str = Field(..., description="The path to the file on disk.")
     file_format: FileFormat = Field(..., description="The format of the file.")
     size_in_bytes: int = Field(..., description="The size of the file in bytes.")
+
+
+class FileUploadResponse(CommonResponseModel):
+    """
+    Response model for file upload.
+    """
+
+    # Fields.
+    message: str = Field(..., description="Message for the uploaded file.")
+    number_of_files_uploaded: int = Field(default=0, description="The number of files successfully uploaded.")
+    task_id: str | None = Field(default=None, description="The ID of the worker task.")
 
 
 # - Images.

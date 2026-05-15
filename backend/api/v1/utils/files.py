@@ -3,15 +3,13 @@ Module with all utilities related to file operations.
 """
 
 import hashlib
-import shutil
 import struct
-import uuid
 from collections.abc import Callable, Generator
 from pathlib import Path
 
 import soundfile as sf
 from celery.result import AsyncResult
-from fastapi import UploadFile, status
+from fastapi import status
 from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import HTTPException
 from fastapi.responses import Response
@@ -35,15 +33,53 @@ FILE_FORMAT_CHUNK_SIZE = 512  # 512 Bytes
 
 
 # Functions.
-def is_a_directory_path(path: str) -> None:
+def is_a_file_path(path: str) -> bool:
+    """
+    Validate if a given path is a file.
+
+    Args:
+            path (str): The path to validate.
+
+    Returns:
+            bool: True if the path is a file, False otherwise.
+    """
+    return Path(path).is_file()
+
+
+def is_a_directory_path(path: str) -> bool:
     """
     Validate if a given path is a directory.
 
     Args:
             path (str): The path to validate.
+
+    Returns:
+            bool: True if the path is a directory, False otherwise.
     """
-    if not Path(path).is_dir():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid directory path: {path}.")
+    return Path(path).is_dir()
+
+
+def check_if_file_is_valid_for_project(
+    filepath: str, project: Project, target_suffixes: list[str] | None = None
+) -> bool:
+    """
+    Check if a given file path is valid for a project based on the allowed file formats.
+
+    Args:
+            filepath (str): The path of the file to check.
+            project (Project): The project instance to check against.
+            target_suffixes (list[str] | None): Optional list of target file suffixes to check against. (Default: None)
+
+    Returns:
+            bool: True if the file is valid for the project, False otherwise.
+    """
+    # Get file format.
+    file_format = Path(filepath).suffix.lower()
+
+    # Check if file format is allowed in the project.
+    if target_suffixes is None:
+        target_suffixes = ["." + fmt for fmt in project.details.file_format]
+    return file_format in target_suffixes
 
 
 def get_all_valid_files_from_directory(directory_path: str, project: Project) -> list[str]:
@@ -59,12 +95,47 @@ def get_all_valid_files_from_directory(directory_path: str, project: Project) ->
             list[str]: List of valid files to be used in the project.
     """
     # Get all valid file formats of the project.
-    allowed_file_format_list = ["." + fmt for fmt in project.details.file_format]
-    allowed_file_list: list[str] = [
-        str(filepath)
-        for filepath in Path(directory_path).glob(pattern="*")
-        if filepath.suffix in allowed_file_format_list
-    ]
+    target_suffixes = ["." + fmt for fmt in project.details.file_format]  # To avoid unnecessary computation later.
+    allowed_file_list: list[str] = list(
+        filter(
+            lambda filepath: check_if_file_is_valid_for_project(str(filepath), project, target_suffixes),  # type: ignore
+            Path(directory_path).glob("*.*"),
+        )
+    )
+    allowed_file_list = list(map(str, allowed_file_list))
+    return allowed_file_list
+
+
+async def validate_input_files(filepath: str, project: Project) -> list[str]:
+    """
+    Validate if the input file or directory path is valid to be used in
+    the project.
+
+    Args:
+            filepath (str): File or directory path.
+            project (Project): Project instance.
+
+    Returns:
+            list[str]: List of valid files to be used in the project.
+    """
+    # Check if the directory path is valid.
+    allowed_file_list: list[str] = []
+    if is_a_directory_path(path=filepath):
+        # Get all allowed files.
+        allowed_file_list += get_all_valid_files_from_directory(directory_path=filepath, project=project)
+
+    elif is_a_file_path(path=filepath):
+        # Check if the file is valid for the project.
+        if check_if_file_is_valid_for_project(filepath=filepath, project=project):
+            allowed_file_list.append(filepath)
+
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"The provided path '{filepath}' is not a valid file or directory, or it does not contain any valid "
+            "files for the project.",
+        )
+
     return allowed_file_list
 
 
@@ -91,25 +162,6 @@ async def check_if_file_belongs_to_project(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"File with ID {file_id} does not belong to project with ID {project_id}.",
         )
-
-
-def generate_unique_filename(file_format: FileFormat) -> str:
-    """
-    Utility function to generate a unique filename.
-
-    Args:
-            file_format (FileFormat): The format of the file.
-
-    Returns:
-            str: The generated unique filename.
-    """
-    # Generate a unique identifier.
-    unique_id = str(uuid.uuid4())
-
-    # Add file extension based on the file format.
-    file_extension = file_format.value.lower()
-    unique_filename = f"{unique_id}.{file_extension}"
-    return unique_filename
 
 
 def load_upload_file_in_chunks(file: WorkerUploadFile) -> Generator[bytes, None, None]:
@@ -150,111 +202,69 @@ def get_upload_file_hash(file: WorkerUploadFile) -> str:
     return sha256_hash.hexdigest()
 
 
-def get_file_metadata(file: UploadFile | WorkerUploadFile) -> dict:
+def get_file_metadata(filepath: str) -> dict:
     """
     Utility function to get metadata of an upload file.
 
     Args:
-            file (UploadFile | WorkerUploadFile): The upload file to get metadata for.
+            filepath (str): Path to a real file on machine.
 
     Returns:
             dict: Metadata of the upload file.
     """
-    # Move cursor to the beginning of the file.
-    file.file.seek(0)
+    # Get file name.
+    filename = Path(filepath).name
+
+    # Compute file size.
+    file_size = Path(filepath).stat().st_size
 
     # Get file extension.
-    file_size = file.size
-    file_extension = file.content_type.split(sep="/")[-1].lower()  # type: ignore
-    return {"format": file_extension, "size_in_bytes": file_size}
+    file_extension = Path(filepath).suffix.lower()
+    return {"filename": filename, "format": file_extension, "size_in_bytes": file_size}
 
 
-def save_upload_file_to_disk(file: UploadFile | WorkerUploadFile, unique_filename: str) -> None:
+async def push_files_to_redis_queue(filepath_list: str | list[str], project_id: str | PyObjectId) -> AsyncResult:
     """
-    Utility function to save the upload file to disk.
+    Utility function to push files to be processed and accepted to a project.
 
     Args:
-            file (UploadFile | WorkerUploadFile): The upload file to save.
-            unique_filename (str): The unique filename to save the file as.
-    """
-    # Move cursor to the beginning of the file.
-    file.file.seek(0)
-
-    # Save file in chunks to avoid memory issues.
-    file_path = Path(BackendSettings.static_file_directory, unique_filename)
-    with file_path.open(mode="wb") as file_buffer:
-        shutil.copyfileobj(fsrc=file.file, fdst=file_buffer)
-
-    # Check if file is saved successfully.
-    if not file_path.exists():
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to save file to disk.")
-
-
-def save_temporary_upload_file_to_disk(file: UploadFile) -> str:
-    """
-    Utility function to save the upload file to disk with a temporary filename.
-
-    Args:
-            file (UploadFile): The upload file to save.
-
-    Returns:
-            str: The temporary filename the file was saved as.
-    """
-    # Generate a unique temporary filename.
-    temp_filename = f"temp_{uuid.uuid4()}"
-
-    # Save file to disk.
-    save_upload_file_to_disk(file=file, unique_filename=temp_filename)
-
-    return temp_filename
-
-
-async def push_upload_file_to_redis_queue(
-    file_list: UploadFile | list[UploadFile], project_id: str | PyObjectId
-) -> AsyncResult:
-    """
-    Utility function to push the upload file or list of upload files to a Redis queue for asynchronous processing.
-
-    Args:
-            file_list (UploadFile | list[UploadFile]): The upload file or list of upload files to push to the Redis
-            queue.
+            filepath_list (str | list[str]): The list of filepaths to push to the Redis queue.
             project_id (str | PyObjectId): The project ID associated with the files.
 
     Returns:
             AsyncResult: The Celery AsyncResult object representing the enqueued task.
     """
     # Check if single file is provided.
-    if isinstance(file_list, UploadFile):
-        file_list = [file_list]
+    if isinstance(filepath_list, str):
+        filepath_list = [filepath_list]
 
     # Push each file to the Redis queue.
     current_total_upload_file_size = 0
-    temp_file_list: list[dict] = []
-    for file in file_list:
+    file_list: list[dict] = []
+    for filepath in filepath_list:
         # Check file size.
-        file_metadata = await run_in_threadpool(func=get_file_metadata, file=file)
+        file_metadata = await run_in_threadpool(func=get_file_metadata, filepath=filepath)
+        filename = file_metadata["filename"]
+        file_format = file_metadata["format"]
         file_size = file_metadata["size_in_bytes"]
         if current_total_upload_file_size + file_size > BackendSettings.max_upload_file_size:
-            temp_file_list.append(
+            file_list.append(
                 {
-                    "temp_file_path": None,
-                    "filename": file.filename,
-                    "content_type": file.content_type,
+                    "filepath": filepath,
+                    "filename": filename,
+                    "format": file_format,
+                    "size_in_bytes": file_size,
                     "error": "Upload size limit exceeded.",
                 }
             )
             continue
         current_total_upload_file_size += file_size
-
-        # Save file to disk with a temporary filename.
-        temp_filename = await run_in_threadpool(func=save_temporary_upload_file_to_disk, file=file)
-        temp_file_path = Path(BackendSettings.static_file_directory, temp_filename)
-        temp_file_list.append(
-            {"temp_file_path": str(temp_file_path), "filename": file.filename, "content_type": file.content_type}
+        file_list.append(
+            {"filepath": filepath, "filename": filename, "format": file_format, "size_in_bytes": file_size}
         )
 
-    # Push temp_file_list to Redis queue for asynchronous processing in the worker.
-    result: AsyncResult = process_uploaded_file_task.delay(temp_file_list=temp_file_list, project_id=str(project_id))  # type: ignore
+    # Push file_list to Redis queue for asynchronous processing in the worker.
+    result: AsyncResult = process_uploaded_file_task.delay(file_list=file_list, project_id=str(project_id))  # type: ignore
 
     return result
 
@@ -347,7 +357,7 @@ async def load_file_content_by_id(
 
     # Get file document.
     file_document = await get_file_by_id(file_id=file_id, db=db)
-    filename = file_document["filename"]
+    filepath = file_document["filepath"]
     file_format = file_document["file_format"]
 
     # Set media type based on file format.
@@ -363,7 +373,7 @@ async def load_file_content_by_id(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported file format: {file_format}.")  # type: ignore
 
     # Load file content and format.
-    content = await run_in_threadpool(func=_load_file_content, filename=filename, file_id=file_id)
+    content = await run_in_threadpool(func=_load_file_content, filepath=filepath)
 
     # Create response.
     return Response(content=content, media_type=media_type)  # type: ignore
@@ -661,17 +671,14 @@ async def process_file_record(
 
     # Create filename to record.
     file_metadata["file_format"] = FileFormat(file_metadata["file_format"])
-    unique_filename = generate_unique_filename(file_format=file_metadata["file_format"])
-
-    # Save file to disk.
-    save_upload_file_to_disk(file=file, unique_filename=unique_filename)
 
     # Create file record in the database.
     collection = db.get_collection(name=Collections.FILES.value.name)
     file_schema = create_model_schema(  # type: ignore
         project_id_list=[project_id_obj],
         file_hash=file_hash,
-        filename=unique_filename,
+        filename=file.filename,
+        filepath=file.filepath,
         **file_metadata,
     ).model_dump()
     result = await collection.insert_one(document=file_schema)
@@ -811,15 +818,14 @@ async def create_file_records(
         if file_format is None:
             file_record = UploadedFileResponse(
                 status=FileUploadStatus.FAILED,
-                message=f"Invalid file format: {file.content_type}. This file format is not supported at all.",
+                message=f"Invalid file format for {file.filepath} file. This file format is not supported at all.",
             )
             processed_file_records.append(file_record.model_dump())
             number_of_failed_files += 1
             if state_updater:
                 state_updater.update_state(  # type: ignore
                     **update_state_args,  # type: ignore
-                    message=f"Invalid file format for '{file.filename}': {file.content_type}. This file format is not "
-                    "supported at all.",
+                    message=f"Invalid file format for {file.filepath} file. This file format is not supported at all.",
                 )
             del file  # Delete buffer file from disk.
             continue
@@ -968,11 +974,5 @@ async def delete_file_records(
     # Get all files that no longer belong to any project and delete them from the database and disk.
     orphan_file_id_list = await collection.distinct(key="_id", filter={"project_id_list": {"$size": 0}})
     if orphan_file_id_list:
-        # Delete files from disk.
-        filename_list = await collection.distinct(key="filename", filter={"_id": {"$in": orphan_file_id_list}})
-        for filename in filename_list:
-            file_path = Path(BackendSettings.static_file_directory, filename)
-            file_path.unlink(missing_ok=True)
-
         # Delete file records from the database.
         await collection.delete_many({"_id": {"$in": orphan_file_id_list}})

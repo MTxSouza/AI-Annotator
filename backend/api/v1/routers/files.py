@@ -2,8 +2,8 @@
 Module with all endpoints related to file operations.
 """
 
-from fastapi import APIRouter, Depends, UploadFile, status
-from fastapi.params import File, Param
+from fastapi import APIRouter, Depends, status
+from fastapi.params import Param
 from fastapi.requests import Request
 from fastapi.responses import Response
 from pymongo.asynchronous.database import AsyncDatabase
@@ -15,7 +15,8 @@ from backend.api.v1.utils.files import (
     delete_file_records,
     get_files,
     load_file_content_by_id,
-    push_upload_file_to_redis_queue,
+    push_files_to_redis_queue,
+    validate_input_files,
 )
 from backend.api.v1.utils.projects import get_authenticated_project
 from backend.database.configs import DatabaseConfig
@@ -74,20 +75,23 @@ async def get_file_data_endpoint(
 @limiter.limit(limit_value="5/minute")
 async def upload_file_endpoint(
     request: Request,
-    file_list: UploadFile | list[UploadFile] = File(...),  # type: ignore
+    filepath: str = Param(),  # type: ignore
     project: Project = Depends(dependency=get_authenticated_project),
 ) -> WorkerTaskResult:
     """
-    Endpoint to queue a file for processing.
+    Endpoint that receives either a file or directory path and extract all
+    valid files from there to be used in project.
 
     Args:
-            file_list (UploadFile | list[UploadFile]): The file or list of files to queue.
+            filepath (str): The path of the file to upload.
     """
-    # Get project ID.
-    project_id = project.id
+    # Get all valid files from the given path.
+    allowed_file_list = await validate_input_files(filepath=filepath, project=project)
+    if not allowed_file_list:
+        return WorkerTaskResult(task_id=None, message="No valid files found in the provided path.")  # type: ignore
 
     # Push file to Redis queue.
-    result = await push_upload_file_to_redis_queue(file_list=file_list, project_id=project_id)
+    result = await push_files_to_redis_queue(filepath_list=allowed_file_list, project_id=project.id)
 
     return WorkerTaskResult(task_id=result.id, message="File(s) have been queued for processing.")  # type: ignore
 

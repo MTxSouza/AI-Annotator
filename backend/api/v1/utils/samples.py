@@ -139,6 +139,7 @@ async def get_create_sample_metadata(
     # Get file format and name.
     file_format = file.get("file_format")
     filename = file.get("filename")
+    filepath = file.get("filepath")
 
     # Check if file belongs to the specified project.
     project_id_obj = PyObjectId(oid=project_id)
@@ -158,6 +159,7 @@ async def get_create_sample_metadata(
         "task": task,
         "file_format": file_format,
         "filename": filename,
+        "filepath": filepath,
     }
 
 
@@ -205,8 +207,8 @@ async def create_sample(sample_data: _SAMPLE_CREATE_, db: AsyncDatabase) -> dict
     # HARDCODED: Copy the text content of the file to the sample if the task is text-related.
     if metadata.get("file_format") in FileFormat.get_text_formats():
         # Load file content.
-        filename = metadata.get("filename")
-        text_bytes = await run_in_threadpool(_load_file_content, filename=filename, file_id=metadata.get("file_id"))  # type: ignore
+        filepath = metadata.get("filepath")
+        text_bytes = await run_in_threadpool(_load_file_content, filepath=filepath)  # type: ignore
         sample_data_dict["text"] = text_bytes.decode(encoding="utf-8")
         del text_bytes
 

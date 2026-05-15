@@ -29,12 +29,11 @@ class WorkerUploadFile:
     """
 
     # Special methods.
-    def __init__(self, temp_file_path: str, filename: str, content_type: str, **kwargs) -> None:
+    def __init__(self, filepath: str, filename: str, **kwargs) -> None:
 
         # Attributes.
-        self.file_path = temp_file_path
+        self.filepath = filepath
         self.filename = filename
-        self.content_type = content_type
         self.__file: BinaryIO | None = None
         self.__extra_kwargs = kwargs
 
@@ -74,10 +73,10 @@ class WorkerUploadFile:
             BinaryIO: The file content.
         """
         if self.__file is None:
-            if self.file_path and os.path.exists(path=self.file_path):
-                self.__file = open(file=self.file_path, mode="rb")
+            if self.filepath and os.path.exists(path=self.filepath):
+                self.__file = open(file=self.filepath, mode="rb")
             else:
-                raise FileNotFoundError(f"File not found at path: {self.file_path}")
+                raise FileNotFoundError(f"File not found at path: {self.filepath}")
         return self.__file
 
     @property
@@ -106,14 +105,7 @@ class WorkerUploadFile:
                 self.__file.close()  # type: ignore
             finally:
                 self.__file = None
-
-        # Delete the temporary file from disk.
-        if self.file_path and os.path.exists(path=self.file_path):
-            try:
-                os.unlink(path=self.file_path)  # Remove the temporary file from disk.
-            except OSError:
-                pass
-        self.file_path = ""  # Clear the file path to prevent further access.
+        self.filepath = ""  # Clear the file path to prevent further access.
 
     def get(self, key: str) -> Any | None:
         """
@@ -207,12 +199,12 @@ def _run_worker_in_threading(wrapper_func: Callable, *args, **kwargs) -> Any:
 
 # Tasks.
 @app.task(bind=True, name="process_uploaded_file")
-def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str | PyObjectId) -> list[dict]:
+def process_uploaded_file_task(self, file_list: list[dict], project_id: str | PyObjectId) -> list[dict]:
     """
     Celery task to process an uploaded file.
 
     Args:
-        temp_file_list (list[dict]): The list of temporary file paths to process.
+        file_list (list[dict]): The list of temporary file paths to process.
         project_id (str | PyObjectId): The ID of the project the files belong to.
     """
 
@@ -226,7 +218,7 @@ def process_uploaded_file_task(self, temp_file_list: list[dict], project_id: str
         db: AsyncDatabase = await DatabaseConfig.get_local_database()  # type: ignore
 
         # Instantiate the WorkerUploadFile objects.
-        worker_file_list = [WorkerUploadFile(**temp_file) for temp_file in temp_file_list]
+        worker_file_list = [WorkerUploadFile(**file) for file in file_list]
 
         # Instantiate the task state updater.
         if is_eager:
