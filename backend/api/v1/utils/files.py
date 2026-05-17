@@ -73,6 +73,10 @@ def check_if_file_is_valid_for_project(
     Returns:
             bool: True if the file is valid for the project, False otherwise.
     """
+    # Check if path is a file.
+    if not is_a_file_path(path=filepath):
+        return False
+
     # Get file format.
     file_format = Path(filepath).suffix.lower()
 
@@ -106,7 +110,7 @@ def get_all_valid_files_from_directory(directory_path: str, project: Project) ->
     return allowed_file_list
 
 
-async def validate_input_files(filepath: str, project: Project) -> list[str]:
+async def validate_input_files(filepath: str | list[str], project: Project) -> list[str]:
     """
     Validate if the input file or directory path is valid to be used in
     the project.
@@ -118,25 +122,30 @@ async def validate_input_files(filepath: str, project: Project) -> list[str]:
     Returns:
             list[str]: List of valid files to be used in the project.
     """
-    # Check if the directory path is valid.
-    allowed_file_list: list[str] = []
-    if is_a_directory_path(path=filepath):
-        # Get all allowed files.
-        allowed_file_list += get_all_valid_files_from_directory(directory_path=filepath, project=project)
-
-    elif is_a_file_path(path=filepath):
-        # Check if the file is valid for the project.
-        if check_if_file_is_valid_for_project(filepath=filepath, project=project):
-            allowed_file_list.append(filepath)
-
+    # Check number of file paths provided.
+    if isinstance(filepath, str):
+        if is_a_directory_path(path=filepath):
+            # Get all allowed files.
+            valid_filepath = get_all_valid_files_from_directory(directory_path=filepath, project=project)
+        elif check_if_file_is_valid_for_project(filepath=filepath, project=project):
+            valid_filepath = [filepath]
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"The provided path '{filepath}' is not a valid file or directory, or it does not contain any "
+                "valid files for the project.",
+            )
     else:
+        # Check multiple file paths.
+        valid_filepath = list(filter(lambda path: check_if_file_is_valid_for_project(path, project), filepath))
+
+    # Check if the final list is empty.
+    if not valid_filepath:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"The provided path '{filepath}' is not a valid file or directory, or it does not contain any valid "
-            "files for the project.",
+            detail="The provided paths do not contain any valid files for the project.",
         )
-
-    return allowed_file_list
+    return valid_filepath
 
 
 async def check_if_file_belongs_to_project(
@@ -193,13 +202,13 @@ def get_upload_file_hash(file: WorkerUploadFile) -> str:
             str: The computed hash of the upload file.
     """
     # Define hash object.
-    sha256_hash = hashlib.sha256()
+    md5sum_hasher = hashlib.md5()
 
     # Load file in chunks to avoid memory issues.
     for chunk in load_upload_file_in_chunks(file):
-        sha256_hash.update(chunk)
+        md5sum_hasher.update(chunk)
 
-    return sha256_hash.hexdigest()
+    return md5sum_hasher.hexdigest()
 
 
 def get_file_metadata(filepath: str) -> dict:

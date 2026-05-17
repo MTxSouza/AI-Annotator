@@ -2,14 +2,10 @@
 Module used to test project-related endpoints.
 """
 
-import io
 import time
-from collections.abc import Callable
 
 import pytest
 from fastapi.testclient import TestClient
-
-from tests.backend.conftest import check_for_worker_task_completion
 
 
 # Mocks.
@@ -481,112 +477,3 @@ def test_get_private_project_with_token_of_another_project(client: TestClient, p
 
     # Assert the logout response status code.
     assert response.status_code == 204, f"Failed to logout of project: {response.text}"
-
-
-@pytest.mark.order(-1)
-def test_delete_project_and_ensure_files_and_samples_deleted(
-    client: TestClient,
-    object_detection_project_payload: dict,
-    list_png_image_file_payload: Callable[[], list[tuple[str, tuple[str, io.BytesIO, str]]]],
-    reset_file_directory: None,  # Used to reset file directory
-):
-    """
-    Test deleting a project and ensuring that associated files and samples are also deleted.
-    """
-    # Create a project.
-    response = client.post(url="/projects/", json=object_detection_project_payload)
-    assert response.status_code == 201, f"Failed to create project: {response.text}"
-    project_id = response.json()["_id"]
-
-    # Create second project.
-    second_image_project_payload = object_detection_project_payload.copy()
-    second_image_project_payload["name"] = "Second Test Project"
-    response = client.post(url="/projects/", json=second_image_project_payload)
-    assert response.status_code == 201, f"Failed to create second project: {response.text}"
-    second_project_id = response.json()["_id"]
-
-    # Create file record for the first project.
-    list_png_image_file_payload_data = list_png_image_file_payload()
-    worker_response = client.post(url=f"/projects/{project_id}/files/", files=list_png_image_file_payload_data)
-    assert worker_response.status_code == 202, f"Failed to create file for the first project: {worker_response.text}"
-
-    # Wait for the file processing to complete.
-    worker_response_json = worker_response.json()
-    assert "task_id" in worker_response_json, "Response does not contain task_id"
-    worker_task_id = worker_response_json["task_id"]
-    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
-
-    # Check response.
-    assert len(file_data_list) == len(list_png_image_file_payload_data)
-
-    for i, file_data in enumerate(iterable=file_data_list):
-        assert file_data["status"] == "Created"
-        assert (
-            file_data["message"] == f"Image file '{list_png_image_file_payload_data[i][1][0]}' uploaded successfully."
-        )
-
-    # Create file record for the second project.
-    list_png_image_file_payload_data = list_png_image_file_payload()
-    worker_response = client.post(url=f"/projects/{second_project_id}/files/", files=list_png_image_file_payload_data)
-    assert worker_response.status_code == 202, f"Failed to create file for the second project: {worker_response.text}"
-
-    # Wait for the file processing to complete.
-    worker_response_json = worker_response.json()
-    assert "task_id" in worker_response_json, "Response does not contain task_id"
-    worker_task_id = worker_response_json["task_id"]
-    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
-
-    # Check response.
-    assert len(file_data_list) == len(list_png_image_file_payload_data)
-
-    for i, file_data in enumerate(iterable=file_data_list):
-        assert file_data["status"] == "Skipped"
-        assert file_data["message"] == f"File '{list_png_image_file_payload_data[i][1][0]}' already exists."
-
-    # Get associated files for the first project to ensure they exist.
-    response = client.get(url=f"/projects/{project_id}/files/")
-    assert response.status_code == 200, f"Failed to get files for the first project: {response.text}"
-    files_data_list = response.json()
-    assert len(files_data_list) == len(list_png_image_file_payload_data), (
-        f"Expected {len(list_png_image_file_payload_data)} files, got {len(files_data_list)}"
-    )
-
-    # Check project_id_list field.
-    assert all(project_id in file_data["project_id_list"] for file_data in files_data_list), (
-        "Expected all files to have the correct project_id_list"
-    )
-
-    # Get associated files for the second project to ensure they exist.
-    response = client.get(url=f"/projects/{second_project_id}/files/")
-    assert response.status_code == 200, f"Failed to get files for the second project: {response.text}"
-    files_data_list = response.json()
-    assert len(files_data_list) == len(list_png_image_file_payload_data), (
-        f"Expected {len(list_png_image_file_payload_data)} files, got {len(files_data_list)}"
-    )
-
-    # Check project_id_list field.
-    assert all(second_project_id in file_data["project_id_list"] for file_data in files_data_list), (
-        "Expected all files to have the correct project_id_list"
-    )
-
-    # Delete the first project.
-    response = client.delete(url=f"/projects/{project_id}")
-    assert response.status_code == 204, f"Failed to delete project: {response.text}"
-
-    # Attempt to retrieve the deleted project.
-    response = client.get(url=f"/projects/{project_id}")
-    assert response.status_code == 404, f"Failed to get expected not found response: {response.text}"
-
-    # Get associated files for the second project to ensure they still exist.
-    response = client.get(url=f"/projects/{second_project_id}/files/")
-    assert response.status_code == 200, f"Failed to get files for the second project: {response.text}"
-    files_data_list = response.json()
-    assert len(files_data_list) == len(list_png_image_file_payload_data), (
-        f"Expected {len(list_png_image_file_payload_data)} files, got {len(files_data_list)}"
-    )
-
-    # Check project_id_list field to ensure the deleted project's ID is removed.
-    assert all(
-        second_project_id in file_data["project_id_list"] and project_id not in file_data["project_id_list"]
-        for file_data in files_data_list
-    ), "Expected all files to have the deleted project ID removed from project_id_list"

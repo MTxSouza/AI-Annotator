@@ -2,280 +2,274 @@
 Module used to test audio file-related endpoints.
 """
 
-import io
-from collections.abc import Callable
+# Imports.
+from pathlib import Path
 
-import numpy as np
-import pytest
-import soundfile as sf
 from fastapi.testclient import TestClient
 
-from backend.configs import BackendSettings
 from tests.backend.conftest import check_for_worker_task_completion
-
-
-# Mocks.
-@pytest.fixture
-def corrupt_audio_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
-    """
-    Fixture to provide a corrupt audio file payload.
-    """
-    # Create corrupt audio content.
-    sample_rate = 16000  # 16 kHz
-    duration = 2  # 2 seconds
-
-    signal = np.random.uniform(-1, 1, int(sample_rate * duration)).astype(np.float32)
-
-    # Write the signal to a bytes buffer in WAV format.
-    audio_buffer = io.BytesIO()
-    sf.write(audio_buffer, signal, sample_rate, format="WAV", subtype="PCM_16")
-
-    # Truncate the buffer to make it corrupt.
-    audio_bytes = audio_buffer.getvalue()
-    corrupt_audio_bytes = audio_bytes[: len(audio_bytes) // 2]  # Keep only the first half
-    corrupt_audio_buffer = io.BytesIO(initial_bytes=corrupt_audio_bytes)
-    corrupt_audio_buffer.seek(0)
-
-    return [("file_list", ("corrupt_audio.wav", corrupt_audio_buffer, "audio/wav"))]
-
-
-@pytest.fixture
-def larger_than_maximum_audio_file_payload() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
-    """
-    Fixture to provide an audio file payload that exceeds the maximum file size limit.
-    """
-    # Create audio content that exceeds the maximum file size limit.
-    large_audio_content = b"A" * (
-        BackendSettings.max_upload_file_size + 1
-    )  # Create bytes that are 1 byte larger than the limit
-
-    # Write the audio content to a bytes buffer.
-    audio_buffer = io.BytesIO(initial_bytes=large_audio_content)
-    audio_buffer.seek(0)
-
-    return [("file_list", ("large_audio_file.wav", audio_buffer, "audio/wav"))]
+from tests.files import AudioFileTest
 
 
 # Tests.
-def test_create_audio_file_record(
-    client: TestClient,
-    audio_transcription_project_payload: dict,
-    list_wav_audio_file_payload: Callable[[], list[tuple[str, tuple[str, io.BytesIO, str]]]],
-    reset_file_directory: None,  # Used to reset file directory
-):
+def test_insert_audio_file_to_project(
+    client: TestClient, audio_transcription_project_payload: dict, audio_5s_payload: bytes
+) -> None:
     """
-    Test to create an audio file record.
+    Test inserting an audio file into an audio transcription project.
     """
-    # Create project first.
-    project_response = client.post(url="/projects/", json=audio_transcription_project_payload)
-    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
-    project = project_response.json()
-    project_id = project["_id"]
+    # Create a new project.
+    response = client.post("/projects", json=audio_transcription_project_payload)
 
-    # Check number of files and samples in project response.
-    project_details = project.get("details", {})
+    # Assert that the project was created successfully.
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
+    project_response = response.json()
+    assert project_response["name"] == audio_transcription_project_payload["name"], (
+        "Project name does not match payload"
+    )
+    assert project_response["task"] == audio_transcription_project_payload["task"], (
+        "Project task does not match payload"
+    )
+    assert project_response["description"] is None, "Project description should be None"
+    assert project_response["is_private"] is False, "Project should not be private"
+
+    # Insert an audio file into the project.
+    project_id = project_response["_id"]
+    with AudioFileTest() as audio_filepath:
+        audio_filepath_name = Path(audio_filepath.name).name
+        audio_filepath.write(audio_5s_payload)
+        audio_filepath.flush()
+        worker_response = client.post(f"/projects/{project_id}/files", params={"filepath": audio_filepath.name})
+        assert worker_response.status_code == 202, f"Failed to insert audio file into project: {worker_response.text}"
+
+        # Wait for the file processing to complete.
+        worker_response_json = worker_response.json()
+        assert "task_id" in worker_response_json, "Response does not contain task_id"
+        worker_task_id = worker_response_json["task_id"]
+        file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+        # Check response.
+        assert len(file_data_list) == 1, f"Expected 1 file to be processed, but got {len(file_data_list)}"
+
+        file_id_list = []
+        for _, file_data in enumerate(iterable=file_data_list):
+            assert file_data["status"] == "Created", file_data["message"]
+            assert file_data["message"] == f"Audio file '{audio_filepath_name}' uploaded successfully."
+            file_id_list.append(file_data["file_id"])
+
+        # Get project again to check number of files and samples.
+        project_response = client.get(url=f"/projects/{project_id}/")
+        assert project_response.status_code == 200, f"Failed to get project: {project_response.text}"
+        project = project_response.json()
+        project_details = project.get("details", {})
+        assert project_details["number_of_files"] == 1
+        assert project_details["number_of_samples"] == 0
+
+        # Check file content.
+        for _, file_id in enumerate(iterable=file_id_list):
+            file_content_response = client.get(url=f"/projects/{project_id}/files/{file_id}/data/")
+            assert file_content_response.status_code == 200, f"Failed to get file content: {file_content_response.text}"
+            assert file_content_response.content == audio_5s_payload, "File content does not match original content"
+
+
+def test_insert_duplicate_audio_file_to_project(
+    client: TestClient, audio_transcription_project_payload: dict, audio_5s_payload: bytes
+) -> None:
+    """
+    Test inserting a duplicate audio file into an audio transcription project.
+    """
+    # Create a new project.
+    response = client.post("/projects", json=audio_transcription_project_payload)
+
+    # Assert that the project was created successfully.
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
+    project_response = response.json()
+    project_id = project_response["_id"]
+
+    # Insert an audio file into the project.
+    with AudioFileTest() as audio_filepath:
+        audio_filepath_name = Path(audio_filepath.name).name
+        audio_filepath.write(audio_5s_payload)
+        audio_filepath.flush()
+        worker_response = client.post(f"/projects/{project_id}/files", params={"filepath": audio_filepath.name})
+        assert worker_response.status_code == 202, f"Failed to insert audio file into project: {worker_response.text}"
+
+        # Wait for the file processing to complete.
+        worker_response_json = worker_response.json()
+        assert "task_id" in worker_response_json, "Response does not contain task_id"
+        worker_task_id = worker_response_json["task_id"]
+        file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+        # Check response.
+        assert len(file_data_list) == 1, f"Expected 1 file to be processed, but got {len(file_data_list)}"
+
+        for _, file_data in enumerate(iterable=file_data_list):
+            assert file_data["status"] == "Created", file_data["message"]
+            assert file_data["message"] == f"Audio file '{audio_filepath_name}' uploaded successfully."
+
+        # Insert the same file again.
+        duplicate_worker_response = client.post(
+            f"/projects/{project_id}/files", params={"filepath": audio_filepath.name}
+        )
+        assert duplicate_worker_response.status_code == 202, (
+            f"Expected 202 status code for duplicate file insertion, but got {duplicate_worker_response.status_code}"
+        )
+
+        # Wait for the file processing to complete.
+        duplicated_worker_response_json = duplicate_worker_response.json()
+        assert "task_id" in duplicated_worker_response_json, "Response does not contain task_id"
+        worker_task_id = duplicated_worker_response_json["task_id"]
+        file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+        # Check response.
+        assert len(file_data_list) == 1, f"Expected 1 file to be processed, but got {len(file_data_list)}"
+
+        for _, file_data in enumerate(iterable=file_data_list):
+            assert file_data["status"] == "Skipped", file_data["message"]
+            assert file_data["message"] == f"File '{audio_filepath_name}' already exists."
+
+        # Get project again to check number of files and samples.
+        project_response = client.get(url=f"/projects/{project_id}/")
+        assert project_response.status_code == 200, f"Failed to get project: {project_response.text}"
+        project = project_response.json()
+        project_details = project.get("details", {})
+        assert project_details["number_of_files"] == 1
+        assert project_details["number_of_samples"] == 0
+
+
+def test_insert_corrupt_audio_file_to_project(client: TestClient, audio_transcription_project_payload: dict) -> None:
+    """
+    Test inserting a corrupt audio file into an audio transcription project.
+    """
+    # Create a new project.
+    response = client.post("/projects", json=audio_transcription_project_payload)
+
+    # Assert that the project was created successfully.
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
+    project_response = response.json()
+    project_id = project_response["_id"]
+
+    # Insert a corrupt audio file into the project.
+    with AudioFileTest() as audio_filepath:
+        audio_filepath_name = Path(audio_filepath.name).name
+        # Write invalid WAV bytes to the file.
+        audio_filepath.write(b"\x52\x49\x46\x46\x00\x00")
+        audio_filepath.flush()
+        worker_response = client.post(f"/projects/{project_id}/files", params={"filepath": audio_filepath.name})
+        assert worker_response.status_code == 202, (
+            f"Failed to insert corrupt audio file into project: {worker_response.text}"
+        )
+
+        # Wait for the file processing to complete.
+        worker_response_json = worker_response.json()
+        assert "task_id" in worker_response_json, "Response does not contain task_id"
+        worker_task_id = worker_response_json["task_id"]
+        file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+        # Check response.
+        assert len(file_data_list) == 1, f"Expected 1 file to be processed, but got {len(file_data_list)}"
+
+        for _, file_data in enumerate(iterable=file_data_list):
+            assert file_data["status"] == "Failed", file_data["message"]
+            assert file_data["message"] == f"Corrupted file: {audio_filepath_name}."
+
+        # Get project again to check number of files and samples.
+        project_response = client.get(url=f"/projects/{project_id}/")
+        assert project_response.status_code == 200, f"Failed to get project: {project_response.text}"
+        project = project_response.json()
+        project_details = project.get("details", {})
+        assert project_details["number_of_files"] == 0
+        assert project_details["number_of_samples"] == 0
+
+
+def test_insert_multiple_audio_files_to_project(
+    client: TestClient, audio_transcription_project_payload: dict, audio_5s_payload: bytes, audio_10s_payload: bytes
+) -> None:
+    """
+    Test inserting multiple audio files into an audio transcription project.
+    """
+    # Create a new project.
+    response = client.post("/projects", json=audio_transcription_project_payload)
+
+    # Assert that the project was created successfully.
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
+    project_response = response.json()
+    project_id = project_response["_id"]
+
+    # Insert multiple audio files into the project.
+    with AudioFileTest() as audio_filepath_1, AudioFileTest() as audio_filepath_2:
+        audio_filepath_1.write(audio_5s_payload)
+        audio_filepath_1.flush()
+
+        audio_filepath_2.write(audio_10s_payload)
+        audio_filepath_2.flush()
+
+        worker_response = client.post(
+            f"/projects/{project_id}/files", params={"filepath": [audio_filepath_1.name, audio_filepath_2.name]}
+        )
+        assert worker_response.status_code == 202, (
+            f"Failed to insert multiple audio files into project: {worker_response.text}"
+        )
+
+        # Wait for the file processing to complete.
+        worker_response_json = worker_response.json()
+        assert "task_id" in worker_response_json, "Response does not contain task_id"
+        worker_task_id = worker_response_json["task_id"]
+        file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+        # Check response.
+        assert len(file_data_list) == 2, f"Expected 2 files to be processed, but got {len(file_data_list)}"
+
+        for _, file_data in enumerate(iterable=file_data_list):
+            assert file_data["status"] == "Created", file_data["message"]
+
+        # Get project again to check number of files and samples.
+        project_response = client.get(url=f"/projects/{project_id}/")
+        assert project_response.status_code == 200, f"Failed to get project: {project_response.text}"
+        project = project_response.json()
+        project_details = project.get("details", {})
+        assert project_details["number_of_files"] == 2
+        assert project_details["number_of_samples"] == 0
+
+
+def test_delete_audio_file_from_project(
+    client: TestClient, audio_transcription_project_payload: dict, audio_5s_payload: bytes
+) -> None:
+    """
+    Test deleting an audio file from an audio transcription project.
+    """
+    # Create a new project.
+    response = client.post("/projects", json=audio_transcription_project_payload)
+
+    assert response.status_code == 201, f"Failed to create project: {response.text}"
+    project_response = response.json()
+    project_id = project_response["_id"]
+
+    # Insert an audio file into the project.
+    with AudioFileTest() as audio_filepath:
+        audio_filepath.write(audio_5s_payload)
+        audio_filepath.flush()
+        worker_response = client.post(f"/projects/{project_id}/files", params={"filepath": audio_filepath.name})
+        assert worker_response.status_code == 202, f"Failed to insert audio file into project: {worker_response.text}"
+
+        worker_task_id = worker_response.json()["task_id"]
+        file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
+
+        assert len(file_data_list) == 1
+        assert file_data_list[0]["status"] == "Created", file_data_list[0]["message"]
+        file_id = file_data_list[0]["file_id"]
+
+    # Delete the file from the project.
+    delete_response = client.delete(url=f"/projects/{project_id}/files/{file_id}")
+    assert delete_response.status_code == 204, f"Failed to delete audio file from project: {delete_response.text}"
+
+    # Verify the file is no longer accessible in the project.
+    file_content_response = client.get(url=f"/projects/{project_id}/files/{file_id}/data/")
+    assert file_content_response.status_code == 404, "File should not be accessible after deletion"
+
+    # Verify the project no longer has the file.
+    project_response = client.get(url=f"/projects/{project_id}/")
+    assert project_response.status_code == 200, f"Failed to get project: {project_response.text}"
+    project_details = project_response.json().get("details", {})
     assert project_details["number_of_files"] == 0
     assert project_details["number_of_samples"] == 0
-    assert project["details"]["total_duration_in_seconds"] == 0.0
-
-    # Create file record.
-    list_wav_audio_file = list_wav_audio_file_payload()
-    worker_response = client.post(url=f"/projects/{project_id}/files/", files=list_wav_audio_file)
-    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
-
-    # Wait for the file processing to complete.
-    worker_response_json = worker_response.json()
-    assert "task_id" in worker_response_json, "Response does not contain task_id"
-    worker_task_id = worker_response_json["task_id"]
-    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
-
-    # Check response.
-    assert len(file_data_list) == len(list_wav_audio_file)
-
-    file_id_list = []
-    for i, file_data in enumerate(iterable=file_data_list):
-        assert file_data["status"] == "Created"
-        assert file_data["message"] == f"Audio file '{list_wav_audio_file[i][1][0]}' uploaded successfully."
-        file_id_list.append(file_data["file_id"])
-
-    # Get project again to check number of files and samples.
-    project_response = client.get(url=f"/projects/{project_id}")
-    assert project_response.status_code == 200, f"Failed to get project: {project_response.text}"
-    project = project_response.json()
-    assert project["details"]["number_of_files"] == len(list_wav_audio_file)
-    assert project["details"]["number_of_samples"] == 0
-    assert project["details"]["total_duration_in_seconds"] > 0.0
-
-
-def test_create_duplicate_audio_file_record(
-    client: TestClient,
-    audio_transcription_project_payload: dict,
-    list_wav_audio_file_payload: Callable[[], list[tuple[str, tuple[str, io.BytesIO, str]]]],
-    reset_file_directory: None,  # Used to reset file directory
-):
-    """
-    Test to check that creating a duplicate audio file record is handled properly.
-    """
-    # Create project first.
-    project_response = client.post(url="/projects/", json=audio_transcription_project_payload)
-    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
-    project = project_response.json()
-    project_id = project["_id"]
-
-    # Create file record.
-    list_wav_audio_file = list_wav_audio_file_payload()
-    worker_response = client.post(url=f"/projects/{project_id}/files/", files=list_wav_audio_file)
-    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
-
-    # Wait for the file processing to complete.
-    worker_response_json = worker_response.json()
-    assert "task_id" in worker_response_json, "Response does not contain task_id"
-    worker_task_id = worker_response_json["task_id"]
-    check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
-
-    # Attempt to create duplicate file record.
-    list_wav_audio_file = list_wav_audio_file_payload()
-    duplicate_file_response = client.post(url=f"/projects/{project_id}/files/", files=list_wav_audio_file)
-    assert duplicate_file_response.status_code == 202, (
-        f"Failed to create duplicate file: {duplicate_file_response.text}"
-    )
-
-    # Wait for the file processing to complete.
-    duplicate_file_response_json = duplicate_file_response.json()
-    assert "task_id" in duplicate_file_response_json, "Response does not contain task_id"
-    duplicate_file_worker_task_id = duplicate_file_response_json["task_id"]
-    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=duplicate_file_worker_task_id)
-
-    # Check response.
-    assert len(file_data_list) == len(list_wav_audio_file)
-    for i, file_data in enumerate(iterable=file_data_list):
-        assert file_data["status"] == "Skipped"
-        assert file_data["message"] == f"File '{list_wav_audio_file[i][1][0]}' already exists."
-
-
-def test_create_corrupt_audio_file_record(
-    client: TestClient,
-    audio_transcription_project_payload: dict,
-    corrupt_audio_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
-    reset_file_directory: None,  # Used to reset file directory
-):
-    """
-    Test to check that creating a corrupt audio file record is handled properly.
-    """
-    # Create project first.
-    project_response = client.post(url="/projects/", json=audio_transcription_project_payload)
-    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
-    project = project_response.json()
-    project_id = project["_id"]
-
-    # Attempt to create file record with corrupt audio file.
-    worker_response = client.post(url=f"/projects/{project_id}/files/", files=corrupt_audio_file_payload)
-    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
-
-    # Wait for the file processing to complete.
-    worker_response_json = worker_response.json()
-    assert "task_id" in worker_response_json, "Response does not contain task_id"
-    worker_task_id = worker_response_json["task_id"]
-    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
-
-    # Check response.
-    assert len(file_data_list) == len(corrupt_audio_file_payload)
-    for i, file_data in enumerate(iterable=file_data_list):
-        assert file_data["status"] == "Failed"
-        assert file_data["message"] == f"Corrupted file: {corrupt_audio_file_payload[i][1][0]}."
-
-
-def test_create_image_file_format_record(
-    client: TestClient,
-    audio_transcription_project_payload: dict,
-    list_png_image_file_payload: Callable[[], list[tuple[str, tuple[str, io.BytesIO, str]]]],
-    reset_file_directory: None,  # Used to reset file directory
-):
-    """
-    Test to create an image file record in an audio transcription project.
-    """
-    # Create project first.
-    project_response = client.post(url="/projects/", json=audio_transcription_project_payload)
-    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
-    project_id = project_response.json()["_id"]
-
-    # Create file record.
-    list_png_image_file = list_png_image_file_payload()
-    worker_response = client.post(url=f"/projects/{project_id}/files/", files=list_png_image_file)
-    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
-
-    # Wait for the file processing to complete.
-    worker_response_json = worker_response.json()
-    assert "task_id" in worker_response_json, "Response does not contain task_id"
-    worker_task_id = worker_response_json["task_id"]
-    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
-
-    # Check response.
-    assert len(file_data_list) == len(list_png_image_file)
-    for i, file_data in enumerate(iterable=file_data_list):
-        assert file_data["status"] == "Failed"
-        assert file_data["message"] == "Invalid file format for this project: png."
-
-
-def test_create_text_file_format_record(
-    client: TestClient,
-    audio_transcription_project_payload: dict,
-    list_text_file_payload: Callable[[], list[tuple[str, tuple[str, io.BytesIO, str]]]],
-    reset_file_directory: None,  # Used to reset file directory
-):
-    """
-    Test to create a text file record in an audio transcription project.
-    """
-    # Create project first.
-    project_response = client.post(url="/projects/", json=audio_transcription_project_payload)
-    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
-    project_id = project_response.json()["_id"]
-
-    # Create file record.
-    list_text_file = list_text_file_payload()
-    worker_response = client.post(url=f"/projects/{project_id}/files/", files=list_text_file)
-    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
-
-    # Wait for the file processing to complete.
-    worker_response_json = worker_response.json()
-    assert "task_id" in worker_response_json, "Response does not contain task_id"
-    worker_task_id = worker_response_json["task_id"]
-    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
-
-    # Check response.
-    assert len(file_data_list) == len(list_text_file)
-    for i, file_data in enumerate(iterable=file_data_list):
-        assert file_data["status"] == "Failed"
-        assert file_data["message"] == "Invalid file format for this project: txt."
-
-
-def test_upload_maximum_audio_file_size_limit(
-    client: TestClient,
-    audio_transcription_project_payload: dict,
-    larger_than_maximum_audio_file_payload: list[tuple[str, tuple[str, io.BytesIO, str]]],
-    reset_file_directory: None,  # Used to reset file directory
-):
-    """
-    Test to upload an audio file that exceeds the maximum file size limit.
-    """
-    # Create project first.
-    project_response = client.post(url="/projects/", json=audio_transcription_project_payload)
-    assert project_response.status_code == 201, f"Failed to create project: {project_response.text}"
-    project_id = project_response.json()["_id"]
-
-    # Attempt to create file record.
-    worker_response = client.post(url=f"/projects/{project_id}/files/", files=larger_than_maximum_audio_file_payload)
-    assert worker_response.status_code == 202, f"Failed to create file: {worker_response.text}"
-
-    # Wait for the file processing to complete.
-    worker_response_json = worker_response.json()
-    assert "task_id" in worker_response_json, "Response does not contain task_id"
-    worker_task_id = worker_response_json["task_id"]
-    file_data_list = check_for_worker_task_completion(client=client, worker_task_id=worker_task_id)
-
-    # Check response.
-    assert len(file_data_list) == len(larger_than_maximum_audio_file_payload)
-    for i, file_data in enumerate(iterable=file_data_list):
-        audio_filename = larger_than_maximum_audio_file_payload[i][1][0]
-        assert file_data["status"] == "Failed"
-        assert file_data["message"] == f"File '{audio_filename}' upload failed: Upload size limit exceeded."

@@ -2,25 +2,22 @@
 Main module that setup main configurations for backend tests.
 """
 
-import io
-import shutil
+import random
+import string
 import time
-from collections.abc import Callable
 from contextlib import asynccontextmanager
 
-import numpy as np
 import pytest
-import soundfile as sf
 from celery.states import FAILURE, SUCCESS
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from PIL import Image
 from pymongo import MongoClient
 
 from backend.app import app
 from backend.configs import BackendSettings
 from backend.database.configs import DatabaseConfig
 from backend.worker import app as celery_app
+from tests.files import AudioFileTest, ImageFileTest, TextFileTest
 
 
 # Session-wide fixtures.
@@ -121,104 +118,90 @@ def audio_transcription_project_payload() -> dict:
 
 
 @pytest.fixture
-def reset_file_directory():
+def text_100words_payload() -> bytes:
     """
-    Fixture to reset the file storage directory before each module.
+    Utility function to create a sample text file payload with 100 words.
     """
-    # Reset the static file directory.
-    shutil.rmtree(BackendSettings.static_file_directory, ignore_errors=True)
+    # Create text content.
+    text = random.choices(string.ascii_letters + string.digits + string.punctuation + " ", k=100)
+    content = TextFileTest.write_content(content="".join(text))
+    return content
 
 
 @pytest.fixture
-def list_png_image_file_payload() -> Callable[[], list[tuple[str, tuple[str, io.BytesIO, str]]]]:
+def text_1000words_payload() -> bytes:
     """
-    Fixture to provide a list of image file payloads.
+    Utility function to create a sample text file payload with 1000 words.
     """
-
-    def _wrapper() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
-        # Create images.
-        IMAGE_SIZE_LIST = [
-            (200, 200),
-            (300, 150),
-            (400, 400),
-            (500, 250),
-            (600, 300),
-            (1280, 720),
-            (1920, 1080),
-            (3840, 2160),
-        ]
-        image_file_list = []
-        for image_size in IMAGE_SIZE_LIST:
-            # Create empty image.
-            image = Image.new("RGB", image_size, color=(255, 0, 0))
-
-            # Store image in bytes buffer.
-            buffer = io.BytesIO()
-            image.save(buffer, format="PNG")
-            buffer.seek(0)
-
-            # Append to list.
-            image_file_list.append(
-                ("file_list", (f"test_image_{image_size[0]}x{image_size[1]}.png", buffer, "image/png"))
-            )
-
-        return image_file_list
-
-    return _wrapper
+    # Create text content.
+    text = random.choices(string.ascii_letters + string.digits + string.punctuation + " ", k=1000)
+    content = TextFileTest.write_content(content="".join(text))
+    return content
 
 
 @pytest.fixture
-def list_text_file_payload() -> Callable[[], list[tuple[str, tuple[str, io.BytesIO, str]]]]:
+def text_10000words_payload() -> bytes:
     """
-    Fixture to provide a list of text file payloads.
+    Utility function to create a sample text file payload with 10000 words.
     """
-
-    def _wrapper() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
-        # Create text files.
-        text_file_list = []
-        for i in range(5):
-            # Create text content.
-            text_content = f"This is test file number {i + 1}."
-
-            # Store text in bytes buffer.
-            buffer = io.BytesIO(initial_bytes=text_content.encode("utf-8"))
-            buffer.seek(0)
-
-            # Append to list.
-            text_file_list.append(("file_list", (f"test_file_{i + 1}.txt", buffer, "text/plain")))
-
-        return text_file_list
-
-    return _wrapper
+    # Create text content.
+    text = random.choices(string.ascii_letters + string.digits + string.punctuation + " ", k=10000)
+    content = TextFileTest.write_content(content="".join(text))
+    return content
 
 
 @pytest.fixture
-def list_wav_audio_file_payload(seed: int = 1234) -> Callable[[], list[tuple[str, tuple[str, io.BytesIO, str]]]]:
+def image_200x200_payload() -> bytes:
     """
-    Fixture to create a list of audio file payloads.
+    Utility function to create a sample image file payload.
     """
+    # Create image content.
+    content = ImageFileTest.write_content(width=200, height=200, channels=3)
+    return content
 
-    def _wrapper() -> list[tuple[str, tuple[str, io.BytesIO, str]]]:
-        # Set random seed for reproducibility.
-        np.random.seed(seed)
 
-        # Create a simple sine wave audio signal as bytes.
-        sample_rate = 16000  # 16 kHz
-        audio_file_list = []
-        for i in range(5):
-            duration = np.random.uniform(1, 5)  # Random duration between 1 and 5 seconds
+@pytest.fixture
+def image_300x300_payload() -> bytes:
+    """
+    Utility function to create a sample image file payload.
+    """
+    # Create image content.
+    content = ImageFileTest.write_content(width=300, height=300, channels=3)
+    return content
 
-            signal = np.random.uniform(-1, 1, int(sample_rate * duration)).astype(np.float32)
 
-            # Write the signal to a bytes buffer in WAV format.
-            audio_buffer = io.BytesIO()
-            sf.write(audio_buffer, signal, sample_rate, format="WAV", subtype="PCM_16")
-            audio_buffer.seek(0)
-            audio_file_list.append(("file_list", (f"test_audio_{i}.wav", audio_buffer, "audio/wav")))
+@pytest.fixture
+def image_400x400_payload() -> bytes:
+    """
+    Utility function to create a sample image file payload.
+    """
+    # Create image content.
+    content = ImageFileTest.write_content(width=400, height=400, channels=3)
+    return content
 
-        return audio_file_list
 
-    return _wrapper
+@pytest.fixture
+def audio_5s_payload() -> bytes:
+    """
+    Utility function to create a sample audio file payload with 5 seconds of audio.
+    """
+    return AudioFileTest.write_content(duration=5, sample_rate=44100)
+
+
+@pytest.fixture
+def audio_10s_payload() -> bytes:
+    """
+    Utility function to create a sample audio file payload with 10 seconds of audio.
+    """
+    return AudioFileTest.write_content(duration=10, sample_rate=44100)
+
+
+@pytest.fixture
+def audio_20s_payload() -> bytes:
+    """
+    Utility function to create a sample audio file payload with 20 seconds of audio.
+    """
+    return AudioFileTest.write_content(duration=20, sample_rate=44100)
 
 
 # Utility

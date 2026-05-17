@@ -119,7 +119,7 @@ class FileFormat(StrEnum):
         # Determine possible formats.
         POSSIBLE_FORMATS = [
             # Images.
-            (cls.JPEG, [b"\xff\xd8\xff\xdb", b"\xff\xd8\xff\xe0\00\10\4A\46\49\46\00\01", b"\xff\xd8\xff\xee"]),
+            (cls.JPEG, [b"\xff\xd8\xff\xdb", b"\xff\xd8\xff\xe0\x00\x10\x4a\x46\x49\x46\x00\x01", b"\xff\xd8\xff\xee"]),
             (cls.PNG, [b"\x89\x50\x4e\x47\x0d\x0a\x1a\x0a"]),
             # Texts.
             (

@@ -3,7 +3,7 @@ Module with all endpoints related to file operations.
 """
 
 from fastapi import APIRouter, Depends, status
-from fastapi.params import Param
+from fastapi.params import Param, Path
 from fastapi.requests import Request
 from fastapi.responses import Response
 from pymongo.asynchronous.database import AsyncDatabase
@@ -52,7 +52,7 @@ async def get_files_endpoint(
 
 @router.get(path="/{file_id}/data", response_class=Response, status_code=status.HTTP_200_OK)
 async def get_file_data_endpoint(
-    file_id: str,
+    file_id: str = Path(..., description="The ID of the file to get."),  # type: ignore
     project: Project = Depends(dependency=get_authenticated_project),
     db: AsyncDatabase = Depends(dependency=DatabaseConfig.get_database),
 ) -> Response:
@@ -75,7 +75,7 @@ async def get_file_data_endpoint(
 @limiter.limit(limit_value="5/minute")
 async def upload_file_endpoint(
     request: Request,
-    filepath: str = Param(),  # type: ignore
+    filepath: str | list[str] = Param(),  # type: ignore
     project: Project = Depends(dependency=get_authenticated_project),
 ) -> WorkerTaskResult:
     """
@@ -83,7 +83,7 @@ async def upload_file_endpoint(
     valid files from there to be used in project.
 
     Args:
-            filepath (str): The path of the file to upload.
+            filepath (str | list[str]): The path(s) of the file(s) to upload.
     """
     # Get all valid files from the given path.
     allowed_file_list = await validate_input_files(filepath=filepath, project=project)
