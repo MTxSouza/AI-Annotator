@@ -16,7 +16,7 @@ from backend.api.v1.models.samples import (
     TextClassificationSampleCreate,
     TextClassificationSampleUpdate,
 )
-from backend.api.v1.utils.common import _load_file_content
+from backend.api.v1.utils.common import load_file_content
 from backend.api.v1.utils.task_details import get_valid_number_of_samples_per_file
 from backend.database.configs import Collections
 from backend.database.enums import FileFormat, PyObjectId
@@ -208,7 +208,7 @@ async def create_sample(sample_data: _SAMPLE_CREATE_, db: AsyncDatabase) -> dict
     if metadata.get("file_format") in FileFormat.get_text_formats():
         # Load file content.
         filepath = metadata.get("filepath")
-        text_bytes = await run_in_threadpool(_load_file_content, filepath=filepath)  # type: ignore
+        text_bytes = await run_in_threadpool(load_file_content, filepath=filepath)  # type: ignore
         sample_data_dict["text"] = text_bytes.decode(encoding="utf-8")
         del text_bytes
 

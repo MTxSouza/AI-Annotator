@@ -19,12 +19,12 @@ from pymongo.asynchronous.database import AsyncDatabase
 
 from backend.api.v1.models.files import AudioFileCreate, ImageFileCreate, TextFileCreate, UploadedFileResponse
 from backend.api.v1.models.projects import Project
-from backend.api.v1.utils.common import _load_file_content
+from backend.api.v1.utils.common import load_file_content
 from backend.api.v1.utils.samples import delete_samples_by_file_id
 from backend.api.v1.utils.task_details import get_task_file
 from backend.configs import BackendSettings
 from backend.database.configs import Collections
-from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId
+from backend.database.enums import FileFormat, FileStatus, FileUploadStatus, PyObjectId
 from backend.worker import UpdateTaskState, WorkerUploadFile, process_uploaded_file_task
 
 # Global variables.
@@ -382,7 +382,16 @@ async def load_file_content_by_id(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported file format: {file_format}.")  # type: ignore
 
     # Load file content and format.
-    content = await run_in_threadpool(func=_load_file_content, filepath=filepath)
+    try:
+        content = await run_in_threadpool(func=load_file_content, filepath=filepath)
+    except FileNotFoundError:
+        # Update file status to "Not Found" in the database.
+        collection = db.get_collection(name=Collections.FILES.value.name)
+        await collection.update_one({"_id": file_id}, {"$set": {"status": FileStatus.NOT_FOUND.value}})
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"File with ID {file_id} was not found on disk."
+        )
 
     # Create response.
     return Response(content=content, media_type=media_type)  # type: ignore

@@ -38,6 +38,15 @@ class FileUploadStatus(StrEnum):
     FAILED = "Failed"
 
 
+class FileStatus(StrEnum):
+    """
+    Enum for file status.
+    """
+
+    READY_TO_USE = "Ready to Use"
+    NOT_FOUND = "Not Found"
+
+
 class Task(StrEnum):
     """
     Enum for tasks.

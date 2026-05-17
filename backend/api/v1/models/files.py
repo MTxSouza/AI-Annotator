@@ -4,7 +4,7 @@ Main module with all schemas used in Files collection.
 
 from pydantic import BaseModel, Field, computed_field, field_validator
 
-from backend.database.enums import FileFormat, FileUploadStatus, PyObjectId
+from backend.database.enums import FileFormat, FileStatus, FileUploadStatus, PyObjectId
 from backend.database.models import CommonModel, CommonRequestModel, CommonResponseModel
 
 
@@ -21,6 +21,7 @@ class __File(CommonResponseModel):
     filepath: str = Field(..., description="The path to the file on disk.")
     file_format: FileFormat = Field(..., description="The format of the file.")
     size_in_bytes: int = Field(..., description="The size of the file in bytes.")
+    status: FileStatus = Field(default=FileStatus.READY_TO_USE, description="The status of the file.")
 
 
 class FileUploadResponse(CommonResponseModel):
